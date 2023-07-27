@@ -1,2 +1,2 @@
 # AmpliconComparison
-Compare amplicon sets across technologies and methods
+Comparing cycle decompositions across technologies and methods.
