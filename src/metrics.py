@@ -12,6 +12,7 @@ import networkx as nx
 
 from utils import HEADER as h
 from utils import PROPS as p
+from utils import DDT as ddt
 
 
 def read_input(t_file, r_file):
@@ -573,27 +574,28 @@ def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
 
 
 # distance for the copy-number profile
-dict_distance_function = {"hamming": get_hamming_score,
-						  "hamming_norm": get_hamming_score_norm,
-						  "overlap": get_overlap_score_weighted}
+dict_distance_function = {ddt.HAMMING: get_hamming_score,
+						  ddt.HAMMING_NORM: get_hamming_score_norm,
+						  ddt.OVERLAP: get_overlap_score_weighted}
 
 # distance between paired breapoints
 dict_distance_paired_breakpoints = {
-	"euclidian": euclidian_distance,
-	"euclidian_norm_l1": euclidian_distance_norm_l1,
-	"euclidian_norm_l2": euclidian_distance_norm_l2,
+	ddt.EUCLIDIAN: euclidian_distance,
+	ddt.EUCLIDIAN_NORM_L1: euclidian_distance_norm_l1,
+	ddt.EUCLIDIAN_NORM_L2: euclidian_distance_norm_l2,
 	# "auc_triangle": auc_triangle,
 	# "auc_trapeze": auc_trapeze,
 	# "match_angle": match_angle,
-	"match_score": match_score
+	ddt.RELATIVE_METRIC: match_score
 }
 
 dict_distance_paired_breakpoints_thresholds = {
-	"euclidian": 3000,
-	"euclidian_norm_l1": 0.3,
-	"euclidian_norm_l2": 0.3,
-	"auc_triangle": 500000,
-	"auc_trapeze": 50000,
-	"match_angle": 1.2,
-	"match_score": 0.3
+	ddt.EUCLIDIAN: ddt.EUCLIDIAN_THRESHOLD,
+	ddt.EUCLIDIAN_NORM_L1: ddt.EUCLIDIAN_THRESHOLD_L1,
+	ddt.EUCLIDIAN_NORM_L2: ddt.EUCLIDIAN_THRESHOLD_L2,
+	ddt.AUC_TRIANGLE: ddt.AUC_TRIANGLE_THRESHOLD,
+	ddt.AUC_TRAPEZE: ddt.AUC_TRAPEZE_THRESHOLD,
+	ddt.RELATIVE_METRIC: ddt.RELATIVE_METRIC_THRESHOLD,
+	ddt.MATCH_ANGLE: ddt.MATCH_ANGLE_THRESHOLD,
+	ddt.UNMATCHED:ddt.UNMATCHED_THRESHOLD
 }

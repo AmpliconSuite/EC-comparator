@@ -11,6 +11,7 @@ class HEADER:
 	CN = "estimated_cn"
 	CHR1 = "chr1"
 	CHR2 = "chr2"
+
 class PROPS:
 
 	# visualization
@@ -23,3 +24,32 @@ class PROPS:
 
 	# compute similarity
 	INF = 3000000000
+
+class DDT:
+	EUCLIDIAN = 'euclidian'
+	EUCLIDIAN_THRESHOLD = 3000
+
+	EUCLIDIAN_NORM_L1 = 'euclidian_norm_l1'
+	EUCLIDIAN_THRESHOLD_L1 = 0.3
+
+	EUCLIDIAN_NORM_L2 = 'euclidian_norm_l2'
+	EUCLIDIAN_THRESHOLD_L2 = 0.3
+
+	AUC_TRIANGLE = 'auc_triangle'
+	AUC_TRIANGLE_THRESHOLD = 500000
+
+	AUC_TRAPEZE = 'auc_trapeze'
+	AUC_TRAPEZE_THRESHOLD = 500000
+
+	MATCH_ANGLE = 'match_angle'
+	MATCH_ANGLE_THRESHOLD = 1.2
+
+	RELATIVE_METRIC = 'match_score'
+	RELATIVE_METRIC_THRESHOLD = 0.3
+
+	UNMATCHED = 'unmatched'
+	UNMATCHED_THRESHOLD = 10000
+
+	HAMMING = 'hamming'
+	HAMMING_NORM = 'hamming_norm'
+	OVERLAP = 'overlap'
