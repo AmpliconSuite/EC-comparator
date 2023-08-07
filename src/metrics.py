@@ -76,7 +76,7 @@ def get_bin_len(s_bins):
 	return [(s_bins[i], s_bins[i + 1] - s_bins[i]) for i in range(0, len(s_bins) - 1)]
 
 
-def get_breakpoints(df_cycle):
+def transform_fragments2breakpoints(df_cycle):
 	"""
 	Creates the list of breakpoints
 
@@ -207,8 +207,8 @@ def get_breakpoints_pairs(df_t, df_r):
 	Returns:
 
 	"""
-	br_t = get_breakpoints(df_t)
-	br_r = get_breakpoints(df_r)
+	br_t = transform_fragments2breakpoints(df_t)
+	br_r = transform_fragments2breakpoints(df_r)
 
 	return br_t, br_r
 
@@ -217,7 +217,7 @@ def get_feature_cn(cycle_fragments, bins):
 	"""
 	Get the structure copy-number binned using defined intervals
 
-	Arguments:
+	Args:
 		cycle_fragments (pd.DataFrame): Contains the fragments intervals of the reconstruction
 										Example
 										+--------------+-----------+-----------+-----------+-----------+--------------+
@@ -263,7 +263,7 @@ def get_feature_cn(cycle_fragments, bins):
 
 def get_cos_similarity_cn(e1, e2):
 	"""
-	Arguments:
+	Args:
 		e1 (pd.DataFrame): First reconstruction binned by union of all bins
 		e2 (pd.DataFrame): Second reconstruction binned by union of all bins
 	"""
@@ -274,7 +274,7 @@ def get_hamming_score(e1, e2, bins):
 	"""
 	Compute hamming distance between the two reconstructions
 
-	Arguments:
+	Args:
 		e1 (pd.DataFrame): First reconstruction
 		e2 (pd.DataFrame): Second reconstruction
 		bins (pd.DataFrame): Bins of the intervals union e1 and e2
@@ -334,7 +334,6 @@ def euclidian_distance_norm_l2(a, b, x, y):
 	v2 = np.array([[x, y]])
 	v1_norm = preprocessing.normalize(v1, norm='l2')
 	v2_norm = preprocessing.normalize(v2, norm='l2')
-	print(v1_norm, v2_norm)
 	return skl.euclidean_distances(v1_norm, v2_norm)
 
 
@@ -343,7 +342,6 @@ def euclidian_distance_norm_l1(a, b, x, y):
 	v2 = np.array([[x, y]])
 	v1_norm = preprocessing.normalize(v1, norm='l1')
 	v2_norm = preprocessing.normalize(v2, norm='l1')
-	print(v1_norm, v2_norm)
 	return skl.euclidean_distances(v1_norm, v2_norm)
 
 
@@ -395,9 +393,29 @@ def match_score(a, b, x, y):
 	return 1 - abs((cos1 + cos2) / 2)
 
 
-def create_cost_matrix(br_t, br_r, dist="euclidian"):
+def is_unmatched(row1, row2, threshold):
+	"""
+	Check if breakpoints are unmatched
+	"""
+	if row1[h.CHR1] != row2[h.CHR1]:
+		return True
+
+	if row1[h.CHR2] != row2[h.CHR2]:
+		return True
+
+	if abs(row1[h.START] - row2[h.START]) > threshold:
+		return True
+
+	if abs(row1[h.END] - row2[h.END]) > threshold:
+		return True
+
+	return False
+
+
+def create_cost_matrix(br_t, br_r, unmatched, dist="euclidian"):
 	"""
 	Create the cost matrix for the breakpoints pair.
+	Set breakpoints with x-x' or y-y' > unmatched as infinity distance
 
 	Arguments:
 		br_t (pd.DataFrame): Breakpoints true
@@ -417,20 +435,24 @@ def create_cost_matrix(br_t, br_r, dist="euclidian"):
 
 	for i in range(0, br_t.shape[0]):
 		for j in range(0, br_r.shape[0]):
-			m[i, j] = dict_distance_paired_breakpoints[dist](br_t.loc[i, h.START], br_t.loc[i, h.END],
-															 br_r.loc[j, h.START], br_r.loc[j, h.END])
+
+			# compute distance between breakpoint only for those who are not too far away
+			if not is_unmatched(br_t.loc[i, :], br_t.loc[j, :], unmatched):
+				m[i, j] = dict_distance_paired_breakpoints[dist](br_t.loc[i, h.START], br_t.loc[i, h.END],
+																 br_r.loc[j, h.START], br_r.loc[j, h.END])
+			else:
+				m[i, j] = p.INF
 
 	return m
 
 
-def create_bipartite_graph(br_t, br_r, dist="euclidian"):
+def create_bipartite_graph(br_t, br_r, unmatched, dist="euclidian"):
 	"""
 	Create bipartite graph using the breakpoints pairs as nodes and
-	edges weighted by the distance (cost) between the pairs)
+	edges weighted by the distance (cost) between the pairs).
+	Set as unmatched those breakpoints for which x-x' or y-y' > unmatched
 	"""
-	m = create_cost_matrix(br_t, br_r, dist=dist)
-	print("m=")
-	print(m)
+	m = create_cost_matrix(br_t, br_r, unmatched, dist=dist)
 
 	visited_nodes = collections.defaultdict(list)
 
@@ -449,10 +471,10 @@ def create_bipartite_graph(br_t, br_r, dist="euclidian"):
 				# print(true_nodes[k],reconstruct_nodes[l])
 				list_of_tuples.append((k, l, m[true_nodes[k], reconstruct_nodes[l]]))
 				visited_nodes[k].append(l)
-		# else:
-		# 	print()
-		# 	print("not included")
-		# 	print(true_nodes[k], reconstruct_nodes[l])
+	# else:
+	# 	print()
+	# 	print("not included")
+	# 	print(true_nodes[k], reconstruct_nodes[l])
 
 	# add minimal amount of edges which will make the graph connected
 	max_degree = 0
@@ -492,36 +514,62 @@ def find_matching_breakpoints(G, br_t, br_r, t_nodes, r_nodes):
 			# x1,y1 = br_t.loc[id_pair_t, h.START], br_t.loc[id_pair_t, h.END]
 			# x2,y2 = br_r.loc[id_pair_r, h.START], br_r.loc[id_pair_r, h.END]
 			breakpoint_match.append((id_pair_t, id_pair_r, G.get_edge_data(k, matches[k])['weight']))
-		# breakpoint_match.append((y1, y2))
+	# breakpoint_match.append((y1, y2))
 	return matches, breakpoint_match
 
 
-def compare_cycles(t_file, r_file, hamming=True, viz=False):
+def compute_breakpoint_similarity(df_t, df_r, unmatched=10000, distance="euclidian-distance"):
+	"""
+	Compute breakpoint-pairs similarity.
+	Do not consider breakpoints for which (x-x') > unmatched or (y-y') > unmatched
+	Use `distance` to evaluate if the breakpoints are matched or not.
+
+	"""
+
+	# convert fragments to breakpoints
+	br_t, br_r = get_breakpoints_pairs(df_t, df_r)
+
+	# create bipartite graph
+	G, t_nodes, r_nodes = create_bipartite_graph(br_t,
+												 br_r,
+												 unmatched=unmatched,
+												 dist=dict_distance_paired_breakpoints[distance])
+
+	# get matches
+	matches, breakpoint_match = find_matching_breakpoints(G, br_t, br_r, t_nodes, r_nodes)
+
+
+def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
 	"""
 	Entrypoint: compare the distance between two cycle sets.
 	Args:
 		t_file (str): First cycle set
 		r_file (str): Second cycle set
-		hamming (bool): Include copy-number similarity for the total distance if set to True or Hamming distance is copy-number not available
-		viz (bool): Enable visualization of the comparison
+		outdir (str): Output directory
+		dict_configs (dict):
+							hamming (bool): Include copy-number similarity for the total distance if set to True or Hamming distance is copy-number not available
+							viz (bool): Enable visualization of the comparison
 
 	Returns:
 		Dictionary with different distances
 	"""
 
-	# 1. Genome binning based on the breakpoints union
+	print(dict_configs)
 
-	# 2. Compute hamming distance and others
 
-	# 3. Compute copy-number similarity
+# 1. Genome binning based on the breakpoints union
 
-	# 4. Breakpoint matching
+# 2. Compute hamming distance and others
 
-	# 5. Penalize for cycles multiplicity (if the tool decompose in one or more cycles)
+# 3. Compute copy-number similarity
 
-	# 6. Stoichiometry (compute distance of transforming one permutation in the other)
+# 4. Breakpoint matching
 
-	# 7. Merge results
+# 5. Penalize for cycles multiplicity (if the tool decompose in one or more cycles)
+
+# 6. Stoichiometry (compute distance of transforming one permutation in the other)
+
+# 7. Merge results
 
 
 # distance for the copy-number profile

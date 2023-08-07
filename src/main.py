@@ -12,6 +12,22 @@ import os
 import traceback
 import sys
 
+import metrics
+
+def config(args):
+	"""
+	Configure comparison based on user spefication
+	"""
+
+	dict = {"cosine-similarity":args.cos_similarity,
+			"hammping-distance":args.hamming_distance,
+			"euclidian-distance":args.euclidian_distance,
+			"euclidian-distance-threshold": args.euclidian_distance_threshold,
+			"relative-distance":args.relative_distance,
+			"relative-distance-threshold": args.relative_distance_threshold
+			}
+
+	return dict
 
 def main():
 	try:
@@ -26,14 +42,28 @@ def main():
 							help='Hamming distance between genomic footprint. Recommended when no copy-number information available (default: %(default)s',
 							required=False, default=True, type=bool)
 		parser.add_argument('--euclidian-distance',
-							help='Use euclidian distance for breakpoint matching (default: %(default)s', required=False,
+							help='Use euclidian distance for breakpoint-pair matching (default: %(default)s', required=False,
 							default=True, type=bool)
-		parser.add_argument('--relative-distance-score',
+		parser.add_argument('--euclidian-distance-threshold',
+							help='Distance threshold to accept two breakpoints-pairs as matched  (default: %(default)s)', required=False,
+							default=3000, type=float)
+		parser.add_argument('--relative-distance',
 							help='Relative distance score for breakpoint matching (default: %(default)s',
 							required=False,
 							default=True, type=bool)
+		parser.add_argument('--relative-distance-threshold',
+							help='Distance threshold to accept two breakpoints-pairs as matched  (default: %(default)s)',
+							required=False,
+							default=0.3, type=float)
+
 		args = parser.parse_args()
-		print(args)
+		dict_configs = config(args)
+		metrics.compare_cycles(args.first_structure,
+							   args.second_structure,
+							   args.outdir,
+							   dict_configs)
+
+
 	except Exception:
 		traceback.print_exc()
 
