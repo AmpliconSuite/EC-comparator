@@ -2,13 +2,17 @@ import collections
 import math
 import pandas as pd
 import numpy as np
-from scipy.spatial.distance import cosine
+from sklearn.metrics.pairwise import cosine_similarity
+import sklearn.metrics.pairwise as skl
+from sklearn import preprocessing
+
 from pybedtools import BedTool
 import pyranges as pr
 import networkx as nx
 
 from utils import HEADER as h
 from utils import PROPS as p
+
 
 def read_input(t_file, r_file):
 	"""
@@ -265,6 +269,7 @@ def get_cos_similarity_cn(e1, e2):
 	"""
 	pass
 
+
 def get_hamming_score(e1, e2, bins):
 	"""
 	Compute hamming distance between the two reconstructions
@@ -324,6 +329,24 @@ def euclidian_distance(a, b, x, y):
 	return math.sqrt((a - x) ** 2 + (b - y) ** 2)
 
 
+def euclidian_distance_norm_l2(a, b, x, y):
+	v1 = np.array([[a, b]])
+	v2 = np.array([[x, y]])
+	v1_norm = preprocessing.normalize(v1, norm='l2')
+	v2_norm = preprocessing.normalize(v2, norm='l2')
+	print(v1_norm, v2_norm)
+	return skl.euclidean_distances(v1_norm, v2_norm)
+
+
+def euclidian_distance_norm_l1(a, b, x, y):
+	v1 = np.array([[a, b]])
+	v2 = np.array([[x, y]])
+	v1_norm = preprocessing.normalize(v1, norm='l1')
+	v2_norm = preprocessing.normalize(v2, norm='l1')
+	print(v1_norm, v2_norm)
+	return skl.euclidean_distances(v1_norm, v2_norm)
+
+
 def auc_triangle(a, b, x, y):
 	return abs(a - x) * abs(b - y) / 2
 
@@ -352,23 +375,21 @@ def match_score(a, b, x, y):
 		score
 	"""
 
-	v1 = np.array([a - x,
-				   a - b,
-				   a - y])
-	v2 = np.array([x - a,
-				   x - b,
-				   x - y])
-	v3 = np.array([b - a,
-				   b - x,
-				   b - y])
-	v4 = np.array([y - a,
-				   y - x,
-				   y - b])
-	### the implementation of scipy.spatial.distance.cosine is
-	### 1 - dot(A,B)/||A||*||B|| so this is something we dont want
-	### we revert results by subtracting 1
-	cos1 =  (1-cosine(v1, v2))
-	cos2 = (1-cosine(v3, v4))
+	v1 = np.array([[a - x,
+					a - b,
+					a - y]])
+	v2 = np.array([[x - a,
+					x - b,
+					x - y]])
+	v3 = np.array([[b - a,
+					b - x,
+					b - y]])
+	v4 = np.array([[y - a,
+					y - x,
+					y - b]])
+
+	cos1 = cosine_similarity(v1, v2)
+	cos2 = cosine_similarity(v3, v4)
 
 	# return (cos1 + cos2) / 2
 	return 1 - abs((cos1 + cos2) / 2)
@@ -408,9 +429,12 @@ def create_bipartite_graph(br_t, br_r, dist="euclidian"):
 	edges weighted by the distance (cost) between the pairs)
 	"""
 	m = create_cost_matrix(br_t, br_r, dist=dist)
+	print("m=")
+	print(m)
+
 	visited_nodes = collections.defaultdict(list)
 
-	true_nodes = {"t"+str(v):v for v in range(0, m.shape[0])}
+	true_nodes = {"t" + str(v): v for v in range(0, m.shape[0])}
 	reconstruct_nodes = {"r" + str(v): v for v in range(0, m.shape[1])}
 
 	threshold = dict_distance_paired_breakpoints_thresholds[dist]
@@ -419,17 +443,16 @@ def create_bipartite_graph(br_t, br_r, dist="euclidian"):
 	for k in true_nodes:
 		for l in reconstruct_nodes:
 			# exclude if distance larger then this
-			if m[true_nodes[k],reconstruct_nodes[l]] <= threshold:
-
+			if m[true_nodes[k], reconstruct_nodes[l]] <= threshold:
 				# print()
 				# print("included")
 				# print(true_nodes[k],reconstruct_nodes[l])
-				list_of_tuples.append((k,l,m[true_nodes[k],reconstruct_nodes[l]]))
+				list_of_tuples.append((k, l, m[true_nodes[k], reconstruct_nodes[l]]))
 				visited_nodes[k].append(l)
-			# else:
-			# 	print()
-			# 	print("not included")
-			# 	print(true_nodes[k], reconstruct_nodes[l])
+		# else:
+		# 	print()
+		# 	print("not included")
+		# 	print(true_nodes[k], reconstruct_nodes[l])
 
 	# add minimal amount of edges which will make the graph connected
 	max_degree = 0
@@ -468,15 +491,10 @@ def find_matching_breakpoints(G, br_t, br_r, t_nodes, r_nodes):
 			id_pair_r = r_nodes[matches[k]]
 			# x1,y1 = br_t.loc[id_pair_t, h.START], br_t.loc[id_pair_t, h.END]
 			# x2,y2 = br_r.loc[id_pair_r, h.START], br_r.loc[id_pair_r, h.END]
-			breakpoint_match.append((id_pair_t,id_pair_r, G.get_edge_data(k, matches[k])['weight']))
-			# breakpoint_match.append((y1, y2))
+			breakpoint_match.append((id_pair_t, id_pair_r, G.get_edge_data(k, matches[k])['weight']))
+		# breakpoint_match.append((y1, y2))
 	return matches, breakpoint_match
 
-
-
-
-def d1(t_collection, r_collection, sorted_bins, hamming=False):
-	pass
 
 def compare_cycles(t_file, r_file, hamming=True, viz=False):
 	"""
@@ -495,7 +513,7 @@ def compare_cycles(t_file, r_file, hamming=True, viz=False):
 
 	# 2. Compute hamming distance and others
 
-	# 3. Compute copy-number
+	# 3. Compute copy-number similarity
 
 	# 4. Breakpoint matching
 
@@ -506,8 +524,6 @@ def compare_cycles(t_file, r_file, hamming=True, viz=False):
 	# 7. Merge results
 
 
-
-
 # distance for the copy-number profile
 dict_distance_function = {"hamming": get_hamming_score,
 						  "hamming_norm": get_hamming_score_norm,
@@ -516,6 +532,8 @@ dict_distance_function = {"hamming": get_hamming_score,
 # distance between paired breapoints
 dict_distance_paired_breakpoints = {
 	"euclidian": euclidian_distance,
+	"euclidian_norm_l1": euclidian_distance_norm_l1,
+	"euclidian_norm_l2": euclidian_distance_norm_l2,
 	# "auc_triangle": auc_triangle,
 	# "auc_trapeze": auc_trapeze,
 	# "match_angle": match_angle,
@@ -524,6 +542,8 @@ dict_distance_paired_breakpoints = {
 
 dict_distance_paired_breakpoints_thresholds = {
 	"euclidian": 3000,
+	"euclidian_norm_l1": 0.3,
+	"euclidian_norm_l2": 0.3,
 	"auc_triangle": 500000,
 	"auc_trapeze": 50000,
 	"match_angle": 1.2,

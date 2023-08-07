@@ -7,7 +7,7 @@ with open("requirements.txt", "r", encoding="utf-8") as f:
 	required = f.read().splitlines()
 
 setuptools.setup(
-	name="ecdna-cycle-comparison",
+	name="AmpliconComparison",
 	version="0.0.1",
 	author="",
 	author_email="",
