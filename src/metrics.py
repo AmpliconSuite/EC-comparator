@@ -622,7 +622,7 @@ def compare_cycles(t_file: str, r_file: str, outdir: str,  dict_configs: dict):
 	bins = bin_genome(df_t, df_r)
 
 	# as pyranges objects
-	df_t_pr, df_r_pr, df_bins_pr = read_pyranges(t_file, r_file, bins)
+	df_t_pr, df_r_pr, df_bins_pr = read_pyranges(df_t, df_r, bins)
 
 	# 2. Compute hamming distance and others
 	h = get_hamming_score(df_t_pr, df_r_pr, df_bins_pr)
