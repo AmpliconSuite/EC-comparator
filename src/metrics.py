@@ -1,7 +1,11 @@
+import os
 import collections
 import math
+import json
 import pandas as pd
 import numpy as np
+from copy import deepcopy
+
 from sklearn.metrics.pairwise import cosine_similarity
 import sklearn.metrics.pairwise as skl
 from sklearn import preprocessing
@@ -68,6 +72,39 @@ def bin_genome(t_collection, r_collection, margin_size=10000):
 	df_bins = df_bins[(df_bins["#chr"] == df_bins["#chr2"]) & (df_bins["len"] > 0)]
 
 	return df_bins[["#chr", "start", "end", "len"]]
+
+def rename_columns(df_cols):
+	"""
+	Try to rename columns so that it matched the PyRanges nomenclature
+	"""
+	dict_newcols = {}
+	for c in df_cols:
+		if c in p.DICT_COLS:
+			dict_newcols[c] = p.DICT_COLS[c]
+		else:
+			dict_newcols[c] = c
+	return dict_newcols
+
+def read_pyranges(df_t, df_r, bins):
+	"""
+	Load data as pyranges
+	"""
+
+	# df_t_pr = pr.read_bed(t_file, as_df=False, nrows=None)
+	# df_r_pr = pr.read_bed(r_file, as_df=False, nrows=None)
+
+	df_t_pr = deepcopy(df_t)
+	df_r_pr = deepcopy(df_r)
+
+	# rename columns
+	df_t_pr.rename(columns=rename_columns(df_t_pr.columns.tolist()), errors="raise", inplace=True)
+	df_r_pr.rename(columns=rename_columns(df_r_pr.columns.tolist()), errors="raise", inplace=True)
+
+	df_bins_copy = deepcopy(bins)
+	df_bins_copy.columns = ["Chromosome", "Start", "End", "len"]
+	df_bins_pr = pr.PyRanges(df_bins_copy)
+
+	return df_t_pr, df_r_pr, df_bins_pr
 
 
 def get_bin_len(s_bins):
@@ -242,13 +279,16 @@ def get_feature_cn(cycle_fragments, bins):
 	b = BedTool.from_dataframe(bins)
 
 	overlap = b.window(a, w=10).overlap(cols=[START_A, END_A, START_B, END_B])
-	overlap.columns = ["#chr", "start", "end", "len", "#chr_frag", "start_frag", "stop_frag", "circ_id", "cn", "strand",
-					   "overlap"]
+	overlap.columns = ["#chr", "start", "end", "len", "#chr_frag", "start_frag", "stop_frag",
+					   "circ_id", "cn", "strand","overlap"]
 
 	overlap = overlap.to_dataframe()
 	# ['chrom', 'start', 'end', 'name', 'score', 'strand', 'thickStart', 'thickEnd', 'itemRgb', 'blockCount', 'blockSizes']
 	overlap.columns = ["#chr", "start", "end", "len", "#chr_frag", "start_frag", "stop_frag", "circ_id", "cn", "strand",
 					   "overlap"]
+
+	print("###@@@@")
+	print(overlap.head())
 
 	# convert to numeric
 	cols = ["start", "end", "cn", "overlap"]
@@ -335,6 +375,17 @@ def euclidian_distance_norm_l2(a, b, x, y):
 	v2 = np.array([[x, y]])
 	v1_norm = preprocessing.normalize(v1, norm='l2')
 	v2_norm = preprocessing.normalize(v2, norm='l2')
+
+	print("----")
+	print("v1")
+	print(v1)
+	print(v1_norm)
+	print("-----")
+	print("v2")
+	print(v2)
+	print(v2_norm)
+	print("-----")
+
 	return skl.euclidean_distances(v1_norm, v2_norm)
 
 
@@ -438,12 +489,13 @@ def create_cost_matrix(br_t, br_r, unmatched, dist="euclidian"):
 		for j in range(0, br_r.shape[0]):
 
 			# compute distance between breakpoint only for those who are not too far away
-			if not is_unmatched(br_t.loc[i, :], br_t.loc[j, :], unmatched):
+			if not is_unmatched(br_t.loc[i, :], br_r.loc[j, :], unmatched):
 				m[i, j] = dict_distance_paired_breakpoints[dist](br_t.loc[i, h.START], br_t.loc[i, h.END],
 																 br_r.loc[j, h.START], br_r.loc[j, h.END])
 			else:
 				m[i, j] = p.INF
 
+	print(m)
 	return m
 
 
@@ -538,9 +590,15 @@ def compute_breakpoint_similarity(df_t, df_r, unmatched=10000, distance="euclidi
 
 	# get matches
 	matches, breakpoint_match = find_matching_breakpoints(G, br_t, br_r, t_nodes, r_nodes)
+	print(matches)
+	print(breakpoint_match)
 
+	# compute jaccard index
+	jd = len(matches) / (len(br_t) + len(br_r) - len(matches))
 
-def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
+	return jd
+
+def compare_cycles(t_file: str, r_file: str, outdir: str,  dict_configs: dict):
 	"""
 	Entrypoint: compare the distance between two cycle sets.
 	Args:
@@ -554,23 +612,47 @@ def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
 	Returns:
 		Dictionary with different distances
 	"""
+	dict_metrics = {}
+	dict_metrics["configs"] = dict_configs
 
-	print(dict_configs)
+	# 1. Genome binning based on the breakpoints union
 
+	# as data.frame objects
+	df_t, df_r = read_input(t_file, r_file)
+	bins = bin_genome(df_t, df_r)
 
-# 1. Genome binning based on the breakpoints union
+	# as pyranges objects
+	df_t_pr, df_r_pr, df_bins_pr = read_pyranges(t_file, r_file, bins)
 
-# 2. Compute hamming distance and others
+	# 2. Compute hamming distance and others
+	h = get_hamming_score(df_t_pr, df_r_pr, df_bins_pr)
+	h_norm = get_hamming_score_norm(df_t_pr, df_r_pr, df_bins_pr)
+	overlap = get_overlap_score_weighted(df_t_pr, df_r_pr, df_bins_pr)
 
-# 3. Compute copy-number similarity
+	dict_metrics[ddt.HAMMING]=h
+	dict_metrics[ddt.HAMMING_NORM]=h_norm
+	dict_metrics[ddt.OVERLAP]=overlap
 
-# 4. Breakpoint matching
+	# 3. Compute copy-number similarity
+	cv_profile_t = get_feature_cn(df_t, bins)
+	cv_profile_r = get_feature_cn(df_r, bins)
 
-# 5. Penalize for cycles multiplicity (if the tool decompose in one or more cycles)
+	cv_similarity = cosine_similarity(cv_profile_t, cv_profile_r)
+	dict_metrics[ddt.COSINE_SIMILARITY] = cv_similarity
 
-# 6. Stoichiometry (compute distance of transforming one permutation in the other)
+	# 4. Breakpoint matching
 
-# 7. Merge results
+	# 5. Penalize for cycles multiplicity (if the tool decompose in one or more cycles)
+
+	# 6. Stoichiometry (compute distance of transforming one permutation in the other)
+
+	# 7. Merge results
+
+	# 8. Output
+	with open(os.path.join(outdir,'metrics.json', 'w', encoding='utf-8')) as f:
+		json.dump(dict_metrics, f, ensure_ascii=False, indent=4)
+	cv_profile_r.to_csv(os.path.join(outdir,'e2_coverage_profile.txt'),header=True,index=False,sep="\t")
+	cv_profile_t.to_csv(os.path.join(outdir,'e1_coverage_profile.txt'), header=True, index=False, sep="\t")
 
 
 # distance for the copy-number profile
@@ -581,7 +663,7 @@ dict_distance_function = {ddt.HAMMING: get_hamming_score,
 # distance between paired breapoints
 dict_distance_paired_breakpoints = {
 	ddt.EUCLIDIAN: euclidian_distance,
-	ddt.EUCLIDIAN_NORM_L1: euclidian_distance_norm_l1,
+	# ddt.EUCLIDIAN_NORM_L1: euclidian_distance_norm_l1,
 	ddt.EUCLIDIAN_NORM_L2: euclidian_distance_norm_l2,
 	# "auc_triangle": auc_triangle,
 	# "auc_trapeze": auc_trapeze,

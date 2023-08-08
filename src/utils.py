@@ -25,6 +25,14 @@ class PROPS:
 	# compute similarity
 	INF = 3000000000
 
+	DICT_COLS = {"#chr":"Chromosome",
+				 "bin":"Chromosome",
+				 "start":"Start",
+				 "end":"End",
+				 "stop":"End",
+				 "orientation":"Strand",
+				 "strand":"Strand"}
+
 class DDT:
 	EUCLIDIAN = 'euclidian'
 	EUCLIDIAN_THRESHOLD = 3000
@@ -53,3 +61,5 @@ class DDT:
 	HAMMING = 'hamming'
 	HAMMING_NORM = 'hamming_norm'
 	OVERLAP = 'overlap'
+
+	COSINE_SIMILARITY = 'cosine_similarity'
