@@ -25,13 +25,27 @@ class PROPS:
 	# compute similarity
 	INF = 3000000000
 
-	DICT_COLS = {"#chr":"Chromosome",
-				 "bin":"Chromosome",
-				 "start":"Start",
-				 "end":"End",
-				 "stop":"End",
-				 "orientation":"Strand",
-				 "strand":"Strand"}
+	DICT_COLS = {"#chr":"chromosome",
+				 "bin":"chromosome",
+				 "start":"start",
+				 "end":"end",
+				 "stop":"end",
+				 "orientation":"stranded",
+				 "strand":"stranded"}
+	COLS_TOKEEP_SORTED = ["#chr_frag", "start_frag", "stop_frag", "circ_id", "cn", "strand"]
+	DICT_COLS_TOKEEP = {"#chr":"#chr_frag",
+						"chromosome": "#chr_frag",
+						"start": "start_frag",
+						"stop": "stop_frag",
+						"end": "stop_frag",
+						"circ_id": "circ_id",
+						"cycle_id": "circ_id",
+						"weight": "cn",
+						"score": "cn",
+						"proportions": "cn",
+						"strand":"strand",
+						"orientation":"strand"
+						}
 
 class DDT:
 	EUCLIDIAN = 'euclidian'

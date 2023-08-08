@@ -85,20 +85,20 @@ def rename_columns(df_cols):
 			dict_newcols[c] = c
 	return dict_newcols
 
-def read_pyranges(df_t, df_r, bins):
+def read_pyranges(t_file, r_file, bins):
 	"""
 	Load data as pyranges
 	"""
 
-	# df_t_pr = pr.read_bed(t_file, as_df=False, nrows=None)
-	# df_r_pr = pr.read_bed(r_file, as_df=False, nrows=None)
+	df_t_pr = pr.read_bed(t_file, as_df=False, nrows=None)
+	df_r_pr = pr.read_bed(r_file, as_df=False, nrows=None)
 
-	df_t_pr = deepcopy(df_t)
-	df_r_pr = deepcopy(df_r)
-
-	# rename columns
-	df_t_pr.rename(columns=rename_columns(df_t_pr.columns.tolist()), errors="raise", inplace=True)
-	df_r_pr.rename(columns=rename_columns(df_r_pr.columns.tolist()), errors="raise", inplace=True)
+	# df_t_pr = deepcopy(df_t)
+	# df_r_pr = deepcopy(df_r)
+	#
+	# # rename columns
+	# df_t_pr.rename(columns=rename_columns(df_t_pr.columns.tolist()), errors="raise", inplace=True)
+	# df_r_pr.rename(columns=rename_columns(df_r_pr.columns.tolist()), errors="raise", inplace=True)
 
 	df_bins_copy = deepcopy(bins)
 	df_bins_copy.columns = ["Chromosome", "Start", "End", "len"]
@@ -275,7 +275,22 @@ def get_feature_cn(cycle_fragments, bins):
 	END_A = 3
 	START_B = 6
 	END_B = 7
-	a = BedTool.from_dataframe(cycle_fragments)
+
+	# specify which column to keep
+	cols = cycle_fragments.columns.tolist()
+	tokeep = []
+	for c in p.COLS_TOKEEP_SORTED:
+		found = 0
+		for c_map in cols:
+			if c_map in p.DICT_COLS_TOKEEP and p.DICT_COLS_TOKEEP[c_map] == c:
+				tokeep.append(c_map)
+				found = 1
+				break
+		if found == 0:
+			raise ValueError("Column name could not be mapped. ",c)
+	print("columns to keep", tokeep)
+
+	a = BedTool.from_dataframe(cycle_fragments[tokeep])
 	b = BedTool.from_dataframe(bins)
 
 	overlap = b.window(a, w=10).overlap(cols=[START_A, END_A, START_B, END_B])
@@ -622,7 +637,7 @@ def compare_cycles(t_file: str, r_file: str, outdir: str,  dict_configs: dict):
 	bins = bin_genome(df_t, df_r)
 
 	# as pyranges objects
-	df_t_pr, df_r_pr, df_bins_pr = read_pyranges(df_t, df_r, bins)
+	df_t_pr, df_r_pr, df_bins_pr = read_pyranges(t_file, r_file, bins)
 
 	# 2. Compute hamming distance and others
 	h = get_hamming_score(df_t_pr, df_r_pr, df_bins_pr)
