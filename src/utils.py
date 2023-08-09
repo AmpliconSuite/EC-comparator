@@ -1,6 +1,19 @@
 """
 Constants and other settings
 """
+import json
+import numpy as np
+
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NpEncoder, self).default(obj)
+
 
 class HEADER:
 	CIRC_ID = "circ_id"
@@ -11,6 +24,25 @@ class HEADER:
 	CN = "estimated_cn"
 	CHR1 = "chr1"
 	CHR2 = "chr2"
+	LEN = "len"
+
+	HEADER_SORTED = [CHR, START, END, CIRC_ID, CN, STRAND]
+	DICT_HEADER = {"#chr": CHR,
+				   "chr": CHR,
+				   "chromosome": CHR,
+				   "start": START,
+				   "stop": END,
+				   "end": END,
+				   "circ_id": CIRC_ID,
+				   "cycle_id": CIRC_ID,
+				   "weight": CN,
+				   "score": CN,
+				   "proportions": CN,
+				   "estimated_cn": CN,
+				   "cn": CN,
+				   "strand": STRAND,
+				   "orientation": STRAND}
+
 
 class PROPS:
 

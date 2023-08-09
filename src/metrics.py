@@ -14,76 +14,116 @@ from pybedtools import BedTool
 import pyranges as pr
 import networkx as nx
 
-from utils import HEADER as h
+from utils import HEADER as ht
 from utils import PROPS as p
 from utils import DDT as ddt
+from utils import NpEncoder
 
+def rename_columns(df_cols, dict_mapping_cols):
+	"""
+	Try to rename columns so that it matched the naming
+	"""
+	dict_newcols = {}
+	for c in df_cols:
+		if c in dict_mapping_cols:
+			dict_newcols[c] = dict_mapping_cols[c]
+		else:
+			dict_newcols[c] = c
+	return dict_newcols
 
 def read_input(t_file, r_file):
 	"""
 	Read input true and reconstruct file
 	"""
 	dtype = {'#chr': 'str',
+			 'chr': 'str',
 			 'start': 'int',
 			 'end': 'int',
 			 'circ_id': 'str',
+			 'cycle_id': 'str',
+			 'weight': 'double',
+			 'score': 'double',
 			 'estimated_cn': 'double',
-			 'strand': 'str'}
+			 'strand': 'str',
+			 'orientation':str}
 
 	t_collection = pd.read_csv(t_file, header=0, sep="\t", dtype=dtype)
 	r_collection = pd.read_csv(r_file, header=0, sep="\t", dtype=dtype)
 
-	return t_collection, r_collection
+	# rename columns and check if all columns available
+	t_collection.rename(columns=rename_columns(t_collection.columns.tolist(), ht.DICT_HEADER), errors="raise", inplace=True)
+	r_collection.rename(columns=rename_columns(r_collection.columns.tolist(), ht.DICT_HEADER), errors="raise", inplace=True)
 
+	# reorder columns
+	lorder = ht.HEADER_SORTED
+	for h in t_collection.columns.tolist():
+		if h not in lorder:
+			lorder.append(h)
+
+	return t_collection[lorder], r_collection[lorder]
+
+
+# def bin_genome(t_collection, r_collection, margin_size=10000):
+# 	"""
+# 	Bin the intervals by the breakpoints union.
+# 	"""
+# 	df_bins = pd.DataFrame(np.concatenate((t_collection[[ht.CHR, ht.START]].values,
+# 										   t_collection[[ht.CHR, ht.END]].values,
+# 										   r_collection[[ht.CHR, ht.START]].values,
+# 										   r_collection[[ht.CHR, ht.END]].values),
+# 										  axis=0))
+#
+# 	df_bins.columns = [ht.CHR, ht.START]
+# 	df_bins_gr = df_bins.groupby([ht.CHR]).agg({ht.START: [np.min, np.max]}).reset_index()
+# 	df_bins_gr.columns = [ht.CHR, "start_amin", "start_amax"]
+# 	df_bins_gr["start_amin"] = df_bins_gr.apply(lambda x: max(0, x["start_amin"] - margin_size), axis=1)
+# 	df_bins_gr["start_amax"] = df_bins_gr.apply(lambda x: x["start_amax"] + margin_size, axis=1)
+#
+# 	df_bins = pd.concat([df_bins, df_bins_gr[[ht.CHR, "start_amin"]].rename(columns={"start_amin": ht.START})],ignore_index=True)
+# 	df_bins = pd.concat([df_bins, df_bins_gr[[ht.CHR, "start_amax"]].rename(columns={"start_amax": ht.START})],ignore_index=True)
+# 	df_bins = df_bins.sort_values(by=[ht.CHR, ht.START]).drop_duplicates()
+#
+# 	# rotate with 1 up the start column
+# 	df_bins_suffix = df_bins.tail(-1)
+# 	df_bins_suffix = df_bins_suffix.append((df_bins.head(1)), ignore_index=True)
+#
+# 	df_bins.reset_index(drop=True, inplace=True)
+# 	df_bins_suffix.reset_index(drop=True, inplace=True)
+# 	df_bins = pd.concat([df_bins, df_bins_suffix], axis=1, ignore_index=True)
+# 	df_bins.columns = [ht.CHR, ht.START, "#chr2", ht.END]
+# 	df_bins[ht.LEN] = df_bins[ht.END].astype(int) - df_bins[ht.START].astype(int)
+#
+# 	# keep only rows with same chr and positive distance
+# 	df_bins = df_bins[(df_bins[ht.CHR] == df_bins["#chr2"]) & (df_bins[ht.LEN] > 0)]
+#
+# 	return df_bins[[ht.CHR, ht.START, ht.END, ht.LEN]]
 
 def bin_genome(t_collection, r_collection, margin_size=10000):
 	"""
 	Bin the intervals by the breakpoints union.
 	"""
-	df_bins = pd.DataFrame(np.concatenate((t_collection[["#chr", "start"]].values,
-										   t_collection[["#chr", "end"]].values,
-										   r_collection[["#chr", "start"]].values,
-										   r_collection[["#chr", "end"]].values),
+	df_bins = pd.DataFrame(np.concatenate((t_collection[[ht.CHR, ht.START]].values,
+										   t_collection[[ht.CHR, ht.END]].values,
+										   r_collection[[ht.CHR, ht.START]].values,
+										   r_collection[[ht.CHR, ht.END]].values),
 										  axis=0))
-
-	df_bins.columns = ["#chr", "start"]
-	df_bins_gr = df_bins.groupby(["#chr"]).agg({"start": [np.min, np.max]}).reset_index()
-	df_bins_gr.columns = ["#chr", "start_amin", "start_amax"]
-	df_bins_gr["start_amin"] = df_bins_gr.apply(lambda x: max(0, x["start_amin"] - margin_size), axis=1)
-	df_bins_gr["start_amax"] = df_bins_gr.apply(lambda x: x["start_amax"] + margin_size, axis=1)
-
-	df_bins = pd.concat([df_bins, df_bins_gr[["#chr", "start_amin"]].rename(columns={"start_amin": 'start'})],
-						ignore_index=True)
-	df_bins = pd.concat([df_bins, df_bins_gr[["#chr", "start_amax"]].rename(columns={"start_amax": 'start'})],
-						ignore_index=True)
-	df_bins = df_bins.sort_values(by=["#chr", "start"]).drop_duplicates()
+	df_bins.columns = [ht.CHR, ht.START]
+	df_bins = df_bins.sort_values(by=[ht.CHR, ht.START]).drop_duplicates()
 
 	# rotate with 1 up the start column
 	df_bins_suffix = df_bins.tail(-1)
-	df_bins_suffix = df_bins_suffix.append((df_bins.head(1)), ignore_index=True)
+	df_bins_suffix = df_bins_suffix.append(df_bins.head(1), ignore_index=True)
 
 	df_bins.reset_index(drop=True, inplace=True)
 	df_bins_suffix.reset_index(drop=True, inplace=True)
 	df_bins = pd.concat([df_bins, df_bins_suffix], axis=1, ignore_index=True)
-	df_bins.columns = ["#chr", "start", "#chr2", "end"]
-	df_bins["len"] = df_bins["end"].astype(int) - df_bins["start"].astype(int)
+	df_bins.columns = [ht.CHR, ht.START, "#chr2", ht.END]
+	df_bins[ht.LEN] = df_bins[ht.END].astype(int) - df_bins[ht.START].astype(int)
 
 	# keep only rows with same chr and positive distance
-	df_bins = df_bins[(df_bins["#chr"] == df_bins["#chr2"]) & (df_bins["len"] > 0)]
+	df_bins = df_bins[(df_bins[ht.CHR] == df_bins["#chr2"]) & (df_bins[ht.LEN] > 0)]
 
-	return df_bins[["#chr", "start", "end", "len"]]
-
-def rename_columns(df_cols):
-	"""
-	Try to rename columns so that it matched the PyRanges nomenclature
-	"""
-	dict_newcols = {}
-	for c in df_cols:
-		if c in p.DICT_COLS:
-			dict_newcols[c] = p.DICT_COLS[c]
-		else:
-			dict_newcols[c] = c
-	return dict_newcols
+	return df_bins[[ht.CHR, ht.START, ht.END, ht.LEN]]
 
 def read_pyranges(t_file, r_file, bins):
 	"""
@@ -97,8 +137,8 @@ def read_pyranges(t_file, r_file, bins):
 	# df_r_pr = deepcopy(df_r)
 	#
 	# # rename columns
-	# df_t_pr.rename(columns=rename_columns(df_t_pr.columns.tolist()), errors="raise", inplace=True)
-	# df_r_pr.rename(columns=rename_columns(df_r_pr.columns.tolist()), errors="raise", inplace=True)
+	# df_t_pr.rename(columns=rename_columns(df_t_pr.columns.tolist(), p.DICT_COLS_TOKEEP), errors="raise", inplace=True)
+	# df_r_pr.rename(columns=rename_columns(df_r_pr.columns.tolist(), p.DICT_COLS_TOKEEP), errors="raise", inplace=True)
 
 	df_bins_copy = deepcopy(bins)
 	df_bins_copy.columns = ["Chromosome", "Start", "End", "len"]
@@ -124,14 +164,14 @@ def transform_fragments2breakpoints(df_cycle):
 		list of tuples
 	"""
 	breakpoints = pd.DataFrame(columns=["chr1", "start", "chr2", "end", "idx1", "idx2", "strand", "circ_id"])
-	circ_id = df_cycle[h.CIRC_ID].drop_duplicates().tolist()
-	circ_len = df_cycle[[h.CIRC_ID, h.START]].groupby(h.CIRC_ID).count().reset_index()
-	circ_len.columns = ["circ_id", "count"]
+	circ_id = df_cycle[ht.CIRC_ID].drop_duplicates().tolist()
+	circ_len = df_cycle[[ht.CIRC_ID, ht.START]].groupby(ht.CIRC_ID).count().reset_index()
+	circ_len.columns = [ht.CIRC_ID, "count"]
 
 	for c in circ_id:
-		df_temp = df_cycle[df_cycle[h.CIRC_ID] == c]
+		df_temp = df_cycle[df_cycle[ht.CIRC_ID] == c]
 		df_idex = df_temp.index.tolist()
-		l = circ_len[circ_len["circ_id"] == c].iloc[0, 1]
+		l = circ_len[circ_len[ht.CIRC_ID] == c].iloc[0, 1]
 		for i in range(0, l):
 			row1 = df_temp.iloc[i, :]
 			row2 = df_temp.iloc[(i + 1) % l, :]
@@ -144,80 +184,80 @@ def transform_fragments2breakpoints(df_cycle):
 			idx1 = None
 			idx2 = None
 
-			if row1[h.STRAND] == "+" and row2[h.STRAND] == "+":
+			if row1[ht.STRAND] == "+" and row2[ht.STRAND] == "+":
 
-				if row1[h.END] < row2[h.START]:
-					chr1 = row1[h.CHR]
-					chr2 = row2[h.CHR]
-					start = row1[h.END]
-					end = row2[h.START]
-					strand = "".join([row1[h.STRAND], row2[h.STRAND]])
+				if row1[ht.END] < row2[ht.START]:
+					chr1 = row1[ht.CHR]
+					chr2 = row2[ht.CHR]
+					start = row1[ht.END]
+					end = row2[ht.START]
+					strand = "".join([row1[ht.STRAND], row2[ht.STRAND]])
 					idx1 = df_idex[i]
 					idx2 = df_idex[(i + 1) % l]
 				else:
-					chr1 = row2[h.CHR]
-					chr2 = row1[h.CHR]
-					start = row2[h.START]
-					end = row1[h.END]
-					strand = "".join([row2[h.STRAND], row1[h.STRAND]])
+					chr1 = row2[ht.CHR]
+					chr2 = row1[ht.CHR]
+					start = row2[ht.START]
+					end = row1[ht.END]
+					strand = "".join([row2[ht.STRAND], row1[ht.STRAND]])
 					idx2 = df_idex[i]
 					idx1 = df_idex[(i + 1) % l]
 
 
-			elif row1[h.STRAND] == "+" and row2[h.STRAND] == "-":
+			elif row1[ht.STRAND] == "+" and row2[ht.STRAND] == "-":
 
-				if row1[h.END] < row2[h.END]:
-					chr1 = row1[h.CHR]
-					chr2 = row2[h.CHR]
-					start = row1[h.END]
-					end = row2[h.END]
-					strand = "".join([row1[h.STRAND], row2[h.STRAND]])
+				if row1[ht.END] < row2[ht.END]:
+					chr1 = row1[ht.CHR]
+					chr2 = row2[ht.CHR]
+					start = row1[ht.END]
+					end = row2[ht.END]
+					strand = "".join([row1[ht.STRAND], row2[ht.STRAND]])
 					idx1 = df_idex[i]
 					idx2 = df_idex[(i + 1) % l]
 				else:
-					chr1 = row2[h.CHR]
-					chr2 = row1[h.CHR]
-					start = row2[h.END]
-					end = row1[h.END]
-					strand = "".join([row2[h.STRAND], row1[h.STRAND]])
+					chr1 = row2[ht.CHR]
+					chr2 = row1[ht.CHR]
+					start = row2[ht.END]
+					end = row1[ht.END]
+					strand = "".join([row2[ht.STRAND], row1[ht.STRAND]])
 					idx2 = df_idex[i]
 					idx1 = df_idex[(i + 1) % l]
 
-			elif row1[h.STRAND] == "-" and row2[h.STRAND] == "-":
+			elif row1[ht.STRAND] == "-" and row2[ht.STRAND] == "-":
 
-				if row1[h.START] < row2[h.END]:
-					chr1 = row1[h.CHR]
-					chr2 = row2[h.CHR]
-					start = row1[h.START]
-					end = row2[h.END]
-					strand = "".join([row1[h.STRAND], row2[h.STRAND]])
+				if row1[ht.START] < row2[ht.END]:
+					chr1 = row1[ht.CHR]
+					chr2 = row2[ht.CHR]
+					start = row1[ht.START]
+					end = row2[ht.END]
+					strand = "".join([row1[ht.STRAND], row2[ht.STRAND]])
 					idx1 = df_idex[i]
 					idx2 = df_idex[(i + 1) % l]
 				else:
-					chr1 = row2[h.CHR]
-					chr2 = row1[h.CHR]
-					start = row2[h.END]
-					end = row1[h.START]
-					strand = "".join([row2[h.STRAND], row1[h.STRAND]])
+					chr1 = row2[ht.CHR]
+					chr2 = row1[ht.CHR]
+					start = row2[ht.END]
+					end = row1[ht.START]
+					strand = "".join([row2[ht.STRAND], row1[ht.STRAND]])
 					idx2 = df_idex[i]
 					idx1 = df_idex[(i + 1) % l]
 
-			elif row1[h.STRAND] == "-" and row2[h.STRAND] == "+":
+			elif row1[ht.STRAND] == "-" and row2[ht.STRAND] == "+":
 
-				if row1[h.START] < row2[h.START]:
-					chr1 = row1[h.CHR]
-					chr2 = row2[h.CHR]
-					start = row1[h.START]
-					end = row2[h.START]
-					strand = "".join([row1[h.STRAND], row2[h.STRAND]])
+				if row1[ht.START] < row2[ht.START]:
+					chr1 = row1[ht.CHR]
+					chr2 = row2[ht.CHR]
+					start = row1[ht.START]
+					end = row2[ht.START]
+					strand = "".join([row1[ht.STRAND], row2[ht.STRAND]])
 					idx1 = df_idex[i]
 					idx2 = df_idex[(i + 1) % l]
 				else:
-					chr1 = row2[h.CHR]
-					chr2 = row1[h.CHR]
-					start = row2[h.START]
-					end = row1[h.START]
-					strand = "".join([row2[h.STRAND], row1[h.STRAND]])
+					chr1 = row2[ht.CHR]
+					chr2 = row1[ht.CHR]
+					start = row2[ht.START]
+					end = row1[ht.START]
+					strand = "".join([row2[ht.STRAND], row1[ht.STRAND]])
 					idx2 = df_idex[i]
 					idx1 = df_idex[(i + 1) % l]
 
@@ -251,70 +291,86 @@ def get_breakpoints_pairs(df_t, df_r):
 	return br_t, br_r
 
 
-def get_feature_cn(cycle_fragments, bins):
+def get_feature_cn(df_cycles, bins):
 	"""
-	Get the structure copy-number binned using defined intervals
-
-	Args:
-		cycle_fragments (pd.DataFrame): Contains the fragments intervals of the reconstruction
-										Example
-										+--------------+-----------+-----------+-----------+-----------+--------------+
-										| Chromosome   |     Start |       End |   Circ_id |    CN     |  Strand      |
-										| (category)   |   (int64) |   (int64) |   (int64) |   (int64) | (category)   |
-										|--------------+-----------+-----------+-----------+-----------+--------------|
-										| chr1         |      1000 |      2000 |         1 |        10 | +            |
-										| chr1         |      7000 |      8000 |         1 |        10 | +            |
-										| chr1         |      1500 |      2100 |         2 |        20 | +            |
-										| chr1         |       600 |      2500 |         1 |        10 | -            |
-										| chr1         |      9000 |     11100 |         2 |        20 | -            |
-										| chr2         |       100 |      2000 |         2 |        20 | +            |
-										+--------------+-----------+-----------+-----------+-----------+--------------+
-		bins (pd.DataFrame): Intervals how to bin the genome
+	Get copy-number binned using defined intervals
 	"""
-	START_A = 2
-	END_A = 3
-	START_B = 6
-	END_B = 7
 
-	# specify which column to keep
-	cols = cycle_fragments.columns.tolist()
-	tokeep = []
-	for c in p.COLS_TOKEEP_SORTED:
-		found = 0
-		for c_map in cols:
-			if c_map in p.DICT_COLS_TOKEEP and p.DICT_COLS_TOKEEP[c_map] == c:
-				tokeep.append(c_map)
-				found = 1
-				break
-		if found == 0:
-			raise ValueError("Column name could not be mapped. ",c)
-	print("columns to keep", tokeep)
+	a = BedTool.from_dataframe(bins[[ht.CHR, ht.START, ht.END]])
+	df_new = df_cycles[[ht.CHR, ht.START, ht.END, ht.CN]].sort_values(by=[ht.CHR, ht.START, ht.END]).groupby([ht.CHR, ht.START, ht.END]).sum().reset_index()
+	b = BedTool.from_dataframe(df_new[[ht.CHR, ht.START, ht.END, ht.CN]])
+	o1 = a.intersect(b, wo=True, loj=True).to_dataframe().iloc[:,[0,1,2,6]]
+	o1.columns = [ht.CHR, ht.START, ht.END, ht.CN]
+	o1.loc[o1[ht.CN] == ".", ht.CN] = 0
+	o1[ht.CN] = pd.to_numeric(o1[ht.CN])
+	o1 = o1.groupby([ht.CHR, ht.START, ht.END]).sum().reset_index()
 
-	a = BedTool.from_dataframe(cycle_fragments[tokeep])
-	b = BedTool.from_dataframe(bins)
+	return o1
 
-	overlap = b.window(a, w=10).overlap(cols=[START_A, END_A, START_B, END_B])
-	overlap.columns = ["#chr", "start", "end", "len", "#chr_frag", "start_frag", "stop_frag",
-					   "circ_id", "cn", "strand","overlap"]
-
-	overlap = overlap.to_dataframe()
-	# ['chrom', 'start', 'end', 'name', 'score', 'strand', 'thickStart', 'thickEnd', 'itemRgb', 'blockCount', 'blockSizes']
-	overlap.columns = ["#chr", "start", "end", "len", "#chr_frag", "start_frag", "stop_frag", "circ_id", "cn", "strand",
-					   "overlap"]
-
-	print("###@@@@")
-	print(overlap.head())
-
-	# convert to numeric
-	cols = ["start", "end", "cn", "overlap"]
-	overlap[cols] = overlap[cols].apply(pd.to_numeric, errors='coerce')
-
-	# compute the cummulative coverage
-	overlap["hit"] = overlap.apply(lambda x: 1 if abs(x['end'] - x['start']) == x["overlap"] else 0, axis=1)
-	overlap["coverage_norm"] = overlap.apply(lambda x: x['cn'] * x["overlap"], axis=1)
-	overlap["coverage_mean"] = overlap.apply(lambda x: x['cn'] * x["hit"], axis=1)
-	return overlap[["#chr", "start", "end", "len", "coverage_norm", "coverage_mean"]].groupby(
-		by=["#chr", "start", "end", "len"]).agg({'coverage_norm': 'sum', 'coverage_mean': 'sum'}).reset_index()
+#
+# def get_feature_cn(cycle_fragments, bins):
+# 	"""
+# 	Get the structure copy-number binned using defined intervals
+#
+# 	Args:
+# 		cycle_fragments (pd.DataFrame): Contains the fragments intervals of the reconstruction
+# 										Example
+# 										+--------------+-----------+-----------+-----------+-----------+--------------+
+# 										| Chromosome   |     Start |       End |   Circ_id |    CN     |  Strand      |
+# 										| (category)   |   (int64) |   (int64) |   (int64) |   (int64) | (category)   |
+# 										|--------------+-----------+-----------+-----------+-----------+--------------|
+# 										| chr1         |      1000 |      2000 |         1 |        10 | +            |
+# 										| chr1         |      7000 |      8000 |         1 |        10 | +            |
+# 										| chr1         |      1500 |      2100 |         2 |        20 | +            |
+# 										| chr1         |       600 |      2500 |         1 |        10 | -            |
+# 										| chr1         |      9000 |     11100 |         2 |        20 | -            |
+# 										| chr2         |       100 |      2000 |         2 |        20 | +            |
+# 										+--------------+-----------+-----------+-----------+-----------+--------------+
+# 		bins (pd.DataFrame): Intervals how to bin the genome
+# 	"""
+# 	START_A = 2
+# 	END_A = 3
+# 	START_B = 6
+# 	END_B = 7
+#
+# 	# specify which column to keep
+# 	cols = cycle_fragments.columns.tolist()
+# 	tokeep = []
+# 	for c in p.COLS_TOKEEP_SORTED:
+# 		found = 0
+# 		for c_map in cols:
+# 			if c_map in p.DICT_COLS_TOKEEP and p.DICT_COLS_TOKEEP[c_map] == c:
+# 				tokeep.append(c_map)
+# 				found = 1
+# 				break
+# 		if found == 0:
+# 			raise ValueError("Column name could not be mapped. ",c)
+# 	print("columns to keep", tokeep)
+#
+# 	a = BedTool.from_dataframe(cycle_fragments[tokeep])
+# 	b = BedTool.from_dataframe(bins)
+#
+# 	overlap = b.window(a, w=10).overlap(cols=[START_A, END_A, START_B, END_B])
+# 	overlap.columns = ["#chr", "start", "end", "len", "#chr_frag", "start_frag", "stop_frag",
+# 					   "circ_id", "cn", "strand","overlap"]
+#
+# 	overlap = overlap.to_dataframe()
+# 	# ['chrom', 'start', 'end', 'name', 'score', 'strand', 'thickStart', 'thickEnd', 'itemRgb', 'blockCount', 'blockSizes']
+# 	overlap.columns = ["#chr", "start", "end", "len", "#chr_frag", "start_frag", "stop_frag", "circ_id", "cn", "strand", "overlap"]
+#
+# 	# set to 0 negative overlapping blocks
+# 	overlap.loc[overlap["overlap"] < 0, "overlap"] = 0
+#
+# 	# convert to numeric
+# 	cols = ["start", "end", "cn", "overlap"]
+# 	overlap[cols] = overlap[cols].apply(pd.to_numeric, errors='coerce')
+#
+# 	# compute the cummulative coverage
+# 	overlap["hit"] = overlap.apply(lambda x: 1 if abs(x['end'] - x['start']) == x["overlap"] else 0, axis=1)
+# 	overlap["coverage_norm"] = overlap.apply(lambda x: x['cn'] * x["overlap"], axis=1)
+# 	overlap["coverage_mean"] = overlap.apply(lambda x: x['cn'] * x["hit"], axis=1)
+# 	return overlap[["#chr", "start", "end", "len", "coverage_norm", "coverage_mean"]].groupby(
+# 		by=["#chr", "start", "end", "len"]).agg({'coverage_norm': 'sum', 'coverage_mean': 'sum'}).reset_index()
 
 
 def get_cos_similarity_cn(e1, e2):
@@ -323,7 +379,8 @@ def get_cos_similarity_cn(e1, e2):
 		e1 (pd.DataFrame): First reconstruction binned by union of all bins
 		e2 (pd.DataFrame): Second reconstruction binned by union of all bins
 	"""
-	pass
+	return cosine_similarity(e1["cn"].tolist(), e2["cn"].tolist())
+
 
 
 def get_hamming_score(e1, e2, bins):
@@ -379,6 +436,14 @@ def get_overlap_score_weighted(e1, e2, bins):
 	overlaps['overlapping_score'] = overlaps.apply(lambda x: abs(x.e1 - x.e2), axis=1)
 	overlaps["prod"] = overlaps["overlapping_score"] * (overlaps["End"] - overlaps["Start"])
 	return overlaps["prod"].sum()
+
+
+def get_cosine_similarity_cn(cn_profile1, cn_profile2):
+	"""
+	Get cosine similarity between the two copy number profiles
+	"""
+	return cosine_similarity(np.array([cn_profile1[ht.CN].tolist()]),
+							 np.array([cn_profile2[ht.CN].tolist()]))[0][0]
 
 
 def euclidian_distance(a, b, x, y):
@@ -464,16 +529,16 @@ def is_unmatched(row1, row2, threshold):
 	"""
 	Check if breakpoints are unmatched
 	"""
-	if row1[h.CHR1] != row2[h.CHR1]:
+	if row1[ht.CHR1] != row2[ht.CHR1]:
 		return True
 
-	if row1[h.CHR2] != row2[h.CHR2]:
+	if row1[ht.CHR2] != row2[ht.CHR2]:
 		return True
 
-	if abs(row1[h.START] - row2[h.START]) > threshold:
+	if abs(row1[ht.START] - row2[ht.START]) > threshold:
 		return True
 
-	if abs(row1[h.END] - row2[h.END]) > threshold:
+	if abs(row1[ht.END] - row2[ht.END]) > threshold:
 		return True
 
 	return False
@@ -505,8 +570,8 @@ def create_cost_matrix(br_t, br_r, unmatched, dist="euclidian"):
 
 			# compute distance between breakpoint only for those who are not too far away
 			if not is_unmatched(br_t.loc[i, :], br_r.loc[j, :], unmatched):
-				m[i, j] = dict_distance_paired_breakpoints[dist](br_t.loc[i, h.START], br_t.loc[i, h.END],
-																 br_r.loc[j, h.START], br_r.loc[j, h.END])
+				m[i, j] = dict_distance_paired_breakpoints[dist](br_t.loc[i, ht.START], br_t.loc[i, ht.END],
+																 br_r.loc[j, ht.START], br_r.loc[j, ht.END])
 			else:
 				m[i, j] = p.INF
 
@@ -652,7 +717,7 @@ def compare_cycles(t_file: str, r_file: str, outdir: str,  dict_configs: dict):
 	cv_profile_t = get_feature_cn(df_t, bins)
 	cv_profile_r = get_feature_cn(df_r, bins)
 
-	cv_similarity = cosine_similarity(cv_profile_t, cv_profile_r)
+	cv_similarity = get_cosine_similarity_cn(cv_profile_t, cv_profile_r)
 	dict_metrics[ddt.COSINE_SIMILARITY] = cv_similarity
 
 	# 4. Breakpoint matching
@@ -664,8 +729,8 @@ def compare_cycles(t_file: str, r_file: str, outdir: str,  dict_configs: dict):
 	# 7. Merge results
 
 	# 8. Output
-	with open(os.path.join(outdir,'metrics.json', 'w', encoding='utf-8')) as f:
-		json.dump(dict_metrics, f, ensure_ascii=False, indent=4)
+	with open(os.path.join(outdir,'metrics.json'), 'w', encoding='utf-8') as f:
+		json.dump(dict_metrics, f, ensure_ascii=False, indent=4, cls=NpEncoder)
 	cv_profile_r.to_csv(os.path.join(outdir,'e2_coverage_profile.txt'),header=True,index=False,sep="\t")
 	cv_profile_t.to_csv(os.path.join(outdir,'e1_coverage_profile.txt'), header=True, index=False, sep="\t")
 
