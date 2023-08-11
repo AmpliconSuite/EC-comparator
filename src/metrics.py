@@ -63,41 +63,6 @@ def read_input(t_file, r_file):
 	return t_collection[lorder], r_collection[lorder]
 
 
-# def bin_genome(t_collection, r_collection, margin_size=10000):
-# 	"""
-# 	Bin the intervals by the breakpoints union.
-# 	"""
-# 	df_bins = pd.DataFrame(np.concatenate((t_collection[[ht.CHR, ht.START]].values,
-# 										   t_collection[[ht.CHR, ht.END]].values,
-# 										   r_collection[[ht.CHR, ht.START]].values,
-# 										   r_collection[[ht.CHR, ht.END]].values),
-# 										  axis=0))
-#
-# 	df_bins.columns = [ht.CHR, ht.START]
-# 	df_bins_gr = df_bins.groupby([ht.CHR]).agg({ht.START: [np.min, np.max]}).reset_index()
-# 	df_bins_gr.columns = [ht.CHR, "start_amin", "start_amax"]
-# 	df_bins_gr["start_amin"] = df_bins_gr.apply(lambda x: max(0, x["start_amin"] - margin_size), axis=1)
-# 	df_bins_gr["start_amax"] = df_bins_gr.apply(lambda x: x["start_amax"] + margin_size, axis=1)
-#
-# 	df_bins = pd.concat([df_bins, df_bins_gr[[ht.CHR, "start_amin"]].rename(columns={"start_amin": ht.START})],ignore_index=True)
-# 	df_bins = pd.concat([df_bins, df_bins_gr[[ht.CHR, "start_amax"]].rename(columns={"start_amax": ht.START})],ignore_index=True)
-# 	df_bins = df_bins.sort_values(by=[ht.CHR, ht.START]).drop_duplicates()
-#
-# 	# rotate with 1 up the start column
-# 	df_bins_suffix = df_bins.tail(-1)
-# 	df_bins_suffix = df_bins_suffix.append((df_bins.head(1)), ignore_index=True)
-#
-# 	df_bins.reset_index(drop=True, inplace=True)
-# 	df_bins_suffix.reset_index(drop=True, inplace=True)
-# 	df_bins = pd.concat([df_bins, df_bins_suffix], axis=1, ignore_index=True)
-# 	df_bins.columns = [ht.CHR, ht.START, "#chr2", ht.END]
-# 	df_bins[ht.LEN] = df_bins[ht.END].astype(int) - df_bins[ht.START].astype(int)
-#
-# 	# keep only rows with same chr and positive distance
-# 	df_bins = df_bins[(df_bins[ht.CHR] == df_bins["#chr2"]) & (df_bins[ht.LEN] > 0)]
-#
-# 	return df_bins[[ht.CHR, ht.START, ht.END, ht.LEN]]
-
 def bin_genome(t_collection, r_collection, margin_size=10000):
 	"""
 	Bin the intervals by the breakpoints union.
@@ -107,12 +72,22 @@ def bin_genome(t_collection, r_collection, margin_size=10000):
 										   r_collection[[ht.CHR, ht.START]].values,
 										   r_collection[[ht.CHR, ht.END]].values),
 										  axis=0))
+
 	df_bins.columns = [ht.CHR, ht.START]
+
+	# get max and min for each chromosome
+	df_bins_gr = df_bins.groupby([ht.CHR]).agg({ht.START: [np.min, np.max]}).reset_index()
+	df_bins_gr.columns = [ht.CHR, "start_amin", "start_amax"]
+	df_bins_gr["start_amin"] = df_bins_gr.apply(lambda x: max(0, x["start_amin"] - margin_size), axis=1)
+	df_bins_gr["start_amax"] = df_bins_gr.apply(lambda x: x["start_amax"] + margin_size, axis=1)
+
+	df_bins = pd.concat([df_bins, df_bins_gr[[ht.CHR, "start_amin"]].rename(columns={"start_amin": ht.START})],ignore_index=True)
+	df_bins = pd.concat([df_bins, df_bins_gr[[ht.CHR, "start_amax"]].rename(columns={"start_amax": ht.START})],ignore_index=True)
 	df_bins = df_bins.sort_values(by=[ht.CHR, ht.START]).drop_duplicates()
 
 	# rotate with 1 up the start column
 	df_bins_suffix = df_bins.tail(-1)
-	df_bins_suffix = df_bins_suffix.append(df_bins.head(1), ignore_index=True)
+	df_bins_suffix = df_bins_suffix.append((df_bins.head(1)), ignore_index=True)
 
 	df_bins.reset_index(drop=True, inplace=True)
 	df_bins_suffix.reset_index(drop=True, inplace=True)
@@ -124,6 +99,33 @@ def bin_genome(t_collection, r_collection, margin_size=10000):
 	df_bins = df_bins[(df_bins[ht.CHR] == df_bins["#chr2"]) & (df_bins[ht.LEN] > 0)]
 
 	return df_bins[[ht.CHR, ht.START, ht.END, ht.LEN]]
+
+# def bin_genome(t_collection, r_collection, margin_size=10000):
+# 	"""
+# 	Bin the intervals by the breakpoints union.
+# 	"""
+# 	df_bins = pd.DataFrame(np.concatenate((t_collection[[ht.CHR, ht.START]].values,
+# 										   t_collection[[ht.CHR, ht.END]].values,
+# 										   r_collection[[ht.CHR, ht.START]].values,
+# 										   r_collection[[ht.CHR, ht.END]].values),
+# 										  axis=0))
+# 	df_bins.columns = [ht.CHR, ht.START]
+# 	df_bins = df_bins.sort_values(by=[ht.CHR, ht.START]).drop_duplicates()
+#
+# 	# rotate with 1 up the start column
+# 	df_bins_suffix = df_bins.tail(-1)
+# 	df_bins_suffix = df_bins_suffix.append(df_bins.head(1), ignore_index=True)
+#
+# 	df_bins.reset_index(drop=True, inplace=True)
+# 	df_bins_suffix.reset_index(drop=True, inplace=True)
+# 	df_bins = pd.concat([df_bins, df_bins_suffix], axis=1, ignore_index=True)
+# 	df_bins.columns = [ht.CHR, ht.START, "#chr2", ht.END]
+# 	df_bins[ht.LEN] = df_bins[ht.END].astype(int) - df_bins[ht.START].astype(int)
+#
+# 	# keep only rows with same chr and positive distance
+# 	df_bins = df_bins[(df_bins[ht.CHR] == df_bins["#chr2"]) & (df_bins[ht.LEN] > 0)]
+#
+# 	return df_bins[[ht.CHR, ht.START, ht.END, ht.LEN]]
 
 def read_pyranges(t_file, r_file, bins):
 	"""
@@ -438,12 +440,12 @@ def get_overlap_score_weighted(e1, e2, bins):
 	return overlaps["prod"].sum()
 
 
-def get_cosine_similarity_cn(cn_profile1, cn_profile2):
+def get_cosine_distance_cn(cn_profile1, cn_profile2):
 	"""
-	Get cosine similarity between the two copy number profiles
+	Get cosine distance between the two copy number profiles
 	"""
-	return cosine_similarity(np.array([cn_profile1[ht.CN].tolist()]),
-							 np.array([cn_profile2[ht.CN].tolist()]))[0][0]
+	return 1-abs(cosine_similarity(np.array([cn_profile1[ht.CN].tolist()]),
+							 np.array([cn_profile2[ht.CN].tolist()]))[0][0])
 
 
 def euclidian_distance(a, b, x, y):
@@ -455,16 +457,6 @@ def euclidian_distance_norm_l2(a, b, x, y):
 	v2 = np.array([[x, y]])
 	v1_norm = preprocessing.normalize(v1, norm='l2')
 	v2_norm = preprocessing.normalize(v2, norm='l2')
-
-	print("----")
-	print("v1")
-	print(v1)
-	print(v1_norm)
-	print("-----")
-	print("v2")
-	print(v2)
-	print(v2_norm)
-	print("-----")
 
 	return skl.euclidean_distances(v1_norm, v2_norm)
 
@@ -525,9 +517,19 @@ def match_score(a, b, x, y):
 	return 1 - abs((cos1 + cos2) / 2)
 
 
-def is_unmatched(row1, row2, threshold):
+def sigmoid_unmatched(x, a = p.UNMATCHED):
+	z = 1 / (1 + np.exp(0.01 * (a - x)))
+
+	# breakpoints unmatch
+	if z < 1:
+		return True
+	# breakpoints match
+	return False
+
+
+def is_unmatched(row1, row2):
 	"""
-	Check if breakpoints are unmatched
+	Check if breakpoints are unmatched (True).
 	"""
 	if row1[ht.CHR1] != row2[ht.CHR1]:
 		return True
@@ -535,16 +537,14 @@ def is_unmatched(row1, row2, threshold):
 	if row1[ht.CHR2] != row2[ht.CHR2]:
 		return True
 
-	if abs(row1[ht.START] - row2[ht.START]) > threshold:
-		return True
-
-	if abs(row1[ht.END] - row2[ht.END]) > threshold:
+	d = abs(row1[ht.START] - row2[ht.START]) + abs(row1[ht.END] - row2[ht.END])
+	if sigmoid_unmatched(d):
 		return True
 
 	return False
 
 
-def create_cost_matrix(br_t, br_r, unmatched, dist="euclidian"):
+def create_cost_matrix(br_t, br_r, unmatched, dist=ddt.EUCLIDIAN):
 	"""
 	Create the cost matrix for the breakpoints pair.
 	Set breakpoints with x-x' or y-y' > unmatched as infinity distance
@@ -567,19 +567,21 @@ def create_cost_matrix(br_t, br_r, unmatched, dist="euclidian"):
 
 	for i in range(0, br_t.shape[0]):
 		for j in range(0, br_r.shape[0]):
+			m[i, j] = dict_distance_paired_breakpoints[dist](br_t.loc[i, ht.START], br_t.loc[i, ht.END],
+															 br_r.loc[j, ht.START], br_r.loc[j, ht.END])
 
-			# compute distance between breakpoint only for those who are not too far away
-			if not is_unmatched(br_t.loc[i, :], br_r.loc[j, :], unmatched):
-				m[i, j] = dict_distance_paired_breakpoints[dist](br_t.loc[i, ht.START], br_t.loc[i, ht.END],
-																 br_r.loc[j, ht.START], br_r.loc[j, ht.END])
-			else:
-				m[i, j] = p.INF
+			# # compute distance between breakpoint only for those who are not too far away
+			# if not is_unmatched(br_t.loc[i, :], br_r.loc[j, :], unmatched):
+			# 	m[i, j] = dict_distance_paired_breakpoints[dist](br_t.loc[i, ht.START], br_t.loc[i, ht.END],
+			# 													 br_r.loc[j, ht.START], br_r.loc[j, ht.END])
+			# else:
+			# 	m[i, j] = p.INF
 
 	print(m)
 	return m
 
 
-def create_bipartite_graph(br_t, br_r, unmatched, dist="euclidian"):
+def create_bipartite_graph(br_t, br_r, unmatched, dist=ddt.EUCLIDIAN):
 	"""
 	Create bipartite graph using the breakpoints pairs as nodes and
 	edges weighted by the distance (cost) between the pairs).
@@ -651,7 +653,7 @@ def find_matching_breakpoints(G, br_t, br_r, t_nodes, r_nodes):
 	return matches, breakpoint_match
 
 
-def compute_breakpoint_similarity(df_t, df_r, unmatched=10000, distance="euclidian-distance"):
+def compute_breakpoint_similarity(df_t, df_r, unmatched=10000, distance=ddt.EUCLIDIAN):
 	"""
 	Compute breakpoint-pairs similarity.
 	Do not consider breakpoints for which (x-x') > unmatched or (y-y') > unmatched
@@ -666,17 +668,16 @@ def compute_breakpoint_similarity(df_t, df_r, unmatched=10000, distance="euclidi
 	G, t_nodes, r_nodes = create_bipartite_graph(br_t,
 												 br_r,
 												 unmatched=unmatched,
-												 dist=dict_distance_paired_breakpoints[distance])
+												 dist=distance)
 
 	# get matches
 	matches, breakpoint_match = find_matching_breakpoints(G, br_t, br_r, t_nodes, r_nodes)
-	print(matches)
-	print(breakpoint_match)
 
 	# compute jaccard index
-	jd = len(matches) / (len(br_t) + len(br_r) - len(matches))
+	jd = len(breakpoint_match) / (len(br_t) + len(br_r) - len(breakpoint_match))
 
-	return jd
+	return jd, matches, breakpoint_match
+
 
 def compare_cycles(t_file: str, r_file: str, outdir: str,  dict_configs: dict):
 	"""
@@ -717,10 +718,12 @@ def compare_cycles(t_file: str, r_file: str, outdir: str,  dict_configs: dict):
 	cv_profile_t = get_feature_cn(df_t, bins)
 	cv_profile_r = get_feature_cn(df_r, bins)
 
-	cv_similarity = get_cosine_similarity_cn(cv_profile_t, cv_profile_r)
-	dict_metrics[ddt.COSINE_SIMILARITY] = cv_similarity
+	cv_similarity = get_cosine_distance_cn(cv_profile_t, cv_profile_r)
+	dict_metrics[ddt.COSINE_DISTANCE] = cv_similarity
 
 	# 4. Breakpoint matching
+	jc, matches, breakpoint_matches = compute_breakpoint_similarity(df_t, df_r, distance=ddt.RELATIVE_METRIC)
+	dict_metrics[ddt.BREAKPOINT_SIMILARITY] = jc
 
 	# 5. Penalize for cycles multiplicity (if the tool decompose in one or more cycles)
 
@@ -761,3 +764,4 @@ dict_distance_paired_breakpoints_thresholds = {
 	ddt.MATCH_ANGLE: ddt.MATCH_ANGLE_THRESHOLD,
 	ddt.UNMATCHED:ddt.UNMATCHED_THRESHOLD
 }
+
