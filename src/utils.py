@@ -4,15 +4,16 @@ Constants and other settings
 import json
 import numpy as np
 
+
 class NpEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return super(NpEncoder, self).default(obj)
+	def default(self, obj):
+		if isinstance(obj, np.integer):
+			return int(obj)
+		if isinstance(obj, np.floating):
+			return float(obj)
+		if isinstance(obj, np.ndarray):
+			return obj.tolist()
+		return super(NpEncoder, self).default(obj)
 
 
 class HEADER:
@@ -43,29 +44,38 @@ class HEADER:
 				   "strand": STRAND,
 				   "orientation": STRAND}
 
+	THRESHOLD = "threshold"
+	WEIGHT = "weight"
+	ENABLE = "enable"
+	DEFINITION = "definition"
+
+	BREAKPOINT_DISTANCE = 'breakpoint_distance'
+	GENOMIC_FOOTPRINT = 'genomic_footprint'
+	OTHER_PARAMS = 'other_params'
+	CONFIGS = 'configs'
+
 
 class PROPS:
-
 	# visualization
 	ALPHA = 'alpha'
 	COLOR = 'color'
-	MATCHED = {ALPHA:0.8}
+	MATCHED = {ALPHA: 0.8}
 	UNMATCHED = {ALPHA: 0.2,
-			   COLOR: 'gray'}
+				 COLOR: 'gray'}
 	MAX_COST = 100000
 
 	# compute similarity
 	INF = 3000000000
 
-	DICT_COLS = {"#chr":"chromosome",
-				 "bin":"chromosome",
-				 "start":"start",
-				 "end":"end",
-				 "stop":"end",
-				 "orientation":"stranded",
-				 "strand":"stranded"}
+	DICT_COLS = {"#chr": "chromosome",
+				 "bin": "chromosome",
+				 "start": "start",
+				 "end": "end",
+				 "stop": "end",
+				 "orientation": "stranded",
+				 "strand": "stranded"}
 	COLS_TOKEEP_SORTED = ["#chr_frag", "start_frag", "stop_frag", "circ_id", "cn", "strand"]
-	DICT_COLS_TOKEEP = {"#chr":"#chr_frag",
+	DICT_COLS_TOKEEP = {"#chr": "#chr_frag",
 						"chromosome": "#chr_frag",
 						"start": "start_frag",
 						"stop": "stop_frag",
@@ -75,9 +85,10 @@ class PROPS:
 						"weight": "cn",
 						"score": "cn",
 						"proportions": "cn",
-						"strand":"strand",
-						"orientation":"strand"
+						"strand": "strand",
+						"orientation": "strand"
 						}
+
 
 class DDT:
 	EUCLIDIAN = 'euclidian'
@@ -108,4 +119,8 @@ class DDT:
 	HAMMING_NORM = 'hamming_norm'
 	OVERLAP = 'overlap'
 
-	COSINE_SIMILARITY = 'cosine_similarity'
+	COSINE_DISTANCE = 'cosine_distance'
+	BREAKPOINT_SIMILARITY = 'breakpoint_similarity'
+	BREAKPOINT_DISTANCE = 'breakpoint_distance'
+	FRAGMENTS_DISTANCE = 'fragments_distance'
+	CYCLES_DISTANCE = 'cycles_distance'

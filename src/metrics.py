@@ -5,6 +5,7 @@ import json
 import pandas as pd
 import numpy as np
 from copy import deepcopy
+from pprint import pprint
 
 from sklearn.metrics.pairwise import cosine_similarity
 import sklearn.metrics.pairwise as skl
@@ -417,14 +418,14 @@ def get_hamming_score_norm(e1, e2, bins):
 	overlaps = pr.count_overlaps(grs)
 	overlaps = overlaps.as_df()
 	overlaps['hamming'] = overlaps.apply(lambda x: x.e1 ^ x.e2, axis=1)
-	overlaps["len"] = overlaps["End"] - overlaps["Start"]
+	overlaps["len"] = abs(overlaps["End"] - overlaps["Start"])
 	overlaps["prod"] = overlaps["hamming"] * overlaps["len"]
-	return overlaps["prod"].sum() / overlaps["len"].sum()
+	return (overlaps["prod"].sum()) / (overlaps["len"].sum())
 
 
-def get_overlap_score_weighted(e1, e2, bins):
+def get_overlap_fragments_weighted(e1, e2, bins):
 	"""
-	Compute the overlap distance between the two reconstructions
+	Compute the overlap distance between the fragment counts of two reconstructions which overlap every genomic bin.
 
 	Args:
 		e1 (pd.DataFrame): First reconstruction
@@ -435,9 +436,29 @@ def get_overlap_score_weighted(e1, e2, bins):
 	# Chromosome	Start	End	bins	e1	e2
 	overlaps = pr.count_overlaps(grs)
 	overlaps = overlaps.as_df()
-	overlaps['overlapping_score'] = overlaps.apply(lambda x: abs(x.e1 - x.e2), axis=1)
-	overlaps["prod"] = overlaps["overlapping_score"] * (overlaps["End"] - overlaps["Start"])
-	return overlaps["prod"].sum()
+	overlaps["overlapping_score"] = overlaps.apply(lambda x: abs(x.e1 - x.e2), axis=1)
+	overlaps["len"] = abs(overlaps["End"] - overlaps["Start"])
+	overlaps["prod"] = overlaps["overlapping_score"] * overlaps["len"]
+	return (overlaps["prod"].sum()) / (overlaps["len"].sum())
+
+
+def get_overlap_cycles_weighted(e1, e2, bins):
+	"""
+	Compute the overlap distance between the cycles counts of two reconstructions which overlap every genomic bin.
+
+	Args:
+		e1 (pd.DataFrame): First reconstruction
+		e2 (pd.DataFrame): Second reconstruction
+		bins (pd.DatamFrame): Bins of the intervals union e1 and e2
+	"""
+	grs = {n: s for n, s in zip(["bins", "e1", "e2"], [bins, e1, e2])}
+	# Chromosome	Start	End	bins	e1	e2
+	overlaps = pr.count_overlaps(grs)
+	overlaps = overlaps.as_df()
+	overlaps["overlapping_score"] = overlaps.apply(lambda x: abs(x.e1 - x.e2), axis=1)
+	overlaps["len"] = abs(overlaps["End"] - overlaps["Start"])
+	overlaps["prod"] = overlaps["overlapping_score"] * overlaps["len"]
+	return (overlaps["prod"].sum()) / (overlaps["len"].sum())
 
 
 def get_cosine_distance_cn(cn_profile1, cn_profile2):
@@ -518,7 +539,7 @@ def match_score(a, b, x, y):
 
 
 def sigmoid_unmatched(x, a = p.UNMATCHED):
-	z = 1 / (1 + np.exp(0.01 * (a - x)))
+	z = 1 / (1 + np.exp(0.1 * (a - x)))
 
 	# breakpoints unmatch
 	if z < 1:
@@ -653,7 +674,7 @@ def find_matching_breakpoints(G, br_t, br_r, t_nodes, r_nodes):
 	return matches, breakpoint_match
 
 
-def compute_breakpoint_similarity(df_t, df_r, unmatched=10000, distance=ddt.EUCLIDIAN):
+def compute_breakpoint_distance(df_t, df_r, unmatched=10000, distance=ddt.EUCLIDIAN):
 	"""
 	Compute breakpoint-pairs similarity.
 	Do not consider breakpoints for which (x-x') > unmatched or (y-y') > unmatched
@@ -678,6 +699,16 @@ def compute_breakpoint_similarity(df_t, df_r, unmatched=10000, distance=ddt.EUCL
 
 	return jd, matches, breakpoint_match
 
+def remove_ref2methods(dict_configs):
+	"""
+	Remove from dictionary all values which are pointers to methods
+	"""
+	for key in dict_configs[ht.CONFIGS]:
+		if key in [ht.BREAKPOINT_DISTANCE, ht.GENOMIC_FOOTPRINT]:
+			for d in dict_configs[ht.CONFIGS][key]:
+				del dict_configs[ht.CONFIGS][key][d][ht.DEFINITION]
+	return dict_configs
+
 
 def compare_cycles(t_file: str, r_file: str, outdir: str,  dict_configs: dict):
 	"""
@@ -694,7 +725,7 @@ def compare_cycles(t_file: str, r_file: str, outdir: str,  dict_configs: dict):
 		Dictionary with different distances
 	"""
 	dict_metrics = {}
-	dict_metrics["configs"] = dict_configs
+	dict_metrics[ht.CONFIGS] = dict_configs
 
 	# 1. Genome binning based on the breakpoints union
 
@@ -708,11 +739,9 @@ def compare_cycles(t_file: str, r_file: str, outdir: str,  dict_configs: dict):
 	# 2. Compute hamming distance and others
 	h = get_hamming_score(df_t_pr, df_r_pr, df_bins_pr)
 	h_norm = get_hamming_score_norm(df_t_pr, df_r_pr, df_bins_pr)
-	overlap = get_overlap_score_weighted(df_t_pr, df_r_pr, df_bins_pr)
 
 	dict_metrics[ddt.HAMMING]=h
 	dict_metrics[ddt.HAMMING_NORM]=h_norm
-	dict_metrics[ddt.OVERLAP]=overlap
 
 	# 3. Compute copy-number similarity
 	cv_profile_t = get_feature_cn(df_t, bins)
@@ -722,10 +751,14 @@ def compare_cycles(t_file: str, r_file: str, outdir: str,  dict_configs: dict):
 	dict_metrics[ddt.COSINE_DISTANCE] = cv_similarity
 
 	# 4. Breakpoint matching
-	jc, matches, breakpoint_matches = compute_breakpoint_similarity(df_t, df_r, distance=ddt.RELATIVE_METRIC)
-	dict_metrics[ddt.BREAKPOINT_SIMILARITY] = jc
+	jc, matches, breakpoint_matches = compute_breakpoint_distance(df_t, df_r, distance=ddt.RELATIVE_METRIC)
+	dict_metrics[ddt.BREAKPOINT_DISTANCE] = jc
 
-	# 5. Penalize for cycles multiplicity (if the tool decompose in one or more cycles)
+	# 5. Penalize for cycles and fragments multiplicity (if the tool decompose in one or more cycles)
+	overlap_fragments = get_overlap_fragments_weighted(df_t_pr, df_r_pr, df_bins_pr)
+	overlap_cycles = get_overlap_cycles_weighted(df_t_pr, df_r_pr, df_bins_pr)
+	dict_metrics[ddt.FRAGMENTS_DISTANCE]=overlap_fragments
+	dict_metrics[ddt.CYCLES_DISTANCE] = overlap_cycles
 
 	# 6. Stoichiometry (compute distance of transforming one permutation in the other)
 
@@ -733,7 +766,9 @@ def compare_cycles(t_file: str, r_file: str, outdir: str,  dict_configs: dict):
 
 	# 8. Output
 	with open(os.path.join(outdir,'metrics.json'), 'w', encoding='utf-8') as f:
-		json.dump(dict_metrics, f, ensure_ascii=False, indent=4, cls=NpEncoder)
+		final_dict = remove_ref2methods(dict_metrics)
+		pprint(final_dict)
+		json.dump(final_dict, f, ensure_ascii=False, indent=4, cls=NpEncoder)
 	cv_profile_r.to_csv(os.path.join(outdir,'e2_coverage_profile.txt'),header=True,index=False,sep="\t")
 	cv_profile_t.to_csv(os.path.join(outdir,'e1_coverage_profile.txt'), header=True, index=False, sep="\t")
 
@@ -741,7 +776,7 @@ def compare_cycles(t_file: str, r_file: str, outdir: str,  dict_configs: dict):
 # distance for the copy-number profile
 dict_distance_function = {ddt.HAMMING: get_hamming_score,
 						  ddt.HAMMING_NORM: get_hamming_score_norm,
-						  ddt.OVERLAP: get_overlap_score_weighted}
+						  ddt.OVERLAP: get_overlap_fragments_weighted}
 
 # distance between paired breapoints
 dict_distance_paired_breakpoints = {
