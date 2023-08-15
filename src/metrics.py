@@ -770,8 +770,8 @@ def compute_breakpoint_distance(df_t, df_r, unmatched=10000, distance=ddt.EUCLID
 	# get matches
 	matches, breakpoint_match = find_matching_breakpoints(G, br_t, br_r, t_nodes, r_nodes)
 
-	# compute jaccard index
-	jd = len(breakpoint_match) / (len(br_t) + len(br_r) - len(breakpoint_match))
+	# compute jaccard distance
+	jd = 1 - len(breakpoint_match) / (len(br_t) + len(br_r) - len(breakpoint_match))
 
 	return jd, matches, breakpoint_match
 
@@ -824,8 +824,8 @@ def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
 	cv_profile_t = get_feature_cn(df_t, bins)
 	cv_profile_r = get_feature_cn(df_r, bins)
 
-	cv_similarity = get_cosine_distance_cn(cv_profile_t, cv_profile_r)
-	dict_metrics[ddt.COSINE_DISTANCE] = cv_similarity
+	cv_distance = get_cosine_distance_cn(cv_profile_t, cv_profile_r)
+	dict_metrics[ddt.COSINE_DISTANCE] = cv_distance
 
 	# 4. Breakpoint matching
 	jc, matches, breakpoint_matches = compute_breakpoint_distance(df_t, df_r, distance=ddt.RELATIVE_METRIC)
