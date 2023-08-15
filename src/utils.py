@@ -53,6 +53,7 @@ class HEADER:
 	GENOMIC_FOOTPRINT = 'genomic_footprint'
 	OTHER_PARAMS = 'other_params'
 	CONFIGS = 'configs'
+	DISTANCES = 'distances'
 
 
 class PROPS:
@@ -124,3 +125,7 @@ class DDT:
 	BREAKPOINT_DISTANCE = 'breakpoint_distance'
 	FRAGMENTS_DISTANCE = 'fragments_distance'
 	CYCLES_DISTANCE = 'cycles_distance'
+	JACCARD_DISTANCE = 'jaccard_distance'
+
+	TOTAL_COST = 'total_cost'
+	TOTAL_COST_DESCRIPTION = 'total_cost_description'

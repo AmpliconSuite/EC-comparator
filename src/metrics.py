@@ -674,7 +674,7 @@ def create_cost_matrix(br_t, br_r, unmatched, dist=ddt.EUCLIDIAN):
 		# else:
 		# 	m[i, j] = p.INF
 
-	print(m)
+	# print(m)
 	return m
 
 
@@ -787,6 +787,25 @@ def remove_ref2methods(dict_configs):
 	return dict_configs
 
 
+def get_total_cost(dict_metrics):
+	"""
+	Get total cost
+	"""
+	total_cost = 0
+	total_cost_description = {}
+	for key in dict_metrics[ht.CONFIGS]:
+		if key in [ht.BREAKPOINT_DISTANCE, ht.GENOMIC_FOOTPRINT]:
+			for d in dict_metrics[ht.CONFIGS][key]:
+				# distance is enabled
+				if dict_metrics[ht.CONFIGS][key][d][ht.ENABLE]:
+					weight = dict_metrics[ht.CONFIGS][key][d][ht.WEIGHT]
+					val = dict_metrics[ht.DISTANCES][d]
+					total_cost += weight * val
+					total_cost_description[d] = weight
+
+	return total_cost, total_cost_description
+
+
 def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
 	"""
 	Entrypoint: compare the distance between two cycle sets.
@@ -803,6 +822,7 @@ def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
 	"""
 	dict_metrics = {}
 	dict_metrics[ht.CONFIGS] = dict_configs
+	dict_metrics[ht.DISTANCES] = {}
 
 	# 1. Genome binning based on the breakpoints union
 
@@ -817,29 +837,33 @@ def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
 	h = get_hamming_score(df_t_pr, df_r_pr, df_bins_pr)
 	h_norm = get_hamming_score_norm(df_t_pr, df_r_pr, df_bins_pr)
 
-	dict_metrics[ddt.HAMMING] = h
-	dict_metrics[ddt.HAMMING_NORM] = h_norm
+	print(dict_metrics.keys())
+	dict_metrics[ht.DISTANCES][ddt.HAMMING] = round(h,2)
+	dict_metrics[ht.DISTANCES][ddt.HAMMING_NORM] = round(h_norm,2)
 
 	# 3. Compute copy-number similarity
 	cv_profile_t = get_feature_cn(df_t, bins)
 	cv_profile_r = get_feature_cn(df_r, bins)
 
 	cv_distance = get_cosine_distance_cn(cv_profile_t, cv_profile_r)
-	dict_metrics[ddt.COSINE_DISTANCE] = cv_distance
+	dict_metrics[ht.DISTANCES][ddt.COSINE_DISTANCE] = round(cv_distance,2)
 
 	# 4. Breakpoint matching
 	jc, matches, breakpoint_matches = compute_breakpoint_distance(df_t, df_r, distance=ddt.RELATIVE_METRIC)
-	dict_metrics[ddt.BREAKPOINT_DISTANCE] = jc
+	dict_metrics[ht.DISTANCES][ddt.JACCARD_DISTANCE] = jc
 
 	# 5. Penalize for cycles and fragments multiplicity (if the tool decompose in one or more cycles)
-	overlap_fragments = get_overlap_fragments_weighted(df_t_pr, df_r_pr, df_bins_pr)
-	overlap_cycles = get_overlap_cycles_weighted(df_t_pr, df_r_pr, df_bins_pr)
-	dict_metrics[ddt.FRAGMENTS_DISTANCE] = overlap_fragments
-	dict_metrics[ddt.CYCLES_DISTANCE] = overlap_cycles
+	overlap_fragments_distance = get_overlap_fragments_weighted(df_t_pr, df_r_pr, df_bins_pr)
+	overlap_cycles_distance = get_overlap_cycles_weighted(df_t_pr, df_r_pr, df_bins_pr)
+	dict_metrics[ht.DISTANCES][ddt.FRAGMENTS_DISTANCE] = round(overlap_fragments_distance,2)
+	dict_metrics[ht.DISTANCES][ddt.CYCLES_DISTANCE] = round(overlap_cycles_distance,2)
 
 	# 6. Stoichiometry (compute distance of transforming one permutation in the other)
 
 	# 7. Merge results
+	total_cost, total_cost_description = get_total_cost(dict_metrics)
+	dict_metrics[ht.DISTANCES][ddt.TOTAL_COST] = round(total_cost,2)
+	dict_metrics[ht.DISTANCES][ddt.TOTAL_COST_DESCRIPTION] = total_cost_description
 
 	# 8. Output
 	with open(os.path.join(outdir, 'metrics.json'), 'w', encoding='utf-8') as f:

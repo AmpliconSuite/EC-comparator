@@ -19,12 +19,17 @@ class Configs:
 				h.WEIGHT: 1,
 				h.THRESHOLD: d.EUCLIDIAN_THRESHOLD,
 				h.DEFINITION: m.euclidian_distance,
-				h.ENABLE: True
+				h.ENABLE: False
 			},
 			d.RELATIVE_METRIC: {
 				h.WEIGHT: 1,
 				h.THRESHOLD: d.RELATIVE_METRIC_THRESHOLD,
 				h.DEFINITION: m.match_score,
+				h.ENABLE: True
+			},
+			d.JACCARD_DISTANCE: {
+				h.WEIGHT: 1,
+				h.DEFINITION: m.compute_breakpoint_distance,
 				h.ENABLE: True
 			}
 		},
