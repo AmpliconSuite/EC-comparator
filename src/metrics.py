@@ -67,6 +67,7 @@ def read_input(t_file, r_file):
 def bin_genome(t_collection, r_collection, margin_size=10000):
 	"""
 	Bin the intervals by the breakpoints union.
+	Warning: Setting a margin size can effect the output of different distances
 	"""
 	df_bins = pd.DataFrame(np.concatenate((t_collection[[ht.CHR, ht.START]].values,
 										   t_collection[[ht.CHR, ht.END]].values,
@@ -75,12 +76,15 @@ def bin_genome(t_collection, r_collection, margin_size=10000):
 										  axis=0))
 
 	df_bins.columns = [ht.CHR, ht.START]
+	# return df_bins
 
 	# get max and min for each chromosome
 	df_bins_gr = df_bins.groupby([ht.CHR]).agg({ht.START: [np.min, np.max]}).reset_index()
 	df_bins_gr.columns = [ht.CHR, "start_amin", "start_amax"]
 	df_bins_gr["start_amin"] = df_bins_gr.apply(lambda x: max(0, x["start_amin"] - margin_size), axis=1)
 	df_bins_gr["start_amax"] = df_bins_gr.apply(lambda x: x["start_amax"] + margin_size, axis=1)
+
+	print(df_bins_gr)
 
 	df_bins = pd.concat([df_bins, df_bins_gr[[ht.CHR, "start_amin"]].rename(columns={"start_amin": ht.START})],ignore_index=True)
 	df_bins = pd.concat([df_bins, df_bins_gr[[ht.CHR, "start_amax"]].rename(columns={"start_amax": ht.START})],ignore_index=True)
@@ -146,6 +150,16 @@ def read_pyranges(t_file, r_file, bins):
 	df_bins_copy = deepcopy(bins)
 	df_bins_copy.columns = ["Chromosome", "Start", "End", "len"]
 	df_bins_pr = pr.PyRanges(df_bins_copy)
+
+	return df_t_pr, df_r_pr, df_bins_pr
+
+def read_pyranges_new(df_t, df_r, bins):
+	"""
+	Load data as pyranges
+	"""
+	df_t_pr = pr.PyRanges(df_t.rename(columns=rename_columns(df_t.columns.tolist(), p.DICT_COLS), errors="raise", inplace=False))
+	df_r_pr = pr.PyRanges(df_r.rename(columns=rename_columns(df_r.columns.tolist(), p.DICT_COLS), errors="raise", inplace=False))
+	df_bins_pr = pr.PyRanges(bins.rename(columns=rename_columns(bins.columns.tolist(), p.DICT_COLS), errors="raise", inplace=False))
 
 	return df_t_pr, df_r_pr, df_bins_pr
 
@@ -399,7 +413,14 @@ def get_hamming_score(e1, e2, bins):
 	# Chromosome	Start	End	bins	e1	e2
 	overlaps = pr.count_overlaps(grs)
 	overlaps = overlaps.as_df()
-	overlaps['hamming'] = overlaps.apply(lambda x: x.e1 ^ x.e2, axis=1)
+
+	# everything > 1 set to 1
+	overlaps['e1'] = overlaps['e1'].apply(lambda x: 1 if x >= 1 else 0)
+	overlaps['e2'] = overlaps['e2'].apply(lambda x: 1 if x >= 1 else 0)
+
+	overlaps['hamming'] = overlaps.apply(lambda x: np.logical_xor(x.e1,x.e2), axis=1)
+	overlaps['hamming'] = overlaps['hamming'].astype(int)
+
 	overlaps["prod"] = overlaps["hamming"] * (overlaps["End"] - overlaps["Start"])
 	return overlaps["prod"].sum()
 
@@ -417,9 +438,17 @@ def get_hamming_score_norm(e1, e2, bins):
 	# Chromosome	Start	End	bins	e1	e2
 	overlaps = pr.count_overlaps(grs)
 	overlaps = overlaps.as_df()
-	overlaps['hamming'] = overlaps.apply(lambda x: x.e1 ^ x.e2, axis=1)
+
+	# everything > 1 set to 1
+	overlaps['e1'] = overlaps['e1'].apply(lambda x: 1 if x >= 1 else 0)
+	overlaps['e2'] = overlaps['e2'].apply(lambda x: 1 if x >= 1 else 0)
+
+	overlaps['hamming'] = overlaps.apply(lambda x: np.logical_xor(x.e1,x.e2), axis=1)
+	overlaps['hamming'] = overlaps['hamming'].astype(int)
+
 	overlaps["len"] = abs(overlaps["End"] - overlaps["Start"])
 	overlaps["prod"] = overlaps["hamming"] * overlaps["len"]
+
 	return (overlaps["prod"].sum()) / (overlaps["len"].sum())
 
 
@@ -439,6 +468,7 @@ def get_overlap_fragments_weighted(e1, e2, bins):
 	overlaps["overlapping_score"] = overlaps.apply(lambda x: abs(x.e1 - x.e2), axis=1)
 	overlaps["len"] = abs(overlaps["End"] - overlaps["Start"])
 	overlaps["prod"] = overlaps["overlapping_score"] * overlaps["len"]
+	print(overlaps)
 	return (overlaps["prod"].sum()) / (overlaps["len"].sum())
 
 
@@ -458,6 +488,7 @@ def get_overlap_cycles_weighted(e1, e2, bins):
 	overlaps["overlapping_score"] = overlaps.apply(lambda x: abs(x.e1 - x.e2), axis=1)
 	overlaps["len"] = abs(overlaps["End"] - overlaps["Start"])
 	overlaps["prod"] = overlaps["overlapping_score"] * overlaps["len"]
+	print(overlaps)
 	return (overlaps["prod"].sum()) / (overlaps["len"].sum())
 
 
@@ -731,10 +762,10 @@ def compare_cycles(t_file: str, r_file: str, outdir: str,  dict_configs: dict):
 
 	# as data.frame objects
 	df_t, df_r = read_input(t_file, r_file)
-	bins = bin_genome(df_t, df_r)
+	bins = bin_genome(df_t, df_r, margin_size=0)
 
 	# as pyranges objects
-	df_t_pr, df_r_pr, df_bins_pr = read_pyranges(t_file, r_file, bins)
+	df_t_pr, df_r_pr, df_bins_pr = read_pyranges_new(df_t, df_r, bins)
 
 	# 2. Compute hamming distance and others
 	h = get_hamming_score(df_t_pr, df_r_pr, df_bins_pr)

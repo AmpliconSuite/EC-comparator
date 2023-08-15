@@ -67,13 +67,13 @@ class PROPS:
 	# compute similarity
 	INF = 3000000000
 
-	DICT_COLS = {"#chr": "chromosome",
-				 "bin": "chromosome",
-				 "start": "start",
-				 "end": "end",
-				 "stop": "end",
-				 "orientation": "stranded",
-				 "strand": "stranded"}
+	DICT_COLS = {"#chr": "Chromosome",
+				 "bin": "Chromosome",
+				 "start": "Start",
+				 "end": "End",
+				 "stop": "End",
+				 "orientation": "Stranded",
+				 "strand": "Stranded"}
 	COLS_TOKEEP_SORTED = ["#chr_frag", "start_frag", "stop_frag", "circ_id", "cn", "strand"]
 	DICT_COLS_TOKEEP = {"#chr": "#chr_frag",
 						"chromosome": "#chr_frag",

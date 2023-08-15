@@ -6,6 +6,7 @@ from numpy import sin, cos, pi, linspace
 
 # custom module
 from utils import PROPS
+from utils import HEADER as ht
 
 
 def draw_breakpoints_creative(chr, start, end):
@@ -60,6 +61,7 @@ def draw_breakpoints(chr1, start, chr2, end, chr_offsets, idx, breakpoints_list,
 		xs, ys = draw_arc(start, end, arc_start, arc_end, resolution=100, scale=scale)
 		# set the chromosome offset
 		xs = xs + chr_offsets[chr1]
+
 		# draw arc
 		if ax:
 			ax.plot(xs, ys, color=color, alpha=alpha, lw=linesize)
@@ -72,25 +74,38 @@ def draw_breakpoints(chr1, start, chr2, end, chr_offsets, idx, breakpoints_list,
 			plt.scatter(xs[0], 0, s=w * dotsize, color=color, alpha=alpha)
 			plt.scatter(xs[-1], 0, s=w * dotsize, color=color, alpha=alpha)
 			plt.title(title)
-		plt.xlabel(chr1)
+		plt.xlabel("")
 
 
-def vizualize_cn(cv_profile_t, cv_profile_r, plot_col="coverage_mean", width=11, height=5):
-	sns.set(rc={'figure.figsize': (width, height)})
+def vizualize_cn(cv_profile_t, cv_profile_r, plot_col="coverage_mean", width=20, height=5):
+
 	sns.set_style("whitegrid")
+	sns.set_context("paper")
+	# sns.set(rc={'figure.figsize': (width, height)})
 
 	cv_profile_t["track"] = "true"
 	cv_profile_r["track"] = "reconstructed"
 	c = cv_profile_t.append(cv_profile_r)
 
 	ncols = c["#chr"].drop_duplicates().shape[0]
-	d = {'color': ['C0', 'k'], "ls": ["-", "--"]}
-	g = sns.FacetGrid(c, col="#chr", height=4, col_wrap=ncols, hue="track", hue_kws=d)
-	g.map(sns.lineplot,
-		  "end",
+	d = {'color': ['green', 'blue'], "ls": ["-", "-"]}
+
+	g = sns.FacetGrid(c,
+					  col=ht.CHR,
+					  height=3,
+					  col_wrap=ncols,
+					  hue="track",
+					  hue_kws=d,
+					  sharey="col",
+					  sharex=None
+					  )
+	ax = g.map(sns.lineplot,
+		  ht.END,
 		  plot_col,
 		  drawstyle='steps-pre',
-		  alpha=0.8)
+		  alpha=0.8,
+		  linewidth = 1.5)
+
 	g.add_legend()
 	g.fig.suptitle(plot_col)
 
