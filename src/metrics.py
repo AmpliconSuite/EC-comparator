@@ -20,6 +20,8 @@ from utils import PROPS as p
 from utils import DDT as ddt
 from utils import NpEncoder
 
+import warnings
+warnings.filterwarnings("ignore")
 
 def rename_columns(df_cols, dict_mapping_cols):
 	"""
@@ -837,7 +839,6 @@ def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
 	h = get_hamming_score(df_t_pr, df_r_pr, df_bins_pr)
 	h_norm = get_hamming_score_norm(df_t_pr, df_r_pr, df_bins_pr)
 
-	print(dict_metrics.keys())
 	dict_metrics[ht.DISTANCES][ddt.HAMMING] = round(h,2)
 	dict_metrics[ht.DISTANCES][ddt.HAMMING_NORM] = round(h_norm,2)
 
