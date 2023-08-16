@@ -7,17 +7,16 @@ AmpliconComparison entry point
 """
 
 import argparse
-import logging
 import os
 import traceback
-import sys
-from pprint import pprint
 
-import metrics
-from metrics import dict_distance_paired_breakpoints_thresholds as ddt
 from configs import Configs
-from utils import DDT as d
-from utils import HEADER as h
+from utils.utils import DDT as d
+from utils.utils import HEADER as h
+from metrics import compare
+
+# from src.utils.utils import DDT as d
+# from src.utils.utils import HEADER as h
 
 def config(args):
 	"""
@@ -85,7 +84,7 @@ def main():
 		# 2. Create outdir if not exist
 		os.makedirs(args.outdir, exist_ok=True)
 		# 3. Compare cycles
-		metrics.compare_cycles(args.first_structure,
+		compare.compare_cycles(args.first_structure,
 							   args.second_structure,
 							   args.outdir,
 							   dict_configs)

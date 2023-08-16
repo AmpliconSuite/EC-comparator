@@ -1,4 +1,3 @@
-import os
 from numpy import sin, cos, pi, linspace
 import pandas as pd
 
@@ -7,9 +6,9 @@ import seaborn as sns
 import plotly.express as px
 
 # custom module
-from utils import DDT
-from utils import HEADER as ht
-from utils import PROPS
+from utils.utils import DDT
+from utils.utils import HEADER as ht
+from utils.utils import PROPS
 
 
 def draw_total_cost(dict_metrics, outfile):

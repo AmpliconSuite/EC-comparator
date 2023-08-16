@@ -6,9 +6,9 @@ Created using PyCharm
 Configs
 """
 
-from utils import HEADER as h
-from utils import DDT as d
-import metrics as m
+from utils.utils import HEADER as h
+from utils.utils import DDT as d
+from metrics import compare as m
 
 
 class Configs:

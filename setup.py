@@ -30,7 +30,7 @@ setuptools.setup(
 	python_requires=">=3.7, <=3.11",
 	entry_points={
         'console_scripts': [
-            'AmpliconComparison = src:metrics.py'
+            'AmpliconComparison = src:compare.py'
         	]
     	},
 	zip_safe = False
