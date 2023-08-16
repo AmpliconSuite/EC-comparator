@@ -15,6 +15,7 @@ from pybedtools import BedTool
 import pyranges as pr
 import networkx as nx
 
+import viz
 from utils import HEADER as ht
 from utils import PROPS as p
 from utils import DDT as ddt
@@ -869,8 +870,12 @@ def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
 	# 8. Output
 	with open(os.path.join(outdir, 'metrics.json'), 'w', encoding='utf-8') as f:
 		final_dict = remove_ref2methods(dict_metrics)
-		pprint(final_dict)
 		json.dump(final_dict, f, ensure_ascii=False, indent=4, cls=NpEncoder)
+
+	# plot total cost
+	viz.draw_total_cost(dict_metrics, os.path.join(outdir, 'total_cost.png'))
+
+	# save coverage profile
 	cv_profile_r.to_csv(os.path.join(outdir, 'e2_coverage_profile.txt'), header=True, index=False, sep="\t")
 	cv_profile_t.to_csv(os.path.join(outdir, 'e1_coverage_profile.txt'), header=True, index=False, sep="\t")
 

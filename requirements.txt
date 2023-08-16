@@ -10,3 +10,4 @@ js.d3==3.5.5
 tenacity==8.2.2
 plotly==5.15.0
 bezier==2021.2.12
+kaleido==0.2.1

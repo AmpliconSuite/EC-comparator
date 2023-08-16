@@ -1,12 +1,40 @@
+import os
+from numpy import sin, cos, pi, linspace
+import pandas as pd
+
 import matplotlib.pyplot as plt
 import seaborn as sns
-import numpy as np
-import pandas as pd
-from numpy import sin, cos, pi, linspace
+import plotly.express as px
 
 # custom module
-from utils import PROPS
+from utils import DDT
 from utils import HEADER as ht
+from utils import PROPS
+
+
+def draw_total_cost(dict_metrics, outfile):
+	r = []
+	theta = []
+	for key in dict_metrics[ht.DISTANCES][DDT.TOTAL_COST_DESCRIPTION]:
+		theta.append(key)
+		r.append(dict_metrics[ht.DISTANCES][key])
+	df = pd.DataFrame(dict(
+		r=r,
+		theta=theta))
+
+	fig = px.line_polar(df, r='r', theta='theta', line_close=True)
+	fig.update_traces(fill='toself')
+	fig.update_layout(
+		polar=dict(
+			radialaxis=dict(
+				visible=True,
+				range=[0, 1]
+			)),
+		showlegend=False
+	)
+
+	# fig.show()
+	fig.write_image(outfile)
 
 
 def draw_breakpoints_creative(chr, start, end):
@@ -37,7 +65,6 @@ def draw_arc(x, y, arc_start, arc_end, resolution=100, scale=False):
 
 def draw_breakpoints(chr1, start, chr2, end, chr_offsets, idx, breakpoints_list, color='green',
 					 alpha=0.5, linesize=3, dotsize=10, w=5, ax=None, title="", flipped=False, scale=False):
-
 	arc_start = 0
 	arc_end = 1
 	if flipped:
@@ -78,7 +105,6 @@ def draw_breakpoints(chr1, start, chr2, end, chr_offsets, idx, breakpoints_list,
 
 
 def vizualize_cn(cv_profile_t, cv_profile_r, plot_col="coverage_mean", width=20, height=5):
-
 	sns.set_style("whitegrid")
 	sns.set_context("paper")
 	# sns.set(rc={'figure.figsize': (width, height)})
@@ -100,11 +126,11 @@ def vizualize_cn(cv_profile_t, cv_profile_r, plot_col="coverage_mean", width=20,
 					  sharex=None
 					  )
 	ax = g.map(sns.lineplot,
-		  ht.END,
-		  plot_col,
-		  drawstyle='steps-pre',
-		  alpha=0.8,
-		  linewidth = 1.5)
+			   ht.END,
+			   plot_col,
+			   drawstyle='steps-pre',
+			   alpha=0.8,
+			   linewidth=1.5)
 
 	g.add_legend()
 	g.fig.suptitle(plot_col)
@@ -120,7 +146,7 @@ def get_chromosome_offset(df_t, df_r):
 
 	Returns:
 	"""
-	df =df_t.append(df_r, ignore_index=True)
+	df = df_t.append(df_r, ignore_index=True)
 	d1 = df[["#chr", "start"]].groupby(["#chr"]).max().reset_index()
 	d1.columns = ["#chr", "pos"]
 
@@ -172,7 +198,8 @@ def plot_breakpoints_comparison(br_t, br_r, chr_offsets, breakpoint_match=None, 
 		c2 = row["chr2"]
 		p1 = row["start"]
 		p2 = row["end"]
-		draw_breakpoints(c1, p1, c2, p2, chr_offsets, index, matched_br_r, color='blue', alpha=0.5, ax=ax, title=title, flipped=True, scale=scale)
+		draw_breakpoints(c1, p1, c2, p2, chr_offsets, index, matched_br_r, color='blue', alpha=0.5, ax=ax, title=title,
+						 flipped=True, scale=scale)
 
 	if ax:
 		ax.axhline(0, color="gray", alpha=0.5, ls="--")
