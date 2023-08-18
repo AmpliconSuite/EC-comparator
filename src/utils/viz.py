@@ -1,17 +1,20 @@
-from numpy import sin, cos, pi, linspace
+import math
 import pandas as pd
+import numpy as np
+from numpy import sin, cos, pi, linspace
 
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 
 # custom module
-from utils.utils import DDT
-from utils.utils import HEADER as ht
-from utils.utils import PROPS
+from src.utils.utils import DDT
+from src.utils.utils import HEADER as ht
+from src.utils.utils import PROPS
+from src.metrics import features
 
 
-def draw_total_cost(dict_metrics, outfile):
+def draw_total_cost(dict_metrics, outfile=None):
 	r = []
 	theta = []
 	for key in dict_metrics[ht.DISTANCES][DDT.TOTAL_COST_DESCRIPTION]:
@@ -32,8 +35,11 @@ def draw_total_cost(dict_metrics, outfile):
 		showlegend=False
 	)
 
-	# fig.show()
-	fig.write_image(outfile)
+	if outfile:
+		fig.write_image(outfile)
+	else:
+		# plot to stdin
+		fig.show()
 
 
 def draw_breakpoints_creative(chr, start, end):
@@ -103,72 +109,117 @@ def draw_breakpoints(chr1, start, chr2, end, chr_offsets, idx, breakpoints_list,
 		plt.xlabel("")
 
 
-def vizualize_cn(cv_profile_t, cv_profile_r, plot_col="coverage_mean", width=20, height=5):
+def break_cn(df):
+	"""
+	Break copy number into the double number of bins
+	"""
+	cols = [ht.CHR, ht.START, ht.END, ht.CN, "track"]
+	df_new = pd.DataFrame(columns=cols)
+	j = 0
+	chr_old = -1
+
+	for i in range(0, df.shape[0]):
+		chr, start, end, cn, type = df.loc[i, cols].tolist()
+		len = end - start
+
+		if chr_old == -1 or chr != chr_old:
+			if chr_old != -1:
+				df_new.loc[j, :] = [chr_old,
+									df_new.loc[j - 1, ht.END],
+									df_new.loc[j - 1, ht.END] + 100,
+									df_new.loc[j - 1, ht.CN],
+									df_new.loc[j - 1, "track"]]
+				j = j + 1
+			chr_old = chr
+
+		df_new.loc[j, :] = [chr, start, start + math.floor(len / 2), cn, type]
+		j = j + 1
+		df_new.loc[j, :] = [chr, start + math.floor(len / 2) + 1, end, cn, type]
+		j = j + 1
+
+	# last element
+	df_new.loc[j, :] = [chr_old,
+						df_new.loc[j - 1, ht.END],
+						df_new.loc[j - 1, ht.END] + 100,
+						df_new.loc[j - 1, ht.CN],
+						df_new.loc[j - 1, "track"]]
+
+	return df_new
+
+
+def draw_cn(cv_profile_t, cv_profile_r, plot_col=ht.CN, width=20, height=5):
 	sns.set_style("whitegrid")
 	sns.set_context("paper")
-	# sns.set(rc={'figure.figsize': (width, height)})
 
+	# sns.set(rc={'figure.figsize': (width, height)})
 	cv_profile_t["track"] = "true"
 	cv_profile_r["track"] = "reconstructed"
-	c = cv_profile_t.append(cv_profile_r)
+	c_new = break_cn(cv_profile_t).append(break_cn(cv_profile_r), ignore_index=True)
 
-	ncols = c["#chr"].drop_duplicates().shape[0]
-	d = {'color': ['green', 'blue'], "ls": ["-", "-"]}
+	chrlist = c_new[ht.CHR].drop_duplicates().tolist()
+	colors = ["blue", "green", "red", "purple"]
+	tracks = c_new["track"].drop_duplicates().tolist()
 
-	g = sns.FacetGrid(c,
-					  col=ht.CHR,
-					  height=3,
-					  col_wrap=ncols,
-					  hue="track",
-					  hue_kws=d,
-					  sharey="col",
-					  sharex=None
-					  )
-	ax = g.map(sns.lineplot,
-			   ht.END,
-			   plot_col,
-			   drawstyle='steps-pre',
-			   alpha=0.8,
-			   linewidth=1.5)
+	ncols = len(chrlist)
+	fig, axs = plt.subplots(1, ncols, figsize=(width, height), sharey=True)
 
-	g.add_legend()
-	g.fig.suptitle(plot_col)
+	for i, ci in enumerate(chrlist):
+		for j, t in enumerate(tracks):
+			x = c_new.loc[(c_new[ht.CHR] == ci) & (c_new["track"] == t), ht.END].tolist()
+			y = c_new.loc[(c_new[ht.CHR] == ci) & (c_new["track"] == t), ht.CN].tolist()
+			axs[i].plot(x, y,
+						drawstyle='steps',
+						label=ci,
+						linewidth=6,
+						color=colors[j],
+						alpha=0.7)
+			axs[i].fill_between(x, y, color=colors[j], step="pre", alpha=0.2)
+
+			axs[i].set_xlabel(ci, fontsize=12)
+			axs[i].set_ylabel("")
+
+			if i == 0:
+				axs[i].set_ylabel("cn", fontsize=12)
+			axs[i].set_xticklabels(np.array(axs[i].get_xticks()).astype(int),
+								   rotation=90,
+								   fontsize=12)
+			axs[i].set_yticklabels(np.array(axs[i].get_yticks()).astype(int),
+								   fontsize=12)
+	axs[i].legend()
 
 
-def get_chromosome_offset(df_t, df_r):
-	"""
-	Get chromosome offsets for visualization purpose.
-
-	Arguments:
-		df_t (pd.DataFrame):
-		df_r (pd.DataFrame:
-
-	Returns:
-	"""
-	df = df_t.append(df_r, ignore_index=True)
-	d1 = df[["#chr", "start"]].groupby(["#chr"]).max().reset_index()
-	d1.columns = ["#chr", "pos"]
-
-	d2 = df[["#chr", "end"]].groupby(["#chr"]).max().reset_index()
-	d2.columns = ["#chr", "pos"]
-
-	d3 = d1.append(d2, ignore_index=True).groupby(["#chr"]).max().reset_index()
-	d3.columns = ["#chr", "pos"]
-
-	chridx = d3["#chr"].drop_duplicates().tolist()
-
-	offsets = {chridx[0]: 0}
-	if len(chridx) == 1:
-		return offsets
-
-	l = d3.shape[0]
-	cumm_offset = 0
-	for i in range(1, l):
-		max_pos = d3[d3["#chr"] == chridx[i - 1]].iloc[0, 1]
-		cumm_offset += max_pos + 5000
-		offsets[chridx[i]] = cumm_offset
-
-	return offsets
+# plt.figure(figsize=(width, height))
+# plt.plot(x, y + 2, drawstyle='steps', label='steps (=steps-pre)')
+#
+#
+#
+# ncols = c_new[ht.CHR].drop_duplicates().shape[0]
+# d = {'color': ['green', 'blue'], "ls": ["-", "-"]}
+#
+#
+# g = sns.FacetGrid(c_new,
+# 				  col=ht.CHR,
+# 				  height=3,
+# 				  col_wrap=ncols,
+# 				  hue="track",
+# 				  hue_kws=d,
+# 				  sharey="col",
+# 				  sharex=None,
+# 				  )
+# g = g.map(sns.lineplot,
+# 		   ht.END,
+# 		   plot_col,
+# 		   drawstyle='steps-pre',
+# 		   alpha=0.5,
+# 		   linewidth=3)
+#
+# # rename correctly the chr
+# g.set_titles(col_template="")
+# for i,val in enumerate(c_new[ht.CHR].drop_duplicates().tolist()):
+# 	g.axes[i].set_xlabel(val)
+# 	g.axes[i].set_xticklabels(np.array(g.axes[i].get_xticks()).astype(int), rotation = 90)
+# g.add_legend()
+# g.fig.suptitle(plot_col)
 
 
 def plot_breakpoints_comparison(br_t, br_r, chr_offsets, breakpoint_match=None, ax=None, title="", scale=True):

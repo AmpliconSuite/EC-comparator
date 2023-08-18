@@ -16,18 +16,8 @@ from sklearn import preprocessing
 
 import pyranges as pr
 
-from utils.utils import HEADER as ht
-from utils.utils import DDT as ddt
-
-
-def get_cos_similarity_cn(e1, e2):
-	"""
-	Args:
-		e1 (pd.DataFrame): First reconstruction binned by union of all bins
-		e2 (pd.DataFrame): Second reconstruction binned by union of all bins
-	"""
-	return cosine_similarity(e1["cn"].tolist(), e2["cn"].tolist())
-
+from src.utils.utils import HEADER as ht
+from src.utils.utils import DDT as ddt
 
 def get_hamming_score(e1, e2, bins):
 	"""
@@ -96,9 +86,11 @@ def get_overlap_fragments_weighted(e1, e2, bins):
 	overlaps = overlaps.as_df()
 	overlaps["overlapping_score"] = overlaps.apply(lambda x: abs(x.e1 - x.e2), axis=1)
 	overlaps["len"] = abs(overlaps["End"] - overlaps["Start"])
+	# account for duplicated fragments
+	overlaps["totallen"] = overlaps.apply(lambda x: max(x.e1, x.e2) * x.len, axis=1)
 	overlaps["prod"] = overlaps["overlapping_score"] * overlaps["len"]
 
-	return (overlaps["prod"].sum()) / (overlaps["len"].sum())
+	return (overlaps["prod"].sum()) / (overlaps["totallen"].sum())
 
 
 def get_overlap_cycles_weighted(e1, e2, bins):
@@ -151,17 +143,21 @@ def get_overlap_cycles_weighted(e1, e2, bins):
 						overlap_parent2[["Chromosome", "Start", "End", "e2"]], how='inner')
 	overlaps["overlapping_score"] = overlaps.apply(lambda x: abs(x.e1 - x.e2), axis=1)
 	overlaps["len"] = abs(overlaps["End"] - overlaps["Start"])
+	overlaps["totallen"] = overlaps.apply(lambda x: max(x.e1, x.e2) * x.len, axis=1)
 	overlaps["prod"] = overlaps["overlapping_score"] * overlaps["len"]
 
-	return (overlaps["prod"].sum()) / (overlaps["len"].sum())
+	return (overlaps["prod"].sum()) / (overlaps["totallen"].sum())
 
 
 def get_cosine_distance_cn(cn_profile1, cn_profile2):
 	"""
 	Get cosine distance between the two copy number profiles
 	"""
-	return 1 - abs(cosine_similarity(np.array([cn_profile1[ht.CN].tolist()]),
-									 np.array([cn_profile2[ht.CN].tolist()]))[0][0])
+	cn_profile1["estimated_cn_normalized"] = cn_profile1.apply(lambda x: x[ht.CN] * abs(x[ht.END]-x[ht.START]), axis=1)
+	cn_profile2["estimated_cn_normalized"] = cn_profile2.apply(lambda x: x[ht.CN] * abs(x[ht.END]-x[ht.START]), axis=1)
+
+	return 1 - abs(cosine_similarity(np.array([cn_profile1["estimated_cn_normalized"].tolist()]),
+									 np.array([cn_profile2["estimated_cn_normalized"].tolist()]))[0][0])
 
 
 def euclidian_distance(a, b, x, y):

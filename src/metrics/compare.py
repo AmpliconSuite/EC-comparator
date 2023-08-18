@@ -9,13 +9,13 @@ Compare cycle profiles.
 import os
 import json
 
-from metrics.features import *
-from metrics.breakpoints import *
-from metrics.distances import *
-from utils import viz
-from utils.utils import HEADER as ht
-from utils.utils import DDT as ddt
-from utils.utils import NpEncoder
+from src.metrics.features import *
+from src.metrics.breakpoints import *
+from src.metrics.distances import *
+from src.utils import viz
+from src.utils.utils import HEADER as ht
+from src.utils.utils import DDT as ddt
+from src.utils.utils import NpEncoder
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -35,6 +35,7 @@ def get_total_cost(dict_metrics):
 	"""
 	Get total cost
 	"""
+
 	total_cost = 0
 	total_cost_description = {}
 	for key in dict_metrics[ht.CONFIGS]:
@@ -115,6 +116,7 @@ def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
 
 	# plot total cost
 	viz.draw_total_cost(dict_metrics, os.path.join(outdir, 'total_cost.png'))
+	viz.draw_cn(cv_profile_t, cv_profile_r)
 
 	# save coverage profile
 	cv_profile_r.to_csv(os.path.join(outdir, 'e2_coverage_profile.txt'), header=True, index=False, sep="\t")

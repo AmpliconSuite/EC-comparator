@@ -10,10 +10,10 @@ import argparse
 import os
 import traceback
 
-from configs import Configs
-from utils.utils import DDT as d
-from utils.utils import HEADER as h
-from metrics import compare
+from src.configs import Configs
+from src.utils.utils import DDT as d
+from src.utils.utils import HEADER as h
+from src.metrics import compare
 
 # from src.utils.utils import DDT as d
 # from src.utils.utils import HEADER as h

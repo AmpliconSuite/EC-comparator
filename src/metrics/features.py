@@ -10,11 +10,48 @@ import numpy as np
 import pyranges as pr
 from pybedtools import BedTool
 
-from utils.utils import HEADER as ht
-from utils.utils import PROPS as p
+from src.utils.utils import HEADER as ht
+from src.utils.utils import PROPS as p
 
 import warnings
 warnings.filterwarnings("ignore")
+
+
+def get_chromosome_offset(df_t, df_r):
+	"""
+	Get chromosome offsets for visualization purpose.
+
+	Arguments:
+		df_t (pd.DataFrame):
+		df_r (pd.DataFrame:
+
+	Returns:
+	"""
+
+	df_bins = pd.DataFrame(np.concatenate((df_t[[ht.CHR, ht.START]].values,
+										   df_t[[ht.CHR, ht.END]].values,
+										   df_r[[ht.CHR, ht.START]].values,
+										   df_r[[ht.CHR, ht.END]].values),
+										  axis=0))
+
+	df_bins.columns = [ht.CHR, ht.START]
+	d3 = df_bins.groupby([ht.CHR]).agg({ht.START: [np.min, np.max]}).reset_index()
+
+	chridx = d3[ht.CHR].drop_duplicates().tolist()
+
+	offsets = {chridx[0]: 0}
+	if len(chridx) == 1:
+		return offsets
+
+	l = d3.shape[0]
+	cumm_offset = 0
+	for i in range(1, l):
+		max_pos = d3[d3[ht.CHR] == chridx[i - 1]].iloc[0, 1]
+		cumm_offset += max_pos
+		offsets[chridx[i]] = cumm_offset
+
+	return offsets
+
 
 def rename_columns(df_cols, dict_mapping_cols):
 	"""
@@ -75,7 +112,6 @@ def bin_genome(t_collection, r_collection, margin_size=10000):
 										  axis=0))
 
 	df_bins.columns = [ht.CHR, ht.START]
-	# return df_bins
 
 	# get max and min for each chromosome
 	df_bins_gr = df_bins.groupby([ht.CHR]).agg({ht.START: [np.min, np.max]}).reset_index()
@@ -105,6 +141,7 @@ def bin_genome(t_collection, r_collection, margin_size=10000):
 	return df_bins[[ht.CHR, ht.START, ht.END, ht.LEN]]
 
 
+
 def read_pyranges(df_t, df_r, bins):
 	"""
 	Load data as pyranges
@@ -128,13 +165,18 @@ def get_feature_cn(df_cycles, bins):
 	"""
 	Get copy-number binned using defined intervals
 	"""
-
+	# bins
 	a = BedTool.from_dataframe(bins[[ht.CHR, ht.START, ht.END]])
+
+	# sum all cn for same bin
 	df_new = df_cycles[[ht.CHR, ht.START, ht.END, ht.CN]].sort_values(by=[ht.CHR, ht.START, ht.END]).groupby(
 		[ht.CHR, ht.START, ht.END]).sum().reset_index()
 	b = BedTool.from_dataframe(df_new[[ht.CHR, ht.START, ht.END, ht.CN]])
+
+	# intersect them
 	o1 = a.intersect(b, wo=True, loj=True).to_dataframe().iloc[:, [0, 1, 2, 6]]
 	o1.columns = [ht.CHR, ht.START, ht.END, ht.CN]
+
 	o1.loc[o1[ht.CN] == ".", ht.CN] = 0
 	o1[ht.CN] = pd.to_numeric(o1[ht.CN])
 	o1 = o1.groupby([ht.CHR, ht.START, ht.END]).sum().reset_index()
