@@ -36,6 +36,11 @@ def config(args):
 	dict[h.BREAKPOINT_DISTANCE][d.EUCLIDIAN][h.THRESHOLD] = args.euclidian_distance_threshold
 	dict[h.BREAKPOINT_DISTANCE][d.RELATIVE_METRIC][h.ENABLE] = args.relative_distance
 	dict[h.BREAKPOINT_DISTANCE][d.RELATIVE_METRIC][h.THRESHOLD] = args.relative_distance_threshold
+	if dict[h.BREAKPOINT_DISTANCE][d.EUCLIDIAN][h.ENABLE]:
+		dict[h.BREAKPOINT_DISTANCE][h.DEFAULT] = d.EUCLIDIAN
+	else:
+		dict[h.BREAKPOINT_DISTANCE][h.DEFAULT] = d.RELATIVE_METRIC
+		dict[h.BREAKPOINT_DISTANCE][d.RELATIVE_METRIC][h.ENABLE] = True
 
 	return dict
 

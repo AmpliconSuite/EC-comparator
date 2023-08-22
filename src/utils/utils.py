@@ -54,6 +54,7 @@ class HEADER:
 	OTHER_PARAMS = 'other_params'
 	CONFIGS = 'configs'
 	DISTANCES = 'distances'
+	DEFAULT = 'default'
 
 
 class PROPS:
@@ -66,7 +67,7 @@ class PROPS:
 	MAX_COST = 100000
 
 	# compute similarity
-	INF = 3000000000
+	INF = 300000000
 
 	DICT_COLS = {"#chr": "Chromosome",
 				 "bin": "Chromosome",
@@ -89,7 +90,8 @@ class PROPS:
 						"strand": "strand",
 						"orientation": "strand"
 						}
-
+	RNULL = "rnull"
+	TNULL = "tnull"
 
 class DDT:
 	EUCLIDIAN = 'euclidian'
@@ -115,6 +117,7 @@ class DDT:
 
 	UNMATCHED = 'unmatched'
 	UNMATCHED_THRESHOLD = 10000
+	SIGMOID_THRESHOLD = 250
 
 	HAMMING = 'hamming'
 	HAMMING_NORM = 'hamming_norm'

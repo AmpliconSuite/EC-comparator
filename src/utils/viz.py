@@ -3,36 +3,80 @@ import pandas as pd
 import numpy as np
 from numpy import sin, cos, pi, linspace
 
-import matplotlib.pyplot as plt
 import seaborn as sns
+import plotly.graph_objects as go
 import plotly.express as px
+import matplotlib.pyplot as plt
 
 # custom module
 from src.utils.utils import DDT
 from src.utils.utils import HEADER as ht
 from src.utils.utils import PROPS
-from src.metrics import features
+
+tokeep = [DDT.HAMMING_NORM, DDT.COSINE_DISTANCE, DDT.CYCLES_DISTANCE, DDT.FRAGMENTS_DISTANCE,
+		  DDT.BREAKPOINT_DISTANCE, DDT.JACCARD_DISTANCE, DDT.TOTAL_COST]
 
 
 def draw_total_cost(dict_metrics, outfile=None):
+	# radial plot information
 	r = []
 	theta = []
 	for key in dict_metrics[ht.DISTANCES][DDT.TOTAL_COST_DESCRIPTION]:
 		theta.append(key)
 		r.append(dict_metrics[ht.DISTANCES][key])
+
 	df = pd.DataFrame(dict(
 		r=r,
 		theta=theta))
 
-	fig = px.line_polar(df, r='r', theta='theta', line_close=True)
-	fig.update_traces(fill='toself')
+	fig = px.line_polar(df, r='r',
+						theta='theta',
+						line_close=True
+						)
+	# opacity = dict_metrics[ht.DISTANCES][DDT.TOTAL_COST] / (len(tokeep)-1)
+	fig.update_traces(fill='toself', opacity=0.8)
 	fig.update_layout(
 		polar=dict(
 			radialaxis=dict(
 				visible=True,
 				range=[0, 1]
 			)),
-		showlegend=False
+		showlegend=True
+	)
+
+	if outfile:
+		fig.write_image(outfile)
+	else:
+		# plot to stdin
+		fig.show()
+
+
+def draw_total_cost_table(dict_metrics, outfile=None):
+	# table information
+	table_val = []
+	table_dist = []
+
+	for key in dict_metrics[ht.DISTANCES]:
+		if key in tokeep:
+			table_dist.append(key)
+			table_val.append(dict_metrics[ht.DISTANCES][key])
+
+	fig = go.Figure(data=go.Table(
+		header=dict(
+			values=["Distance", "Value"],
+			font=dict(color='darkslategray', size=14),
+			line_color='gray',
+			fill_color='white',
+			align="left"
+		),
+		cells=dict(
+			values=[table_dist, table_val],
+			align="left",
+			line_color='gray',
+			fill_color='white',
+			font=dict(color='darkslategray', size=12)
+		)
+	)
 	)
 
 	if outfile:
@@ -147,7 +191,7 @@ def break_cn(df):
 	return df_new
 
 
-def draw_cn(cv_profile_t, cv_profile_r, plot_col=ht.CN, width=20, height=5):
+def draw_cn(cv_profile_t, cv_profile_r, width=20, height=5, outfile=None):
 	sns.set_style("whitegrid")
 	sns.set_context("paper")
 
@@ -162,30 +206,47 @@ def draw_cn(cv_profile_t, cv_profile_r, plot_col=ht.CN, width=20, height=5):
 
 	ncols = len(chrlist)
 	fig, axs = plt.subplots(1, ncols, figsize=(width, height), sharey=True)
+	ax = None
+
+	if ncols == 1:
+		ax = axs
 
 	for i, ci in enumerate(chrlist):
 		for j, t in enumerate(tracks):
 			x = c_new.loc[(c_new[ht.CHR] == ci) & (c_new["track"] == t), ht.END].tolist()
 			y = c_new.loc[(c_new[ht.CHR] == ci) & (c_new["track"] == t), ht.CN].tolist()
-			axs[i].plot(x, y,
-						drawstyle='steps',
-						label=ci,
-						linewidth=6,
-						color=colors[j],
-						alpha=0.7)
-			axs[i].fill_between(x, y, color=colors[j], step="pre", alpha=0.2)
 
-			axs[i].set_xlabel(ci, fontsize=12)
-			axs[i].set_ylabel("")
+			if ncols == 1:
+				ax = axs
+			else:
+				ax = axs[i]
+
+			ax.plot(x, y,
+					drawstyle='steps',
+					label=ci,
+					linewidth=6,
+					color=colors[j],
+					alpha=0.7)
+			ax.fill_between(x, y, color=colors[j], step="pre", alpha=0.2)
+
+			ax.set_xlabel(ci, fontsize=12)
+			ax.set_ylabel("")
+			ax.set_xticklabels(np.array(ax.get_xticks()).astype(int),
+							   rotation=90,
+							   fontsize=12)
+			ax.set_yticklabels(np.array(ax.get_yticks()).astype(int),
+							   fontsize=12)
 
 			if i == 0:
-				axs[i].set_ylabel("cn", fontsize=12)
-			axs[i].set_xticklabels(np.array(axs[i].get_xticks()).astype(int),
-								   rotation=90,
-								   fontsize=12)
-			axs[i].set_yticklabels(np.array(axs[i].get_yticks()).astype(int),
-								   fontsize=12)
-	axs[i].legend()
+				ax.set_ylabel("cn", fontsize=12)
+
+
+	lines = [plt.Line2D([0], [0], color=c, linewidth=3, linestyle='-') for c in colors[:2]]
+	ax.legend(lines, tracks[:2], fontsize=12)
+
+	fig.show()
+	if outfile:
+		plt.savefig(outfile, bbox_inches='tight', dpi=300)
 
 
 # plt.figure(figsize=(width, height))

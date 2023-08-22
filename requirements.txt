@@ -11,3 +11,5 @@ tenacity==8.2.2
 plotly==5.15.0
 bezier==2021.2.12
 kaleido==0.2.1
+dash==2.12.1
+dash-core-components==2.0.0
