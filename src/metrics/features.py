@@ -129,7 +129,7 @@ def bin_genome(t_collection, r_collection, margin_size=10000):
 										  axis=0))
 
 	df_bins.columns = [ht.CHR, ht.START]
-	df_bins[ht.START] = df_bins[ht.START].astype(pd.Int64Dtype())
+	df_bins[ht.START] = df_bins[ht.START]
 	df_bins = df_bins.drop_duplicates().sort_values(by=[ht.CHR, ht.START])
 
 	# get max and min for each chromosome
@@ -206,7 +206,7 @@ def get_feature_cn(df_cycles, bins):
 	o1.columns = [ht.CHR, ht.START, ht.END, ht.CN]
 
 	o1.loc[o1[ht.CN] == ".", ht.CN] = 0
-	o1[ht.CN] = pd.to_numeric(o1[ht.CN])
+	o1[ht.CN] = o1[ht.CN].astype(pd.Int64Dtype())
 	o1 = o1.groupby([ht.CHR, ht.START, ht.END]).sum().reset_index()
 
 	return o1

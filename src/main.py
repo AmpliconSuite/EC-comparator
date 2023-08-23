@@ -69,10 +69,10 @@ def main():
 							required=False, default=True, type=bool)
 		parser.add_argument('--euclidian-distance',
 							help='Use euclidian distance for breakpoint-pair matching (default: %(default)s)',
-							required=False, default=False, type=bool)
+							required=False, default=True, type=bool)
 		parser.add_argument('--euclidian-distance-threshold',
 							help='Distance threshold to accept two breakpoint-pairs as matched  (default: %(default)s)',
-							required=False, default=3000, type=float)
+							required=False, default=1000, type=float)
 		parser.add_argument('--relative-distance',
 							help='Relative distance score for breakpoint matching (default: %(default)s)',
 							required=False, default=False, type=bool)
