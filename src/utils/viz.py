@@ -15,7 +15,7 @@ from src.utils.utils import PROPS
 
 tokeep = [DDT.HAMMING_NORM, DDT.COSINE_DISTANCE, DDT.CYCLES_DISTANCE, DDT.FRAGMENTS_DISTANCE,
 		  DDT.BREAKPOINT_DISTANCE, DDT.JACCARD_DISTANCE, DDT.TOTAL_COST]
-
+colors = ["blue", "green", "red", "purple"]
 
 def draw_total_cost(dict_metrics, outfile=None):
 	# radial plot information
@@ -189,7 +189,6 @@ def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=20, height=5, outfile=Non
 	cv_profile_r[ht.TRACK] = ht.S2
 	c_new = break_cn(cv_profile_t).append(break_cn(cv_profile_r), ignore_index=True)
 
-	colors = ["blue", "green", "red", "purple"]
 	tracks = c_new[ht.TRACK].drop_duplicates().tolist()
 
 	ncols = len(chrlist)
@@ -303,7 +302,6 @@ def plot_breakpoints_comparison(br_t, br_r, chr_offsets, breakpoint_match, chrli
 	br_t[ht.TRACK] = ht.S1
 	br_r[ht.TRACK] = ht.S2
 
-	colors = ["blue", "green", "red", "purple"]
 	ncols = len(chrlist)
 	fig, axs = plt.subplots(1, ncols, figsize=(width, height), sharey=True)
 
@@ -338,12 +336,12 @@ def plot_breakpoints_comparison(br_t, br_r, chr_offsets, breakpoint_match, chrli
 
 			# if s1 and matched breakpoint
 			if row[ht.TRACK] == ht.S1 and index in matched_br_t:
-				color = 'green'
+				color = colors[0]
 				alpha = PROPS.MATCHED[PROPS.ALPHA]
 				print(index)
 
 			if row[ht.TRACK] == ht.S2 and index in matched_br_r:
-				color = 'blue'
+				color = colors[1]
 				alpha = PROPS.MATCHED[PROPS.ALPHA]
 
 			draw_breakpoints(c1, p1, c2, p2, chr_offsets,

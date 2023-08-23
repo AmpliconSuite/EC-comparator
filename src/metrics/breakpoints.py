@@ -278,7 +278,7 @@ def create_bipartite_graph(br_t, br_r, dist, threshold):
 	for k in visited_nodes_r:
 		# unmatched breakpoint
 		if k != p.RNULL and len(visited_nodes_r[k]) == 0:
-			list_of_tuples.append((k, p.TNULL, max_value))
+			list_of_tuples.append((p.TNULL,k, max_value))
 
 	# add minimal amount of edges which will make the graph connected
 	max_degree = 0
@@ -328,7 +328,8 @@ def find_matching_breakpoints(G, t_nodes, r_nodes, cost_matrix):
 				todel.append(k)
 
 	for k in todel:
-		del matches[k]
+		if k in matches:
+			del matches[k]
 
 	return matches, breakpoint_match
 

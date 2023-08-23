@@ -105,6 +105,23 @@ def bin_genome(t_collection, r_collection, margin_size=10000):
 	Bin the intervals by the breakpoints union.
 	Warning: Setting a margin size can effect the output of different distances
 	"""
+	# # binning using pybedtools
+	# df_bins = pd.DataFrame(np.concatenate((t_collection[[ht.CHR, ht.START, ht.END]].values,
+	# 									   r_collection[[ht.CHR, ht.START, ht.END]].values),
+	# 									  axis=0))
+	# df_bins.columns = [ht.CHR, ht.START, ht.END]
+	# a = BedTool.from_dataframe(df_bins).sort()
+	# # merge bins 500 apart
+	# df_bins_merged = a.merge(d=0).to_dataframe()
+	# df_bins_merged.columns = [ht.CHR, ht.START, ht.END]
+	# df_bins_merged[ht.LEN] = df_bins_merged.apply(lambda x: abs(x[ht.START] - x[ht.END]), axis=1)
+	# chrlist = df_bins[ht.CHR].drop_duplicates().tolist()
+	#
+	# print(df_bins_merged)
+	# print(chrlist)
+	#
+	# return df_bins_merged, chrlist
+
 	df_bins = pd.DataFrame(np.concatenate((t_collection[[ht.CHR, ht.START]].values,
 										   t_collection[[ht.CHR, ht.END]].values,
 										   r_collection[[ht.CHR, ht.START]].values,
@@ -112,18 +129,20 @@ def bin_genome(t_collection, r_collection, margin_size=10000):
 										  axis=0))
 
 	df_bins.columns = [ht.CHR, ht.START]
+	df_bins[ht.START] = df_bins[ht.START].astype(pd.Int64Dtype())
+	df_bins = df_bins.drop_duplicates().sort_values(by=[ht.CHR, ht.START])
 
 	# get max and min for each chromosome
-	df_bins_gr = df_bins.groupby([ht.CHR]).agg({ht.START: [np.min, np.max]}).reset_index()
-	df_bins_gr.columns = [ht.CHR, "start_amin", "start_amax"]
-	df_bins_gr["start_amin"] = df_bins_gr.apply(lambda x: max(0, x["start_amin"] - margin_size), axis=1)
-	df_bins_gr["start_amax"] = df_bins_gr.apply(lambda x: x["start_amax"] + margin_size, axis=1)
-
-	df_bins = pd.concat([df_bins, df_bins_gr[[ht.CHR, "start_amin"]].rename(columns={"start_amin": ht.START})],
-						ignore_index=True)
-	df_bins = pd.concat([df_bins, df_bins_gr[[ht.CHR, "start_amax"]].rename(columns={"start_amax": ht.START})],
-						ignore_index=True)
-	df_bins = df_bins.sort_values(by=[ht.CHR, ht.START]).drop_duplicates()
+	# df_bins_gr = df_bins.groupby([ht.CHR]).agg({ht.START: [np.min, np.max]}).reset_index()
+	# df_bins_gr.columns = [ht.CHR, "start_amin", "start_amax"]
+	# df_bins_gr["start_amin"] = df_bins_gr.apply(lambda x: max(0, x["start_amin"] - margin_size), axis=1)
+	# df_bins_gr["start_amax"] = df_bins_gr.apply(lambda x: x["start_amax"] + margin_size, axis=1)
+	#
+	# df_bins = pd.concat([df_bins, df_bins_gr[[ht.CHR, "start_amin"]].rename(columns={"start_amin": ht.START})],
+	# 					ignore_index=True)
+	# df_bins = pd.concat([df_bins, df_bins_gr[[ht.CHR, "start_amax"]].rename(columns={"start_amax": ht.START})],
+	# 					ignore_index=True)
+	# df_bins = df_bins.sort_values(by=[ht.CHR, ht.START]).drop_duplicates()
 
 	# rotate with 1 up the start column
 	df_bins_suffix = df_bins.tail(-1)
@@ -133,13 +152,21 @@ def bin_genome(t_collection, r_collection, margin_size=10000):
 	df_bins_suffix.reset_index(drop=True, inplace=True)
 	df_bins = pd.concat([df_bins, df_bins_suffix], axis=1, ignore_index=True)
 	df_bins.columns = [ht.CHR, ht.START, "#chr2", ht.END]
-	df_bins[ht.LEN] = df_bins[ht.END].astype(int) - df_bins[ht.START].astype(int)
+	# keep only rows with same chr and non-negative distance
+	df_bins = df_bins[(df_bins[ht.CHR] == df_bins["#chr2"]) & (abs(df_bins[ht.START] - df_bins[ht.END]) >= 0)]
 
-	# keep only rows with same chr and positive distance
-	df_bins = df_bins[(df_bins[ht.CHR] == df_bins["#chr2"]) & (df_bins[ht.LEN] > 0)]
-	chrlist = df_bins[ht.CHR].drop_duplicates().tolist()
+	# merge intervals
+	df_bins[ht.END] = df_bins.apply(lambda x: x[ht.END] if abs(x[ht.START] - x[ht.END]) < 50 else x[ht.END]-1, axis=1)
+	df_bins = df_bins[(df_bins[ht.END] - df_bins[ht.START]) > 0]
+	a = BedTool.from_dataframe(df_bins[[ht.CHR, ht.START, ht.END]]).sort()
+	df_bins_merged = a.merge(d=0).to_dataframe()
+	df_bins_merged.columns = [ht.CHR, ht.START, ht.END]
 
-	return df_bins[[ht.CHR, ht.START, ht.END, ht.LEN]], chrlist
+	# merge very small intervals
+	df_bins_merged[ht.LEN] = df_bins_merged[ht.END] - df_bins_merged[ht.START]
+	chrlist = df_bins_merged[ht.CHR].drop_duplicates().tolist()
+
+	return df_bins_merged[[ht.CHR, ht.START, ht.END, ht.LEN]], chrlist
 
 
 
