@@ -112,8 +112,8 @@ def draw_arc(x, y, arc_start, arc_end, resolution=100, scale=False):
 	return xs, ys
 
 
-def draw_breakpoints(chr1, start, chr2, end, chr_offsets, idx, breakpoints_list, color='green',
-					 alpha=0.5, linesize=3, dotsize=10, w=5, ax=None, title="", flipped=False, scale=False):
+def draw_breakpoints(chr1, start, chr2, end, chr_offsets, color, alpha,
+					 linesize=3, dotsize=10, w=5, ax=None, title="", flipped=False, scale=False):
 	arc_start = 0
 	arc_end = 1
 	if flipped:
@@ -123,41 +123,30 @@ def draw_breakpoints(chr1, start, chr2, end, chr_offsets, idx, breakpoints_list,
 	# structure are on the same chromosome and no information about breakpoint match
 	if chr1 == chr2:
 
-		# breakpoints list set
-		if breakpoints_list and idx not in breakpoints_list:
-			# color unmatch gray
-			color = PROPS.UNMATCHED[PROPS.COLOR]
-			alpha = PROPS.UNMATCHED[PROPS.ALPHA]
-		if not breakpoints_list or (breakpoints_list and len(breakpoints_list) == 0):
-			# color unmatch gray
-			color = PROPS.UNMATCHED[PROPS.COLOR]
-			alpha = PROPS.UNMATCHED[PROPS.ALPHA]
-
 		# get arc dots
 		xs, ys = draw_arc(start, end, arc_start, arc_end, resolution=100, scale=scale)
 		# set the chromosome offset
 		xs = xs + chr_offsets[chr1]
 
 		# draw arc
-		if ax:
-			ax.plot(xs, ys, color=color, alpha=alpha, lw=linesize)
-			ax.scatter(xs[0], 0, s=w * dotsize, color=color, alpha=alpha)
-			ax.scatter(xs[-1], 0, s=w * dotsize, color=color, alpha=alpha)
-			ax.title.set_text(title)
-			ax.set_yticks([])
-		else:
-			plt.plot(xs, ys, color=color, alpha=alpha, lw=linesize)
-			plt.scatter(xs[0], 0, s=w * dotsize, color=color, alpha=alpha)
-			plt.scatter(xs[-1], 0, s=w * dotsize, color=color, alpha=alpha)
-			plt.title(title)
-		plt.xlabel("")
+		ax.plot(xs, ys, color=color, alpha=alpha, lw=linesize)
+		ax.scatter(xs[0], 0, s=w * dotsize, color=color, alpha=alpha)
+		ax.scatter(xs[-1], 0, s=w * dotsize, color=color, alpha=alpha)
+		ax.title.set_text(title)
+		ax.set_yticks([])
+		# else:
+		# 	plt.plot(xs, ys, color=color, alpha=alpha, lw=linesize)
+		# 	plt.scatter(xs[0], 0, s=w * dotsize, color=color, alpha=alpha)
+		# 	plt.scatter(xs[-1], 0, s=w * dotsize, color=color, alpha=alpha)
+		# 	plt.title(title)
+		# plt.xlabel("")
 
 
 def break_cn(df):
 	"""
 	Break copy number into the double number of bins
 	"""
-	cols = [ht.CHR, ht.START, ht.END, ht.CN, "track"]
+	cols = [ht.CHR, ht.START, ht.END, ht.CN, ht.TRACK]
 	df_new = pd.DataFrame(columns=cols)
 	j = 0
 	chr_old = -1
@@ -172,7 +161,7 @@ def break_cn(df):
 									df_new.loc[j - 1, ht.END],
 									df_new.loc[j - 1, ht.END] + 100,
 									df_new.loc[j - 1, ht.CN],
-									df_new.loc[j - 1, "track"]]
+									df_new.loc[j - 1, ht.TRACK]]
 				j = j + 1
 			chr_old = chr
 
@@ -186,23 +175,22 @@ def break_cn(df):
 						df_new.loc[j - 1, ht.END],
 						df_new.loc[j - 1, ht.END] + 100,
 						df_new.loc[j - 1, ht.CN],
-						df_new.loc[j - 1, "track"]]
+						df_new.loc[j - 1, ht.TRACK]]
 
 	return df_new
 
 
-def draw_cn(cv_profile_t, cv_profile_r, width=20, height=5, outfile=None):
+def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=20, height=5, outfile=None):
 	sns.set_style("whitegrid")
 	sns.set_context("paper")
 
 	# sns.set(rc={'figure.figsize': (width, height)})
-	cv_profile_t["track"] = "true"
-	cv_profile_r["track"] = "reconstructed"
+	cv_profile_t[ht.TRACK] = ht.S1
+	cv_profile_r[ht.TRACK] = ht.S2
 	c_new = break_cn(cv_profile_t).append(break_cn(cv_profile_r), ignore_index=True)
 
-	chrlist = c_new[ht.CHR].drop_duplicates().tolist()
 	colors = ["blue", "green", "red", "purple"]
-	tracks = c_new["track"].drop_duplicates().tolist()
+	tracks = c_new[ht.TRACK].drop_duplicates().tolist()
 
 	ncols = len(chrlist)
 	fig, axs = plt.subplots(1, ncols, figsize=(width, height), sharey=True)
@@ -212,22 +200,28 @@ def draw_cn(cv_profile_t, cv_profile_r, width=20, height=5, outfile=None):
 		ax = axs
 
 	for i, ci in enumerate(chrlist):
+		dict_x = {}
+		dict_y = {}
 		for j, t in enumerate(tracks):
-			x = c_new.loc[(c_new[ht.CHR] == ci) & (c_new["track"] == t), ht.END].tolist()
-			y = c_new.loc[(c_new[ht.CHR] == ci) & (c_new["track"] == t), ht.CN].tolist()
+			dict_x[t] = c_new.loc[(c_new[ht.CHR] == ci) & (c_new[ht.TRACK] == t), ht.END].tolist()
+			dict_y[t] = c_new.loc[(c_new[ht.CHR] == ci) & (c_new[ht.TRACK] == t), ht.CN].tolist()
 
 			if ncols == 1:
 				ax = axs
 			else:
 				ax = axs[i]
 
-			ax.plot(x, y,
+			# flipp y-axis to negative for S2
+			if t == ht.S2:
+				dict_y[t] = [-y for y in dict_y[t]]
+
+			ax.plot(dict_x[t], dict_y[t],
 					drawstyle='steps',
 					label=ci,
-					linewidth=6,
+					linewidth=3,
 					color=colors[j],
-					alpha=0.7)
-			ax.fill_between(x, y, color=colors[j], step="pre", alpha=0.2)
+					alpha=0.5)
+			ax.fill_between(dict_x[t], dict_y[t], color=colors[j], step="pre", alpha=0.1)
 
 			ax.set_xlabel(ci, fontsize=12)
 			ax.set_ylabel("")
@@ -240,9 +234,18 @@ def draw_cn(cv_profile_t, cv_profile_r, width=20, height=5, outfile=None):
 			if i == 0:
 				ax.set_ylabel("cn", fontsize=12)
 
+		# plot difference between the 2 profiles
+		x_diff = dict_x[ht.S1]
+		y_diff = [(np.log2(dict_y[ht.S1][k] + 1) - np.log2(abs(dict_y[ht.S2][k])+1)) for k in range(0, len(dict_y[ht.S1]))]
+		ax.plot(x_diff, y_diff,
+				drawstyle='steps',
+				label=ht.S1 + "/" + ht.S2,
+				linewidth=3,
+				color="black",
+				alpha=1)
 
-	lines = [plt.Line2D([0], [0], color=c, linewidth=3, linestyle='-') for c in colors[:2]]
-	ax.legend(lines, tracks[:2], fontsize=12)
+	lines = [plt.Line2D([0], [0], color=c, linewidth=3, linestyle='-') for c in colors[:2] + ["black"]]
+	ax.legend(lines, tracks[:2] + ["log2(" + ht.S1 + "/" + ht.S2 + ")"], fontsize=12)
 
 	fig.show()
 	if outfile:
@@ -283,7 +286,7 @@ def draw_cn(cv_profile_t, cv_profile_r, width=20, height=5, outfile=None):
 # g.fig.suptitle(plot_col)
 
 
-def plot_breakpoints_comparison(br_t, br_r, chr_offsets, breakpoint_match=None, ax=None, title="", scale=True):
+def plot_breakpoints_comparison(br_t, br_r, chr_offsets, breakpoint_match, chrlist, title="", width=20, height=5, outfile=None):
 	"""
 
 	Arguments:
@@ -297,22 +300,56 @@ def plot_breakpoints_comparison(br_t, br_r, chr_offsets, breakpoint_match=None, 
 	matched_br_t = [a[0] for a in breakpoint_match]
 	matched_br_r = [a[1] for a in breakpoint_match]
 
-	for index, row in br_t.iterrows():
-		c1 = row["chr1"]
-		c2 = row["chr2"]
-		p1 = row["start"]
-		p2 = row["end"]
-		draw_breakpoints(c1, p1, c2, p2, chr_offsets, index, matched_br_t, color='green', alpha=0.5, ax=ax, scale=scale)
+	br_t[ht.TRACK] = ht.S1
+	br_r[ht.TRACK] = ht.S2
 
-	for index, row in br_r.iterrows():
-		c1 = row["chr1"]
-		c2 = row["chr2"]
-		p1 = row["start"]
-		p2 = row["end"]
-		draw_breakpoints(c1, p1, c2, p2, chr_offsets, index, matched_br_r, color='blue', alpha=0.5, ax=ax, title=title,
-						 flipped=True, scale=scale)
+	colors = ["blue", "green", "red", "purple"]
+	ncols = len(chrlist)
+	fig, axs = plt.subplots(1, ncols, figsize=(width, height), sharey=True)
 
-	if ax:
-		ax.axhline(0, color="gray", alpha=0.5, ls="--")
-	else:
-		plt.axhline(0, color="gray", alpha=0.5, ls="--")
+	ax = None
+	if ncols != 1:
+		ax_dict = {chr:axs[i] for i,chr in enumerate(chrlist)}
+
+	for arr in [br_t, br_r]:
+		for index, row in arr.iterrows():
+
+			c1 = row[ht.CHR1]
+			c2 = row[ht.CHR2]
+			p1 = row[ht.START]
+			p2 = row[ht.END]
+
+			if c1 not in chrlist or c2 not in chrlist or c1 != c2:
+				continue
+
+			if ncols == 1:
+				ax = axs
+			else:
+				ax = ax_dict[c1]
+
+			# check if the breakpoint is a match
+			color = PROPS.UNMATCHED[PROPS.COLOR]
+			alpha = PROPS.UNMATCHED[PROPS.ALPHA]
+
+			# set if flipped or not
+			flipped = False
+			if row[ht.TRACK] == ht.S2:
+				flipped = True
+
+			# if s1 and matched breakpoint
+			if row[ht.TRACK] == ht.S1 and index in matched_br_t:
+				color = 'green'
+				alpha = PROPS.MATCHED[PROPS.ALPHA]
+				print(index)
+
+			if row[ht.TRACK] == ht.S2 and index in matched_br_r:
+				color = 'blue'
+				alpha = PROPS.MATCHED[PROPS.ALPHA]
+
+			draw_breakpoints(c1, p1, c2, p2, chr_offsets,
+							color=color, alpha=alpha, ax=ax, flipped=flipped)
+
+
+
+	ax.axhline(0, color="gray", alpha=0.5, ls="--")
+

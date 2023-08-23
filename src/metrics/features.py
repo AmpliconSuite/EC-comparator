@@ -137,8 +137,9 @@ def bin_genome(t_collection, r_collection, margin_size=10000):
 
 	# keep only rows with same chr and positive distance
 	df_bins = df_bins[(df_bins[ht.CHR] == df_bins["#chr2"]) & (df_bins[ht.LEN] > 0)]
+	chrlist = df_bins[ht.CHR].drop_duplicates().tolist()
 
-	return df_bins[[ht.CHR, ht.START, ht.END, ht.LEN]]
+	return df_bins[[ht.CHR, ht.START, ht.END, ht.LEN]], chrlist
 
 
 

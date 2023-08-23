@@ -26,6 +26,9 @@ class HEADER:
 	CHR1 = "chr1"
 	CHR2 = "chr2"
 	LEN = "len"
+	S1 = "s1"
+	S2 = "s2"
+	TRACK  = "track"
 
 	HEADER_SORTED = [CHR, START, END, CIRC_ID, CN, STRAND]
 	DICT_HEADER = {"#chr": CHR,

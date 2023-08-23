@@ -82,7 +82,7 @@ def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
 
 	# as data.frame objects
 	df_t, df_r = read_input(t_file, r_file)
-	bins = bin_genome(df_t, df_r, margin_size=0)
+	bins, chrlist = bin_genome(df_t, df_r, margin_size=0)
 
 	# as pyranges objects
 	df_t_pr, df_r_pr, df_bins_pr = read_pyranges(df_t, df_r, bins)
@@ -132,4 +132,4 @@ def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
 	# save coverage profile
 	cv_profile_r.to_csv(os.path.join(outdir, 'e2_coverage_profile.txt'), header=True, index=False, sep="\t")
 	cv_profile_t.to_csv(os.path.join(outdir, 'e1_coverage_profile.txt'), header=True, index=False, sep="\t")
-	viz.draw_cn(cv_profile_t, cv_profile_r, outfile=os.path.join(outdir, 'e1_e2_coverage_profile.png'))
+	viz.draw_cn(cv_profile_t, cv_profile_r, chrlist, outfile=os.path.join(outdir, 'e1_e2_coverage_profile.png'))
