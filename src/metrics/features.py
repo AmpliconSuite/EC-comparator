@@ -206,7 +206,7 @@ def get_feature_cn(df_cycles, bins):
 	o1.columns = [ht.CHR, ht.START, ht.END, ht.CN]
 
 	o1.loc[o1[ht.CN] == ".", ht.CN] = 0
-	o1[ht.CN] = o1[ht.CN].astype(pd.Int64Dtype())
+	o1[ht.CN] = o1.apply(lambda x: round(float(x[ht.CN]),0), axis=1)
 	o1 = o1.groupby([ht.CHR, ht.START, ht.END]).sum().reset_index()
 
 	return o1

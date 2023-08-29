@@ -9,6 +9,7 @@ AmpliconComparison entry point
 import argparse
 import os
 import traceback
+import datetime
 
 from src.configs import Configs
 from src.utils.utils import DDT as d
@@ -86,8 +87,13 @@ def main():
 
 		# 1. Get all configurations
 		dict_configs = config(args)
+
 		# 2. Create outdir if not exist
+		if args.outdir is None:
+			args.outdir = os.path.join(os.getcwd(),"output_" + str(datetime.datetime.now()))
+			print("Warning: outdir not specified. The files will be saved under ", args.outdir)
 		os.makedirs(args.outdir, exist_ok=True)
+
 		# 3. Compare cycles
 		compare.compare_cycles(args.first_structure,
 							   args.second_structure,

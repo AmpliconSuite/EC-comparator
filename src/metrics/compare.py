@@ -8,6 +8,7 @@ Compare cycle profiles.
 
 import os
 import json
+import matplotlib.pyplot as plt
 
 from src.metrics.features import *
 from src.metrics.breakpoints import *
@@ -16,6 +17,7 @@ from src.utils import viz
 from src.utils.utils import HEADER as ht
 from src.utils.utils import DDT as ddt
 from src.utils.utils import NpEncoder
+
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -57,7 +59,7 @@ def get_total_cost(dict_metrics):
 	return total_cost, total_cost_description
 
 
-def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
+def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True):
 	"""
 	Entrypoint: compare the distance between two cycle sets.
 	Args:
@@ -71,6 +73,9 @@ def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
 	Returns:
 		Dictionary with different distances
 	"""
+	if outdir:
+		os.makedirs(outdir, exist_ok=True)
+
 	dict_metrics = {}
 	dict_metrics[ht.CONFIGS] = dict_configs
 	default_breakpoint_distance = dict_metrics[ht.CONFIGS][ht.BREAKPOINT_DISTANCE][ht.DEFAULT]
@@ -83,6 +88,7 @@ def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
 	# as data.frame objects
 	df_t, df_r = read_input(t_file, r_file)
 	bins, chrlist = bin_genome(df_t, df_r, margin_size=0)
+	chr_offsets = get_chromosome_offset(df_t, df_r)
 
 	# as pyranges objects
 	df_t_pr, df_r_pr, df_bins_pr = read_pyranges(df_t, df_r, bins)
@@ -95,17 +101,19 @@ def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
 	dict_metrics[ht.DISTANCES][ddt.HAMMING_NORM] = round(h_norm,2)
 
 	# 3. Compute copy-number similarity
-	cv_profile_t = get_feature_cn(df_t, bins)
-	cv_profile_r = get_feature_cn(df_r, bins)
+	cn_profile_t = get_feature_cn(df_t, bins)
+	cn_profile_r = get_feature_cn(df_r, bins)
 
-	cv_distance = get_cosine_distance_cn(cv_profile_t, cv_profile_r)
+	cv_distance = get_cosine_distance_cn(cn_profile_t, cn_profile_r)
 	dict_metrics[ht.DISTANCES][ddt.COSINE_DISTANCE] = round(cv_distance,2)
 
 	# 4. Breakpoint matching
-	jc, matches, breakpoint_matches = compute_breakpoint_distance(df_t, df_r,
+	br_t, br_r = get_breakpoints_pairs(df_t, df_r)
+	jc, matches, breakpoint_matches = compute_breakpoint_distance(br_t, br_r,
 																  distance=default_breakpoint_distance,
 																  threshold=default_breakpoint_distance_threshold)
 	dict_metrics[ht.DISTANCES][ddt.JACCARD_DISTANCE] = round(jc,2)
+	# dict_metrics[ht.DISTANCES][ddt.JACCARD_DISTANCE] = 1
 
 	# 5. Penalize for cycles and fragments multiplicity (if the tool decompose in one or more cycles)
 	overlap_fragments_distance = get_overlap_fragments_weighted(df_t_pr, df_r_pr, df_bins_pr)
@@ -121,15 +129,34 @@ def compare_cycles(t_file: str, r_file: str, outdir: str, dict_configs: dict):
 	dict_metrics[ht.DISTANCES][ddt.TOTAL_COST_DESCRIPTION] = total_cost_description
 
 	# 8. Output
-	with open(os.path.join(outdir, 'metrics.json'), 'w', encoding='utf-8') as f:
-		final_dict = remove_ref2methods(dict_metrics)
-		json.dump(final_dict, f, ensure_ascii=False, indent=4, cls=NpEncoder)
+	if outdir:
+		with open(os.path.join(outdir, 'metrics.json'), 'w', encoding='utf-8') as f:
+			final_dict = remove_ref2methods(dict_metrics)
+			json.dump(final_dict, f, ensure_ascii=False, indent=4, cls=NpEncoder)
 
 	# plot total cost
-	viz.draw_total_cost(dict_metrics, os.path.join(outdir, 'total_cost.png'))
-	viz.draw_total_cost_table(dict_metrics, os.path.join(outdir, 'total_cost_table.png'))
+	if plot:
+		outfile = os.path.join(outdir, 'total_cost.png') if outdir else None
+		viz.draw_total_cost(dict_metrics, outfile)
+		outfile = os.path.join(outdir, 'total_cost_table.png') if outdir else None
+		viz.draw_total_cost_table(dict_metrics, outfile)
 
-	# save coverage profile
-	cv_profile_r.to_csv(os.path.join(outdir, 'e2_coverage_profile.txt'), header=True, index=False, sep="\t")
-	cv_profile_t.to_csv(os.path.join(outdir, 'e1_coverage_profile.txt'), header=True, index=False, sep="\t")
-	viz.draw_cn(cv_profile_t, cv_profile_r, chrlist, outfile=os.path.join(outdir, 'e1_e2_coverage_profile.png'))
+	# save and plot coverage profile
+	if outdir:
+		cn_profile_r.to_csv(os.path.join(outdir, 'coverage_profile_s2.txt'), header=True, index=False, sep="\t")
+		cn_profile_t.to_csv(os.path.join(outdir, 'coverage_profile_s1.txt'), header=True, index=False, sep="\t")
+	if plot:
+		outfile = os.path.join(outdir, 'coverage_profile.png') if outdir else None
+		viz.draw_cn(cn_profile_t, cn_profile_r, chrlist, outfile=outfile)
+
+	# save breakpoints profile
+	if outdir:
+		br_r.to_csv(os.path.join(outdir, 'breakpoints_profile_s2.txt'), header=True, index=False, sep="\t")
+		br_t.to_csv(os.path.join(outdir, 'breakpoints_profile_s1.txt'), header=True, index=False, sep="\t")
+
+	# plot merged coverage and breakpoint profile
+	max_coverage = max(np.max(cn_profile_t[ht.CN].tolist()), np.max(cn_profile_r[ht.CN].tolist()))
+	max_coverage = max_coverage + 0.5 * max_coverage
+	if plot:
+		outfile = os.path.join(outdir, 'coverage_breakpoints_profile.png') if outdir else None
+		viz.plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, breakpoint_matches, chrlist, max_coverage, outfile=outfile)

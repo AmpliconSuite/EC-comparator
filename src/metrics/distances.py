@@ -160,8 +160,13 @@ def get_cosine_distance_cn(cn_profile1, cn_profile2):
 									 np.array([cn_profile2["estimated_cn_normalized"].tolist()]))[0][0])
 
 
-def euclidian_distance(a, b, x, y):
-	return math.sqrt((a - x) ** 2 + (b - y) ** 2)
+def euclidian_distance(cha, a, chb,  b, chx,x, chy, y):
+	if cha == chx and chb == chy:
+		return math.sqrt((a - x) ** 2 + (b - y) ** 2)
+	elif cha == chy and chb == chx:
+		return math.sqrt((a - y) ** 2 + (b - x) ** 2)
+	else:
+		return np.nan
 
 
 def euclidian_distance_norm_l2(a, b, x, y):
@@ -237,11 +242,11 @@ dict_distance_function = {ddt.HAMMING: get_hamming_score,
 dict_distance_paired_breakpoints = {
 	ddt.EUCLIDIAN: euclidian_distance,
 	# ddt.EUCLIDIAN_NORM_L1: euclidian_distance_norm_l1,
-	ddt.EUCLIDIAN_NORM_L2: euclidian_distance_norm_l2,
+	# ddt.EUCLIDIAN_NORM_L2: euclidian_distance_norm_l2,
 	# "auc_triangle": auc_triangle,
 	# "auc_trapeze": auc_trapeze,
 	# "match_angle": match_angle,
-	ddt.RELATIVE_METRIC: match_score
+	# ddt.RELATIVE_METRIC: match_score
 }
 
 dict_distance_paired_breakpoints_thresholds = {

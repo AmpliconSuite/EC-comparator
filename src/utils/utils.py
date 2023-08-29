@@ -64,8 +64,8 @@ class PROPS:
 	# visualization
 	ALPHA = 'alpha'
 	COLOR = 'color'
-	MATCHED = {ALPHA: 0.8}
-	UNMATCHED = {ALPHA: 0.2,
+	MATCHED = {ALPHA: 0.7}
+	UNMATCHED = {ALPHA: 0.3,
 				 COLOR: 'gray'}
 	MAX_COST = 100000
 
