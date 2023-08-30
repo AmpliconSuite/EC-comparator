@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AmpliconComparison</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body,h1,h3,h2,h4,p {font-family: "Montserrat", sans-serif}
+        img {margin-bottom: -7px}
+        .w3-row-padding img {margin-bottom: 20px}
+        .w3-content {margin-left:20px}
+        .negative-padding {margin-top: -20px}
+        p,h3,h4 {margin-left: 40px}
+        h1,h2 {margin-left: 20px}
+
+
+    </style>
+</head>
+<body>
+<div class="w3-content w3-row-padding" style="max-width:1500px">
+    <h1>AmpliconComparison results</h1>
+    <h2>Setup:</h2>
+    <p><b>Date</b>: 2023-08-29 19:53:38.231911</p>
+    <p><b>Sample s1</b>: ../examples/ecdna1/true.bed</p>
+    <p><b>Sample s2</b>: ../examples/ecdna1/reconstructed.bed</p>
+    <p><b>Output directory</b>: ../examples/ecdna1/output</p>
+    <div class="w3-container" style="width:100%; display: block; min-width: 100% !important;">
+        <h2>Results:</h2>
+        <p>Here we compute the cycle distance between `s1` and `s2`.<br/><br/>
+            Distance description:<br/>
+            1. cosine_distance = measures the distance between the s1 and s2 normalized coverage profiles<br/>
+            2. hamming_norm = measures the amount of dissimilar genomic bins usage for s1 and s2<br/>
+            3. fragments_distance = measures the amount of fragment usage per genomic bin which is dissimilar between s1
+            and s2<br/>
+            4. cycles_distance = measures the amount of cycles usage per genomic bin which is dissimilar between s1 and
+            s2<br/>
+            5. jaccard_distance = measures how many breakpoints-pairs could not be matched between s1 and s2<br/><br/>
+            The radial plot shows all these distances, with values between 0 (low cost, high similarity) and 1 (high
+            cost, low similarity).<br/>
+            The more colorful the more distant are `s1` and `s2`.
+        </p>
+        <h4><b>Total cost</b>: 1.03 (0 - highly similar, 5 - dissimilar)</h4>
+        <div class="w3-third ">
+            <img src=/Users/madag/Projects/PhD/collaboration/vineet_bafna/AmpliconComparison/examples/ecdna1/output/total_cost.png alt="Norway" style="width:100%">
+        </div>
+        <div class="w3-third">
+            <img src=/Users/madag/Projects/PhD/collaboration/vineet_bafna/AmpliconComparison/examples/ecdna1/output/total_cost_table.png alt="Norway" style="width:110%">
+        </div>
+        <div class="w3-container">
+            <p>Coverage (gray track) and breakpoint-pairs matches for s1 (green) and s2 (blue).<br/>Unmached
+                breakpoint-pairs are displayed in gray.<br/></p>
+            <img src=/Users/madag/Projects/PhD/collaboration/vineet_bafna/AmpliconComparison/examples/ecdna1/output/coverage_breakpoints_profile.png alt="Norway" style="width:100%">
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

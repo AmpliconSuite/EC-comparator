@@ -1,0 +1,56 @@
+{
+    "configs": {
+        "breakpoint_distance": {
+            "euclidian": {
+                "weight": 1,
+                "threshold": 1000,
+                "enable": true
+            },
+            "match_score": {
+                "weight": 1,
+                "threshold": 0.3,
+                "enable": false
+            },
+            "jaccard_distance": {
+                "weight": 1,
+                "enable": true
+            },
+            "default": "euclidian"
+        },
+        "genomic_footprint": {
+            "hamming_norm": {
+                "weight": 1,
+                "enable": true
+            },
+            "cosine_distance": {
+                "weight": 1,
+                "enable": true
+            },
+            "fragments_distance": {
+                "weight": 1,
+                "enable": true
+            },
+            "cycles_distance": {
+                "weight": 1,
+                "enable": true
+            }
+        },
+        "other_params": {}
+    },
+    "distances": {
+        "hamming": 0,
+        "hamming_norm": 0.0,
+        "cosine_distance": 0.0,
+        "jaccard_distance": 0.0,
+        "fragments_distance": 0.0,
+        "cycles_distance": 0.0,
+        "total_cost": 0.0,
+        "total_cost_description": {
+            "jaccard_distance": 1,
+            "hamming_norm": 1,
+            "cosine_distance": 1,
+            "fragments_distance": 1,
+            "cycles_distance": 1
+        }
+    }
+}
