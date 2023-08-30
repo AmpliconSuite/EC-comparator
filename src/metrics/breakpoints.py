@@ -290,7 +290,7 @@ def create_bipartite_graph(br_t, br_r, dist, threshold):
 			max_degree = len(visited_nodes_r[k])
 			max_node = k
 
-	print(max_value, max_node)
+	# print(max_value, max_node)
 
 	# connect null and other node if the node does not have any
 	for k in visited_nodes_t:

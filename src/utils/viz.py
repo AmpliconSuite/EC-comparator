@@ -44,11 +44,12 @@ def draw_total_cost(dict_metrics, outfile=None):
 				visible=True,
 				range=[0, 1]
 			)),
-		showlegend=True
+		showlegend=True,
+		font=dict(color='darkslategray', size=10)
 	)
 
 	if outfile:
-		fig.write_image(outfile)
+		fig.write_image(outfile, scale=15, width=500, height=500)
 	else:
 		# plot to stdin
 		fig.show()
@@ -83,7 +84,7 @@ def draw_total_cost_table(dict_metrics, outfile=None):
 	)
 
 	if outfile:
-		fig.write_image(outfile)
+		fig.write_image(outfile, scale=6, width=500, height=500)
 	else:
 		# plot to stdin
 		fig.show()
@@ -450,7 +451,7 @@ def plot_breakpoints_location(br_t, br_r, max_y, chrlist, width=30, height=5):
 
 
 def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
-								width=30, height=5, max_value=None, scale=True, fig=None, axs=None):
+								width=30, height=3, max_value=None, scale=True, fig=None, axs=None):
 	"""
 
 	Arguments:

@@ -16,7 +16,9 @@ from src.metrics.distances import *
 from src.utils import viz
 from src.utils.utils import HEADER as ht
 from src.utils.utils import DDT as ddt
+from src.utils.utils import OUTFILES as o
 from src.utils.utils import NpEncoder
+from src.utils import report
 
 
 import warnings
@@ -130,33 +132,41 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True):
 
 	# 8. Output
 	if outdir:
-		with open(os.path.join(outdir, 'metrics.json'), 'w', encoding='utf-8') as f:
+		with open(os.path.join(outdir, o.METRICS_JSON), 'w', encoding='utf-8') as f:
 			final_dict = remove_ref2methods(dict_metrics)
 			json.dump(final_dict, f, ensure_ascii=False, indent=4, cls=NpEncoder)
 
 	# plot total cost
 	if plot:
-		outfile = os.path.join(outdir, 'total_cost.png') if outdir else None
+		outfile = os.path.join(outdir, o.TOTAL_COST_PNG) if outdir else None
 		viz.draw_total_cost(dict_metrics, outfile)
-		outfile = os.path.join(outdir, 'total_cost_table.png') if outdir else None
+		outfile = os.path.join(outdir, o.TOTAL_COST_TABLE) if outdir else None
 		viz.draw_total_cost_table(dict_metrics, outfile)
 
 	# save and plot coverage profile
 	if outdir:
-		cn_profile_r.to_csv(os.path.join(outdir, 'coverage_profile_s2.txt'), header=True, index=False, sep="\t")
-		cn_profile_t.to_csv(os.path.join(outdir, 'coverage_profile_s1.txt'), header=True, index=False, sep="\t")
+		cn_profile_t.to_csv(os.path.join(outdir, o.COVERAGE_PROFILE_S1_TXT), header=True, index=False, sep="\t")
+		cn_profile_r.to_csv(os.path.join(outdir, o.COVERAGE_PROFILE_S2_TXT), header=True, index=False, sep="\t")
 	if plot:
-		outfile = os.path.join(outdir, 'coverage_profile.png') if outdir else None
+		outfile = os.path.join(outdir, o.COVERAGE_PROFILE_PNG) if outdir else None
 		viz.draw_cn(cn_profile_t, cn_profile_r, chrlist, outfile=outfile)
 
 	# save breakpoints profile
 	if outdir:
-		br_r.to_csv(os.path.join(outdir, 'breakpoints_profile_s2.txt'), header=True, index=False, sep="\t")
-		br_t.to_csv(os.path.join(outdir, 'breakpoints_profile_s1.txt'), header=True, index=False, sep="\t")
+		br_t.to_csv(os.path.join(outdir, o.BREAKPOINTS_PROFILE_S1_TXT), header=True, index=False, sep="\t")
+		br_r.to_csv(os.path.join(outdir, o.BREAKPOINTS_PROFILE_S2_TXT), header=True, index=False, sep="\t")
 
 	# plot merged coverage and breakpoint profile
 	max_coverage = max(np.max(cn_profile_t[ht.CN].tolist()), np.max(cn_profile_r[ht.CN].tolist()))
 	max_coverage = max_coverage + 0.5 * max_coverage
 	if plot:
-		outfile = os.path.join(outdir, 'coverage_breakpoints_profile.png') if outdir else None
+		outfile = os.path.join(outdir, o.COVERAGE_BREAKPOINTS_PROFILE) if outdir else None
 		viz.plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, breakpoint_matches, chrlist, max_coverage, outfile=outfile)
+
+	# create report
+	if outdir:
+		report.generate_report(
+			t_file,
+			r_file,
+			outdir=outdir,
+			total_cost=total_cost)
