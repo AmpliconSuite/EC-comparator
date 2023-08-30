@@ -13,3 +13,4 @@ bezier==2021.2.12
 kaleido==0.2.1
 dash==2.12.1
 dash-core-components==2.0.0
+xhtml2pdf==0.2.11
