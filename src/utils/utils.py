@@ -140,7 +140,7 @@ class OUTFILES:
 	TOTAL_COST_PNG = 'total_cost.png'
 	TOTAL_COST_TABLE = 'total_cost_table.png'
 	COVERAGE_PROFILE_S1_TXT = 'coverage_profile_s1.txt'
-	COVERAGE_PROFILE_S2_TXT = 'coverage_profile_s1.txt'
+	COVERAGE_PROFILE_S2_TXT = 'coverage_profile_s2.txt'
 	COVERAGE_PROFILE_PNG = 'coverage_profile.png'
 	COVERAGE_BREAKPOINTS_PROFILE = 'coverage_breakpoints_profile.png'
 	BREAKPOINTS_PROFILE_S1_TXT = 'breakpoints_profile_s1.txt'
