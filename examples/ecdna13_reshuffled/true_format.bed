@@ -1,0 +1,7 @@
+#chr	start	end	circ_id	estimated_cn	strand	iscyclic
+chr1	10000	17000	2	30	+	True
+chr1	2500	7000	2	30	-	True
+chr2	1000	17000	2	30	-	True
+chr1	2000	4000	1	10	+	True
+chr1	2500	7000	1	10	-	True
+chr3	4500	8000	3	50	-	True
