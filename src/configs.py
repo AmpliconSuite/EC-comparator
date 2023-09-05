@@ -19,19 +19,25 @@ class Configs:
 				h.WEIGHT: 1,
 				h.THRESHOLD: d.EUCLIDIAN_THRESHOLD,
 				h.DEFINITION: m.euclidian_distance,
-				h.ENABLE: False
+				h.ENABLE: False,
+				d.JACCARD_DISTANCE: {
+					h.WEIGHT: 1,
+					h.DEFINITION: m.compute_breakpoint_distance,
+					h.ENABLE: True
+				}
 			},
 			d.RELATIVE_METRIC: {
 				h.WEIGHT: 1,
 				h.THRESHOLD: d.RELATIVE_METRIC_THRESHOLD,
 				h.DEFINITION: m.match_score,
-				h.ENABLE: True
+				h.ENABLE: True,
+				d.JACCARD_DISTANCE: {
+					h.WEIGHT: 1,
+					h.DEFINITION: m.compute_breakpoint_distance,
+					h.ENABLE: True
+				}
 			},
-			d.JACCARD_DISTANCE: {
-				h.WEIGHT: 1,
-				h.DEFINITION: m.compute_breakpoint_distance,
-				h.ENABLE: True
-			}
+
 		},
 		h.GENOMIC_FOOTPRINT: {
 			# genomic footprint distances
@@ -43,6 +49,11 @@ class Configs:
 			d.COSINE_DISTANCE: {
 				h.WEIGHT: 1,
 				h.DEFINITION: m.get_cosine_distance_cn,
+				h.ENABLE: True
+			},
+			d.COPYNUMBER_JC: {
+				h.WEIGHT: 1,
+				h.DEFINITION: m.get_jc_distance_cn,
 				h.ENABLE: True
 			},
 			d.FRAGMENTS_DISTANCE: {

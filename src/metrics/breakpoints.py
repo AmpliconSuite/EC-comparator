@@ -41,7 +41,6 @@ def transform_fragments2breakpoints(df_cycle):
 	# get all the columns
 	df_col = df_cycle.columns.tolist()
 
-	print()
 	for c in circ_id:
 		print("Detect breakpoints for circle",c)
 		df_temp = df_cycle[df_cycle[ht.CIRC_ID] == c]
@@ -65,8 +64,6 @@ def transform_fragments2breakpoints(df_cycle):
 				print("Path id", c, "is a one fragment acylic path")
 			else:
 				# head to tail
-				print(df_temp)
-				print(df_temp.loc[:,ht.CHR])
 				chr1 = chr2 = df_temp.loc[:,ht.CHR].tolist()[0]
 				idx1 = idx2 = df_idex[0]
 				strand = "+-"
@@ -192,8 +189,6 @@ def transform_fragments2breakpoints(df_cycle):
 					ht.STRAND: strand,
 					ht.CIRC_ID: c,
 					ht.ISCYCLIC: iscyclic}, ignore_index=True)
-
-	print(breakpoints)
 
 	return breakpoints
 

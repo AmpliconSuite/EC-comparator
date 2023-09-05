@@ -125,16 +125,17 @@ class DDT:
 	UNMATCHED_THRESHOLD = 10000
 	SIGMOID_THRESHOLD = 250
 
-	HAMMING = 'hamming'
-	HAMMING_NORM = 'hamming_norm'
+	HAMMING = 'cn_hamming_dist'
+	HAMMING_NORM = 'cn_hamming_norm_dist'
 	OVERLAP = 'overlap'
 
-	COSINE_DISTANCE = 'cosine_distance'
+	COSINE_DISTANCE = 'cn_cos_dist'
 	BREAKPOINT_SIMILARITY = 'breakpoint_similarity'
-	BREAKPOINT_DISTANCE = 'breakpoint_distance'
-	FRAGMENTS_DISTANCE = 'fragments_distance'
-	CYCLES_DISTANCE = 'cycles_distance'
-	JACCARD_DISTANCE = 'jaccard_distance'
+	BREAKPOINT_DISTANCE = 'breakpoint_dist'
+	FRAGMENTS_DISTANCE = 'fragments_dist'
+	CYCLES_DISTANCE = 'cycles_dist'
+	JACCARD_DISTANCE = 'breakpoint_dist'
+	COPYNUMBER_JC = 'cn_jc_dist'
 
 	TOTAL_COST = 'total_cost'
 	TOTAL_COST_DESCRIPTION = 'total_cost_description'

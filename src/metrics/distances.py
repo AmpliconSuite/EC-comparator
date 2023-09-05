@@ -159,6 +159,20 @@ def get_cosine_distance_cn(cn_profile1, cn_profile2):
 	return 1 - abs(cosine_similarity(np.array([cn_profile1["estimated_cn_normalized"].tolist()]),
 									 np.array([cn_profile2["estimated_cn_normalized"].tolist()]))[0][0])
 
+def get_jc_distance_cn(cn_profile1, cn_profile2):
+	"""
+	Get jaccard index distance between the two copy number profiles
+	"""
+	cn_merge = pd.merge(cn_profile1, cn_profile2, on=[ht.CHR, ht.START, ht.END])
+	cn_merge["max"] = cn_merge.apply(lambda x: max(x["estimated_cn_normalized_x"],x["estimated_cn_normalized_y"]),
+									  axis=1)
+	# overlap
+	cn_merge["min"] = cn_merge.apply(lambda x: min(x["estimated_cn_normalized_x"], x["estimated_cn_normalized_y"]),
+									 axis=1)
+
+	# JC = matches / all
+	# 1 - JC means -> 0 highly similar, 1 - not similar
+	return 1 - cn_merge["min"].sum() / cn_merge["max"].sum()
 
 def euclidian_distance(cha, a, chb,  b, chx,x, chy, y):
 	if cha == chx and chb == chy:
@@ -236,7 +250,11 @@ def match_score(a, b, x, y):
 # distance for the copy-number profile
 dict_distance_function = {ddt.HAMMING: get_hamming_score,
 						  ddt.HAMMING_NORM: get_hamming_score_norm,
-						  ddt.OVERLAP: get_overlap_fragments_weighted}
+						  ddt.OVERLAP: get_overlap_fragments_weighted,
+						  ddt.COSINE_DISTANCE: get_cosine_distance_cn,
+						  ddt.CYCLES_DISTANCE: get_overlap_cycles_weighted,
+						  ddt.FRAGMENTS_DISTANCE: get_overlap_fragments_weighted,
+						  ddt.COPYNUMBER_JC: get_jc_distance_cn}
 
 # distance between paired breapoints
 dict_distance_paired_breakpoints = {

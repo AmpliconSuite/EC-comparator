@@ -8,6 +8,7 @@ Compare cycle profiles.
 
 import os
 import json
+import pprint
 import matplotlib.pyplot as plt
 
 from src.metrics.features import *
@@ -53,7 +54,8 @@ def get_total_cost(dict_metrics):
 					total_cost += weight * val
 					total_cost_description[d] = weight
 		elif key == ht.BREAKPOINT_DISTANCE:
-			weight = dict_metrics[ht.CONFIGS][key][ddt.JACCARD_DISTANCE][ht.WEIGHT]
+			def_dist = dict_metrics[ht.CONFIGS][key][ht.DEFAULT]
+			weight = dict_metrics[ht.CONFIGS][key][def_dist][ddt.JACCARD_DISTANCE][ht.WEIGHT]
 			val = dict_metrics[ht.DISTANCES][ddt.JACCARD_DISTANCE]
 			total_cost += weight * val
 			total_cost_description[ddt.JACCARD_DISTANCE] = weight
@@ -77,6 +79,8 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True):
 	"""
 	if outdir:
 		os.makedirs(outdir, exist_ok=True)
+
+	# pprint.pprint(dict_configs)
 
 	dict_metrics = {}
 	dict_metrics[ht.CONFIGS] = dict_configs
@@ -108,6 +112,8 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True):
 
 	cv_distance = get_cosine_distance_cn(cn_profile_t, cn_profile_r)
 	dict_metrics[ht.DISTANCES][ddt.COSINE_DISTANCE] = round(cv_distance,2)
+	cv_distance = get_jc_distance_cn(cn_profile_t, cn_profile_r)
+	dict_metrics[ht.DISTANCES][ddt.COPYNUMBER_JC] = round(cv_distance, 2)
 
 	# 4. Breakpoint matching
 	br_t, br_r = get_breakpoints_pairs(df_t, df_r)

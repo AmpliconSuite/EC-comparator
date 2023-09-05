@@ -30,18 +30,19 @@
         <h2>Results:</h2>
         <p>Here we compute the cycle distance between `s1` and `s2`.<br/><br/>
             Distance description:<br/>
-            1. cosine_distance = measures the distance between the s1 and s2 normalized coverage profiles<br/>
-            2. hamming_norm = measures the amount of dissimilar genomic bins usage for s1 and s2<br/>
-            3. fragments_distance = measures the amount of fragment usage per genomic bin which is dissimilar between s1
+            1. cn_cos_dist = measures the copy-number distance between the s1 and s2 using cosine distance<br/>
+            2. cn_jc_dist = measures the copy-number distance between the s1 and s2 using jaccard index distance<br/>
+            3. cn_hamming_norm_dist = measures the amount of dissimilar genomic bins usage for s1 and s2<br/>
+            4. fragments_dist = measures the amount of fragment usage per genomic bin which is dissimilar between s1
             and s2<br/>
-            4. cycles_distance = measures the amount of cycles usage per genomic bin which is dissimilar between s1 and
+            5. cycles_dist = measures the amount of cycles usage per genomic bin which is dissimilar between s1 and
             s2<br/>
-            5. jaccard_distance = measures how many breakpoints-pairs could not be matched between s1 and s2<br/><br/>
+            6. breakpoint_dist = measures how many breakpoints-pairs could not be matched between s1 and s2<br/><br/>
             The radial plot shows all these distances, with values between 0 (low cost, high similarity) and 1 (high
             cost, low similarity).<br/>
             The more colorful the more distant are `s1` and `s2`.
         </p>
-        <h4><b>Total cost</b>: {{total_cost}} (0 - highly similar, 5 - dissimilar)</h4>
+        <h4><b>Total cost</b>: {{total_cost}} (0 - highly similar, 6 - dissimilar)</h4>
         <div class="w3-third ">
             <img title="total_cost" src="./{{ path_total_cost }}" alt="Norway" style="width:400px"/>
         </div>
