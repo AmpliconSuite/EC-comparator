@@ -1,2 +1,2 @@
 #chr	start	end	circ_id	estimated_cn	strand	iscyclic
-chr12	3500	5500	1	10	+	False
+chr12	3500	5500	1	10	+	True

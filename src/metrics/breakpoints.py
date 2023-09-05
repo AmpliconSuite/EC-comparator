@@ -272,6 +272,9 @@ def create_bipartite_graph(br_t, br_r, dist, threshold):
 	edges weighted by the distance (cost) between the pairs).
 	Set as unmatched those breakpoints for which x-x' or y-y' > unmatched
 	"""
+	if br_t.shape[0] == 0 or br_r.shape[0] == 0:
+		return None, {}, {}, None, None
+
 	m, max_value = create_cost_matrix(br_t, br_r, dist=dist, threshold=threshold)
 
 	# check if all breakpoints are unmatched

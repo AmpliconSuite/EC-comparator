@@ -236,7 +236,7 @@ def break_cn(df):
 			if chr_old != -1:
 				df_new.loc[j, :] = [chr_old,
 									df_new.loc[j - 1, ht.END],
-									df_new.loc[j - 1, ht.END] + 100,
+									df_new.loc[j - 1, ht.END] + 1,
 									df_new.loc[j - 1, ht.CN],
 									df_new.loc[j - 1, ht.TRACK]]
 				j = j + 1
@@ -250,7 +250,7 @@ def break_cn(df):
 	# last element
 	df_new.loc[j, :] = [chr_old,
 						df_new.loc[j - 1, ht.END],
-						df_new.loc[j - 1, ht.END] + 100,
+						df_new.loc[j - 1, ht.END] + 1,
 						df_new.loc[j - 1, ht.CN],
 						df_new.loc[j - 1, ht.TRACK]]
 
