@@ -25,12 +25,15 @@ class HEADER:
 	CN = "estimated_cn"
 	CHR1 = "chr1"
 	CHR2 = "chr2"
+	IDX1 = "idx1"
+	IDX2 = "idx2"
 	LEN = "len"
 	S1 = "s1"
 	S2 = "s2"
 	TRACK  = "track"
+	ISCYCLIC = "iscyclic"
 
-	HEADER_SORTED = [CHR, START, END, CIRC_ID, CN, STRAND]
+	HEADER_SORTED = [CHR, START, END, CIRC_ID, CN, STRAND, ISCYCLIC]
 	DICT_HEADER = {"#chr": CHR,
 				   "chr": CHR,
 				   "chromosome": CHR,

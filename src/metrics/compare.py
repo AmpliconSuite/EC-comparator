@@ -129,6 +129,7 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True):
 	total_cost, total_cost_description = get_total_cost(dict_metrics)
 	dict_metrics[ht.DISTANCES][ddt.TOTAL_COST] = round(total_cost,2)
 	dict_metrics[ht.DISTANCES][ddt.TOTAL_COST_DESCRIPTION] = total_cost_description
+	print("Total cost:",total_cost)
 
 	# 8. Output
 	if outdir:

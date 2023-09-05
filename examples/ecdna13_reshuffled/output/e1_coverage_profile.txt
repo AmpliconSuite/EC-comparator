@@ -1,0 +1,4 @@
+#chr	start	end	estimated_cn	estimated_cn_normalized
+chr1	2000	2500	10.0	5000.0
+chr1	2500	4000	20.0	30000.0
+chr1	4000	7000	10.0	30000.0

@@ -32,113 +32,142 @@ def transform_fragments2breakpoints(df_cycle):
 	Returns:
 		list of tuples
 	"""
-	breakpoints = pd.DataFrame(columns=["chr1", "start", "chr2", "end", "idx1", "idx2", "strand", "circ_id"])
+	breakpoints = pd.DataFrame(columns=[ht.CHR1, ht.START, ht.CHR2, ht.END, ht.IDX1, ht.IDX2, ht.STRAND, ht.CIRC_ID, ht.ISCYCLIC])
+	# get all circ_ids
 	circ_id = df_cycle[ht.CIRC_ID].drop_duplicates().tolist()
+	# count fragments per cycle
 	circ_len = df_cycle[[ht.CIRC_ID, ht.START]].groupby(ht.CIRC_ID).count().reset_index()
 	circ_len.columns = [ht.CIRC_ID, "count"]
+	# get all the columns
+	df_col = df_cycle.columns.tolist()
 
+	print()
 	for c in circ_id:
+		print("Detect breakpoints for circle",c)
 		df_temp = df_cycle[df_cycle[ht.CIRC_ID] == c]
 		df_idex = df_temp.index.tolist()
-		l = circ_len[circ_len[ht.CIRC_ID] == c].iloc[0, 1]
-		for i in range(0, l):
-			row1 = df_temp.iloc[i, :]
-			row2 = df_temp.iloc[(i + 1) % l, :]
+		# count fragments
+		count_fragments = circ_len[circ_len[ht.CIRC_ID] == c].iloc[0, 1]
 
-			start = None
-			end = None
-			strand = None
-			chr1 = None
-			chr2 = None
-			idx1 = None
-			idx2 = None
+		# by default the amplicon is cyclic
+		iscyclic = True
 
-			if row1[ht.STRAND] == "+" and row2[ht.STRAND] == "+":
+		# if we have the information about cyclic / acyclic amplicon
+		if ht.ISCYCLIC in df_col:
+			iscyclic = df_temp.loc[:, ht.ISCYCLIC].tolist()[0]
 
-				if row1[ht.END] < row2[ht.START]:
-					chr1 = row1[ht.CHR]
-					chr2 = row2[ht.CHR]
-					start = row1[ht.END]
-					end = row2[ht.START]
-					strand = "".join([row1[ht.STRAND], row2[ht.STRAND]])
-					idx1 = df_idex[i]
-					idx2 = df_idex[(i + 1) % l]
-				else:
-					chr1 = row2[ht.CHR]
-					chr2 = row1[ht.CHR]
-					start = row2[ht.START]
-					end = row1[ht.END]
-					strand = "".join([row2[ht.STRAND], row1[ht.STRAND]])
-					idx2 = df_idex[i]
-					idx1 = df_idex[(i + 1) % l]
+		print("Iscyclic", iscyclic)
+
+		# simple path and acyclic
+		if count_fragments > 1 and iscyclic is False:
+			print("Path id", c, "is a multi fragment acylic path")
+		if count_fragments == 1 and iscyclic is False:
+			# there are no breakpoints
+			print("Path id", c, "is a one fragment acylic path")
+		else:
+			for i in range(0, count_fragments):
+				row1 = df_temp.iloc[i, :]
+				row2 = df_temp.iloc[(i + 1) % count_fragments, :]
+
+				# skip breakpoint if the path is acyclic
+				if (i + 1) % count_fragments == 0 and iscyclic is False:
+					continue
+
+				start = None
+				end = None
+				strand = None
+				chr1 = None
+				chr2 = None
+				idx1 = None
+				idx2 = None
+
+				if row1[ht.STRAND] == "+" and row2[ht.STRAND] == "+":
+
+					if row1[ht.END] < row2[ht.START]:
+						chr1 = row1[ht.CHR]
+						chr2 = row2[ht.CHR]
+						start = row1[ht.END]
+						end = row2[ht.START]
+						strand = "".join([row1[ht.STRAND], row2[ht.STRAND]])
+						idx1 = df_idex[i]
+						idx2 = df_idex[(i + 1) % count_fragments]
+					else:
+						chr1 = row2[ht.CHR]
+						chr2 = row1[ht.CHR]
+						start = row2[ht.START]
+						end = row1[ht.END]
+						strand = "".join([row2[ht.STRAND], row1[ht.STRAND]])
+						idx2 = df_idex[i]
+						idx1 = df_idex[(i + 1) % count_fragments]
 
 
-			elif row1[ht.STRAND] == "+" and row2[ht.STRAND] == "-":
+				elif row1[ht.STRAND] == "+" and row2[ht.STRAND] == "-":
 
-				if row1[ht.END] < row2[ht.END]:
-					chr1 = row1[ht.CHR]
-					chr2 = row2[ht.CHR]
-					start = row1[ht.END]
-					end = row2[ht.END]
-					strand = "".join([row1[ht.STRAND], row2[ht.STRAND]])
-					idx1 = df_idex[i]
-					idx2 = df_idex[(i + 1) % l]
-				else:
-					chr1 = row2[ht.CHR]
-					chr2 = row1[ht.CHR]
-					start = row2[ht.END]
-					end = row1[ht.END]
-					strand = "".join([row2[ht.STRAND], row1[ht.STRAND]])
-					idx2 = df_idex[i]
-					idx1 = df_idex[(i + 1) % l]
+					if row1[ht.END] < row2[ht.END]:
+						chr1 = row1[ht.CHR]
+						chr2 = row2[ht.CHR]
+						start = row1[ht.END]
+						end = row2[ht.END]
+						strand = "".join([row1[ht.STRAND], row2[ht.STRAND]])
+						idx1 = df_idex[i]
+						idx2 = df_idex[(i + 1) % count_fragments]
+					else:
+						chr1 = row2[ht.CHR]
+						chr2 = row1[ht.CHR]
+						start = row2[ht.END]
+						end = row1[ht.END]
+						strand = "".join([row2[ht.STRAND], row1[ht.STRAND]])
+						idx2 = df_idex[i]
+						idx1 = df_idex[(i + 1) % count_fragments]
 
-			elif row1[ht.STRAND] == "-" and row2[ht.STRAND] == "-":
+				elif row1[ht.STRAND] == "-" and row2[ht.STRAND] == "-":
 
-				if row1[ht.START] < row2[ht.END]:
-					chr1 = row1[ht.CHR]
-					chr2 = row2[ht.CHR]
-					start = row1[ht.START]
-					end = row2[ht.END]
-					strand = "".join([row1[ht.STRAND], row2[ht.STRAND]])
-					idx1 = df_idex[i]
-					idx2 = df_idex[(i + 1) % l]
-				else:
-					chr1 = row2[ht.CHR]
-					chr2 = row1[ht.CHR]
-					start = row2[ht.END]
-					end = row1[ht.START]
-					strand = "".join([row2[ht.STRAND], row1[ht.STRAND]])
-					idx2 = df_idex[i]
-					idx1 = df_idex[(i + 1) % l]
+					if row1[ht.START] < row2[ht.END]:
+						chr1 = row1[ht.CHR]
+						chr2 = row2[ht.CHR]
+						start = row1[ht.START]
+						end = row2[ht.END]
+						strand = "".join([row1[ht.STRAND], row2[ht.STRAND]])
+						idx1 = df_idex[i]
+						idx2 = df_idex[(i + 1) % count_fragments]
+					else:
+						chr1 = row2[ht.CHR]
+						chr2 = row1[ht.CHR]
+						start = row2[ht.END]
+						end = row1[ht.START]
+						strand = "".join([row2[ht.STRAND], row1[ht.STRAND]])
+						idx2 = df_idex[i]
+						idx1 = df_idex[(i + 1) % count_fragments]
 
-			elif row1[ht.STRAND] == "-" and row2[ht.STRAND] == "+":
+				elif row1[ht.STRAND] == "-" and row2[ht.STRAND] == "+":
 
-				if row1[ht.START] < row2[ht.START]:
-					chr1 = row1[ht.CHR]
-					chr2 = row2[ht.CHR]
-					start = row1[ht.START]
-					end = row2[ht.START]
-					strand = "".join([row1[ht.STRAND], row2[ht.STRAND]])
-					idx1 = df_idex[i]
-					idx2 = df_idex[(i + 1) % l]
-				else:
-					chr1 = row2[ht.CHR]
-					chr2 = row1[ht.CHR]
-					start = row2[ht.START]
-					end = row1[ht.START]
-					strand = "".join([row2[ht.STRAND], row1[ht.STRAND]])
-					idx2 = df_idex[i]
-					idx1 = df_idex[(i + 1) % l]
+					if row1[ht.START] < row2[ht.START]:
+						chr1 = row1[ht.CHR]
+						chr2 = row2[ht.CHR]
+						start = row1[ht.START]
+						end = row2[ht.START]
+						strand = "".join([row1[ht.STRAND], row2[ht.STRAND]])
+						idx1 = df_idex[i]
+						idx2 = df_idex[(i + 1) % count_fragments]
+					else:
+						chr1 = row2[ht.CHR]
+						chr2 = row1[ht.CHR]
+						start = row2[ht.START]
+						end = row1[ht.START]
+						strand = "".join([row2[ht.STRAND], row1[ht.STRAND]])
+						idx2 = df_idex[i]
+						idx1 = df_idex[(i + 1) % count_fragments]
 
-			breakpoints = breakpoints.append({
-				"chr1": chr1,
-				"start": start,
-				"idx1": idx1,
-				"chr2": chr2,
-				"end": end,
-				"idx2": idx2,
-				"strand": strand,
-				"circ_id": c}, ignore_index=True)
+				breakpoints = breakpoints.append({
+					ht.CHR1: chr1,
+					ht.START: start,
+					ht.IDX1: idx1,
+					ht.CHR2: chr2,
+					ht.END: end,
+					ht.IDX2: idx2,
+					ht.STRAND: strand,
+					ht.CIRC_ID: c,
+					ht.ISCYCLIC: iscyclic}, ignore_index=True)
 
 	return breakpoints
 

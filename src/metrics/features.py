@@ -80,10 +80,13 @@ def read_input(t_file, r_file):
 			 'score': 'double',
 			 'estimated_cn': 'double',
 			 'strand': 'str',
-			 'orientation': str}
+			 'orientation': 'str',
+			 'iscyclic': 'bool'}
 
 	t_collection = pd.read_csv(t_file, header=0, sep="\t", dtype=dtype)
 	r_collection = pd.read_csv(r_file, header=0, sep="\t", dtype=dtype)
+	print(t_collection)
+	print(r_collection)
 
 	# rename columns and check if all columns available
 	t_collection.rename(columns=rename_columns(t_collection.columns.tolist(), ht.DICT_HEADER), errors="raise",
@@ -92,12 +95,27 @@ def read_input(t_file, r_file):
 						inplace=True)
 
 	# reorder columns
-	lorder = ht.HEADER_SORTED
-	for h in t_collection.columns.tolist():
-		if h not in lorder:
-			lorder.append(h)
+	keep1 = []
+	keep2 = []
+	print(t_collection.columns.tolist())
+	print(r_collection.columns.tolist())
+	# first check if the columns are in HEADER_SORTED
+	for c in ht.HEADER_SORTED:
+		if c in t_collection.columns.tolist():
+			keep1.append(c)
+		if c in r_collection.columns.tolist():
+			keep2.append(c)
 
-	return t_collection[lorder], r_collection[lorder]
+	for h in t_collection.columns.tolist():
+		if h not in ht.HEADER_SORTED:
+			keep1.append(h)
+	for h in r_collection.columns.tolist():
+		if h not in ht.HEADER_SORTED:
+			keep2.append(h)
+
+	print("S1 file header ", keep1)
+	print("S2 file header ", keep2)
+	return t_collection[keep1], r_collection[keep2]
 
 
 def bin_genome(t_collection, r_collection, margin_size=10000):
