@@ -1,5 +1,0 @@
-#chr	start	end	circ_id	estimated_cn	strand
-chr1	2000	4000	1	10	+
-chr1	2500	7000	2	10	-
-chr1	10000	17000	2	10	+
-chr1	2500	7000	2	10	-
