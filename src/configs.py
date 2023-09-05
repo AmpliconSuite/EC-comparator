@@ -22,7 +22,6 @@ class Configs:
 				h.ENABLE: False,
 				d.JACCARD_DISTANCE: {
 					h.WEIGHT: 1,
-					h.DEFINITION: m.compute_breakpoint_distance,
 					h.ENABLE: True
 				}
 			},
@@ -33,10 +32,14 @@ class Configs:
 				h.ENABLE: True,
 				d.JACCARD_DISTANCE: {
 					h.WEIGHT: 1,
-					h.DEFINITION: m.compute_breakpoint_distance,
 					h.ENABLE: True
 				}
 			},
+			d.JACCARD_DISTANCE: {
+				h.WEIGHT: 1,
+				h.DEFINITION: m.compute_breakpoint_distance,
+				h.ENABLE: True
+			}
 
 		},
 		h.GENOMIC_FOOTPRINT: {
