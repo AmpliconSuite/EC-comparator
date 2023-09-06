@@ -107,6 +107,7 @@ def get_overlap_cycles_weighted(e1, e2, bins):
 
 	overlap_parent1 = deepcopy(bins.as_df())
 	overlap_parent1["e1"] = 0
+	overlap_parent1["len"] = abs(overlap_parent1["End"] - overlap_parent1["Start"])
 	for c in c1:
 		# filter pyrange by circle name
 		df_tmp = e1.as_df()
@@ -124,6 +125,7 @@ def get_overlap_cycles_weighted(e1, e2, bins):
 
 	overlap_parent2 = deepcopy(bins.as_df())
 	overlap_parent2["e2"] = 0
+
 	for c in c2:
 		# filter pyrange by circle name
 		df_tmp = e2.as_df()
@@ -141,6 +143,7 @@ def get_overlap_cycles_weighted(e1, e2, bins):
 
 	overlaps = pd.merge(overlap_parent1[["Chromosome", "Start", "End", "e1"]],
 						overlap_parent2[["Chromosome", "Start", "End", "e2"]], how='inner')
+
 	overlaps["overlapping_score"] = overlaps.apply(lambda x: abs(x.e1 - x.e2), axis=1)
 	overlaps["len"] = abs(overlaps["End"] - overlaps["Start"])
 	overlaps["totallen"] = overlaps.apply(lambda x: max(x.e1, x.e2) * x.len, axis=1)

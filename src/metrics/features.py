@@ -97,8 +97,6 @@ def read_input(t_file, r_file):
 	# reorder columns
 	keep1 = []
 	keep2 = []
-	print(t_collection.columns.tolist())
-	print(r_collection.columns.tolist())
 	# first check if the columns are in HEADER_SORTED
 	for c in ht.HEADER_SORTED:
 		if c in t_collection.columns.tolist():
@@ -113,8 +111,6 @@ def read_input(t_file, r_file):
 		if h not in ht.HEADER_SORTED:
 			keep2.append(h)
 
-	print("S1 file header ", keep1)
-	print("S2 file header ", keep2)
 	return t_collection[keep1], r_collection[keep2]
 
 
@@ -173,18 +169,22 @@ def bin_genome(t_collection, r_collection, margin_size=10000):
 	# keep only rows with same chr and non-negative distance
 	df_bins = df_bins[(df_bins[ht.CHR] == df_bins["#chr2"]) & (abs(df_bins[ht.START] - df_bins[ht.END]) >= 0)]
 
-	# merge intervals
-	df_bins[ht.END] = df_bins.apply(lambda x: x[ht.END] if abs(x[ht.START] - x[ht.END]) < 50 else x[ht.END]-1, axis=1)
+	# # merge intervals
+	# df_bins[ht.END] = df_bins.apply(lambda x: x[ht.END] if abs(x[ht.START] - x[ht.END]) < 50 else x[ht.END]-1, axis=1)
+	# df_bins = df_bins[(df_bins[ht.END] - df_bins[ht.START]) > 0]
+	# a = BedTool.from_dataframe(df_bins[[ht.CHR, ht.START, ht.END]]).sort()
+	# df_bins_merged = a.merge(d=0).to_dataframe()
+	# df_bins_merged.columns = [ht.CHR, ht.START, ht.END]
+	#
+	# # merge very small intervals
+	# df_bins_merged[ht.LEN] = df_bins_merged[ht.END] - df_bins_merged[ht.START]
+	# chrlist = df_bins_merged[ht.CHR].drop_duplicates().tolist()
+
 	df_bins = df_bins[(df_bins[ht.END] - df_bins[ht.START]) > 0]
-	a = BedTool.from_dataframe(df_bins[[ht.CHR, ht.START, ht.END]]).sort()
-	df_bins_merged = a.merge(d=0).to_dataframe()
-	df_bins_merged.columns = [ht.CHR, ht.START, ht.END]
+	df_bins[ht.LEN] = abs(df_bins[ht.END] - df_bins[ht.START])
+	chrlist = df_bins[ht.CHR].drop_duplicates().tolist()
 
-	# merge very small intervals
-	df_bins_merged[ht.LEN] = df_bins_merged[ht.END] - df_bins_merged[ht.START]
-	chrlist = df_bins_merged[ht.CHR].drop_duplicates().tolist()
-
-	return df_bins_merged[[ht.CHR, ht.START, ht.END, ht.LEN]], chrlist
+	return df_bins[[ht.CHR, ht.START, ht.END, ht.LEN]], chrlist
 
 
 
