@@ -16,7 +16,7 @@ from src.utils.utils import HEADER as ht
 from src.utils.utils import PROPS
 
 tokeep = [DDT.HAMMING_NORM, DDT.COSINE_DISTANCE, DDT.CYCLES_DISTANCE, DDT.FRAGMENTS_DISTANCE,
-		  DDT.BREAKPOINT_DISTANCE, DDT.JACCARD_DISTANCE, DDT.TOTAL_COST]
+		  DDT.BREAKPOINT_DISTANCE, DDT.JACCARD_DISTANCE, DDT.TOTAL_COST, DDT.COPYNUMBER_JC]
 colors = ["#447604", "#3838CC", "red", "purple"]
 custom_gray = "#D8DBE2"
 
@@ -50,6 +50,7 @@ def draw_total_cost(dict_metrics, outfile=None):
 
 	if outfile:
 		fig.write_image(outfile, scale=15, width=500, height=500)
+		fig.write_image(outfile + ".svg", scale=15, width=500, height=500, format="svg")
 	else:
 		# plot to stdin
 		fig.show()
@@ -85,6 +86,7 @@ def draw_total_cost_table(dict_metrics, outfile=None):
 
 	if outfile:
 		fig.write_image(outfile, scale=6, width=500, height=500)
+		fig.write_image(outfile + ".svg", scale=6, width=500, height=500, format="svg")
 	else:
 		# plot to stdin
 		fig.show()
@@ -332,7 +334,8 @@ def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=5, outfile=Non
 				alpha=0.8)
 
 	if outfile:
-		fig.savefig(outfile, bbox_inches='tight', dpi=600)
+		fig.savefig(outfile, bbox_inches='tight', dpi=72)
+		fig.savefig(outfile, bbox_inches='tight', format="svg")
 	else:
 		fig.show()
 
@@ -577,6 +580,7 @@ def plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, breakpoint_matches, ch
 	draw_cn(cn_profile_t, cn_profile_r, chrlist, fig=fig, axs=axs)
 	plot_breakpoints_comparison(br_t, br_r, breakpoint_matches, chrlist, fig=fig, axs=axs, max_value=max_coverage, scale=True)
 	if outfile:
-		fig.savefig(outfile, bbox_inches='tight', dpi=600)
+		fig.savefig(outfile, bbox_inches='tight', dpi=72)
+		fig.savefig(outfile + ".svg", bbox_inches='tight', format="svg")
 	else:
 		fig.show()
