@@ -80,7 +80,7 @@ def transform_fragments2breakpoints(df_cycle):
 					ht.START: start,
 					ht.IDX1: idx1,
 					ht.CHR2: chr2,
-					ht.END: end,
+					ht.END: end + 10, # make sure there is 1bp difference between start and end
 					ht.IDX2: idx2,
 					ht.STRAND: strand,
 					ht.CIRC_ID: c,
@@ -184,7 +184,7 @@ def transform_fragments2breakpoints(df_cycle):
 					ht.START: start,
 					ht.IDX1: idx1,
 					ht.CHR2: chr2,
-					ht.END: end,
+					ht.END: end + 10, # make sure there is 1bp difference between start and end
 					ht.IDX2: idx2,
 					ht.STRAND: strand,
 					ht.CIRC_ID: c,

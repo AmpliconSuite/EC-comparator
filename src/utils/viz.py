@@ -111,15 +111,15 @@ def draw_arc(x, y, arc_start, arc_end, scale, max_value, resolution=100):
 	# ys = abs((x - y) / 2) * sin(angles)
 	xs = abs((x - y) / 2) * cos(angles) + x - (x - y) / 2
 
-	if scale == True:
+	if scale:
 		if max_value:
 			ymax = max_value - 0.1 * max_value
 			# print("ymax",ymax)
-			ys = min(abs((x - y) / 2), ymax) * sin(angles)
+			ys = min(max(20, abs((x - y) / 2)), ymax) * sin(angles)
 		else:
-			ys = abs((x - y) / 2) * sin(angles)
+			ys = min(20, abs((x - y) / 2)) * sin(angles)
 	else:
-		ys = sin(angles)
+		ys = sin(angles) + 20
 	return xs, ys
 
 
