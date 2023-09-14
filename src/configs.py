@@ -60,12 +60,12 @@ class Configs:
 				h.ENABLE: True
 			},
 			d.FRAGMENTS_DISTANCE: {
-				h.WEIGHT: 1,
+				h.WEIGHT: 0.5,
 				h.DEFINITION: m.get_overlap_fragments_weighted,
 				h.ENABLE: True
 			},
 			d.CYCLES_DISTANCE: {
-				h.WEIGHT: 1,
+				h.WEIGHT: 0.5,
 				h.DEFINITION: m.get_overlap_cycles_weighted,
 				h.ENABLE: True
 			}
