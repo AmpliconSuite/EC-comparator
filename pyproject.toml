@@ -1,0 +1,28 @@
+[build-system]
+requires = [ "setuptools>=42", "wheel", "toml",]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "AmpliconComparison"
+version = "0.0.2"
+description = ""
+readme = "README.md"
+keywords = [ "example", "package",]
+classifiers = [ "Development Status :: 3 - Alpha", "Intended Audience :: Developers", "License :: OSI Approved :: MIT License", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3.8", "Programming Language :: Python :: 3.9", "Programming Language :: Python :: 3.10",]
+dynamic = ["dependencies"]
+requires-python = ">=3.9"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[[project.authors]]
+name = ""
+email = "test@example.com"
+
+[project.license]
+text = "MIT"
+
+[project.urls]
+Homepage = "https://www.google.com"
+Documentation = "https://www.google.com"
+"Source Code" = "https://www.google.com"

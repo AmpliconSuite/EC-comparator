@@ -10,10 +10,10 @@ import pandas as pd
 import networkx as nx
 import numpy as np
 
-from src.utils.utils import PROPS as p
-from src.utils.utils import DDT as ddt
-from src.utils.utils import HEADER as ht
-from src.metrics.distances import *
+from AmpliconComparison.utils.utils import PROPS as p
+from AmpliconComparison.utils.utils import DDT as ddt
+from AmpliconComparison.utils.utils import HEADER as ht
+from AmpliconComparison.metrics.distances import *
 
 import numpy as np
 import scipy as sp

@@ -3,11 +3,21 @@ Comparing cycle decompositions across technologies and methods.
 
 ### Installation
 
-Please install `python3` and run the following code to install all dependencies:
+Please install `python3.9` and run the following code to install all dependencies:
 
 ```bash
 cd AmpliconComparison
-python -m pip install .
+python -m pip install -r requirements.txt
+```
+
+And build and install (for developers):
+
+```bash
+python -m pip install build installer toml setuptools
+
+cd AmpliconComparison
+python -m build
+python -m pip install --force-reinstall dist/AmpliconComparison-0.0.2-py3-none-any.whl
 ```
 
 ### Usage
@@ -15,7 +25,7 @@ python -m pip install .
 Run the following test:
 
 ```bash
-cd AmpliconComparison/src
+cd AmpliconComparison/AmpliconComparison
 python main.py -a ../examples/ecdna1/true.bed \
                -b ../examples/ecdna1/reconstructed.bed \
                -d ../examples/ecdna1/output

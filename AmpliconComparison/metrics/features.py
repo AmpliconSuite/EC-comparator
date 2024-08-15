@@ -10,8 +10,8 @@ import numpy as np
 import pyranges as pr
 from pybedtools import BedTool
 
-from src.utils.utils import HEADER as ht
-from src.utils.utils import PROPS as p
+from AmpliconComparison.utils.utils import HEADER as ht
+from AmpliconComparison.utils.utils import PROPS as p
 
 import warnings
 warnings.filterwarnings("ignore")

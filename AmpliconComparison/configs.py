@@ -6,9 +6,9 @@ Created using PyCharm
 Configs
 """
 
-from src.utils.utils import HEADER as h
-from src.utils.utils import DDT as d
-from src.metrics import compare as m
+from AmpliconComparison.utils.utils import HEADER as h
+from AmpliconComparison.utils.utils import DDT as d
+from AmpliconComparison.metrics import compare as m
 
 
 class Configs:

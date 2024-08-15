@@ -6,7 +6,7 @@ import math
 import pandas as pd
 from copy import deepcopy
 
-from src.utils.utils import HEADER as h
+from AmpliconComparison.utils.utils import HEADER as h
 
 
 def cartesian2polar(x, y):

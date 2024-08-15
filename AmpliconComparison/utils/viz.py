@@ -11,9 +11,9 @@ import matplotlib.transforms as mtransforms
 from matplotlib.patches import ConnectionPatch, Circle
 
 # custom module
-from src.utils.utils import DDT
-from src.utils.utils import HEADER as ht
-from src.utils.utils import PROPS
+from AmpliconComparison.utils.utils import DDT
+from AmpliconComparison.utils.utils import HEADER as ht
+from AmpliconComparison.utils.utils import PROPS
 
 tokeep = [DDT.HAMMING_NORM, DDT.COSINE_DISTANCE, DDT.CYCLES_DISTANCE, DDT.FRAGMENTS_DISTANCE,
 		  DDT.BREAKPOINT_DISTANCE, DDT.JACCARD_DISTANCE, DDT.TOTAL_COST, DDT.COPYNUMBER_JC]

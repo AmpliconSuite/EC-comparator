@@ -11,13 +11,13 @@ import os
 import traceback
 import datetime
 
-from src.configs import Configs
-from src.utils.utils import DDT as d
-from src.utils.utils import HEADER as h
-from src.metrics import compare
+from AmpliconComparison.configs import Configs
+from AmpliconComparison.utils.utils import DDT as d
+from AmpliconComparison.utils.utils import HEADER as h
+from AmpliconComparison.metrics import compare
 
-# from src.utils.utils import DDT as d
-# from src.utils.utils import HEADER as h
+# from AmpliconComparison.utils.utils import DDT as d
+# from AmpliconComparison.utils.utils import HEADER as h
 
 def config(args):
 	"""
@@ -63,6 +63,8 @@ def main():
 		parser.add_argument('-a', '--first-structure', help='First structure (bed format)', required=True)
 		parser.add_argument('-b', '--second-structure', help='Second structure (bed format)', required=True)
 		parser.add_argument('-d', '--outdir', help='Output directory', required=True)
+		parser.add_argument('-p', '--plot', help='Plot coverage profiles', default=True, type=bool)
+		parser.add_argument('-r', '--report', help='Generate report (this will set \'plot\' also on True)', default=True, type=bool)
 		parser.add_argument('--cn-hamming-dist',
 							help='Hamming distance between genomic footprint. Recommended when no copy-number information available (default: %(default)s)',
 							required=False, default=True, type=bool)
@@ -70,7 +72,7 @@ def main():
 						   help="Cosine distance between the coverage profile.",
 							required=False, default=True, type=bool)
 		parser.add_argument('--cn-jc-dist',
-							help="Jaccard index distance between the coverage profile.",
+							help="Min-max distance / Jaccard distance between the coverage profile.",
 							required=False, default=True, type=bool)
 		parser.add_argument('--fragments-dist',
 							help="Quantify the distance between fragments.",
@@ -108,10 +110,14 @@ def main():
 		os.makedirs(args.outdir, exist_ok=True)
 
 		# 3. Compare cycles
+		if args.report:
+			args.plot = True
 		compare.compare_cycles(args.first_structure,
 							   args.second_structure,
 							   args.outdir,
-							   dict_configs)
+							   dict_configs,
+							   plot=args.plot,
+							   plot_report=args.report)
 
 
 	except Exception:

@@ -6,10 +6,21 @@ Created using PyCharm
 Create report with all the results
 """
 import os
+import importlib.util
+
 import datetime
 from jinja2 import Environment, FileSystemLoader
 from xhtml2pdf import pisa
-from src.utils.utils import OUTFILES as o
+from AmpliconComparison.utils.utils import OUTFILES as o
+from AmpliconComparison.utils import utils
+
+def get_package_root(module_name):
+    # Find the module spec
+    spec = importlib.util.find_spec(module_name)
+    # Get the location of the module
+    module_location = spec.origin
+    # Return the directory containing the module
+    return os.path.dirname(os.path.abspath(module_location))
 
 def generate_report(path_s1,
                     path_s2,
@@ -17,7 +28,7 @@ def generate_report(path_s1,
                     outdir=None):
 
     if outdir:
-        env = Environment(loader=FileSystemLoader('.'))
+        env = Environment(loader=get_package_root(utils.PACKAGE_NAME))
         template = env.get_template("utils/report/results.html")
         html = template.render(page_title_text='AmpliconComparison report',
                                description_time=datetime.datetime.now(),

@@ -16,10 +16,10 @@ from sklearn import preprocessing
 
 import pyranges as pr
 
-from src.utils.utils import HEADER as ht
-from src.utils.utils import DDT as ddt
-from src.utils.utils import PROPS as p
-from src.metrics.features import rename_columns
+from AmpliconComparison.utils.utils import HEADER as ht
+from AmpliconComparison.utils.utils import DDT as ddt
+from AmpliconComparison.utils.utils import PROPS as p
+from AmpliconComparison.metrics.features import rename_columns
 
 def get_hamming_score(df_):
 	"""

@@ -4,6 +4,7 @@ Constants and other settings
 import json
 import numpy as np
 
+PACKAGE_NAME = 'AmpliconComparison'
 
 class NpEncoder(json.JSONEncoder):
 	def default(self, obj):

@@ -11,15 +11,15 @@ import json
 import pprint
 import matplotlib.pyplot as plt
 
-from src.metrics.features import *
-from src.metrics.breakpoints import *
-from src.metrics.distances import *
-from src.utils import viz
-from src.utils.utils import HEADER as ht
-from src.utils.utils import DDT as ddt
-from src.utils.utils import OUTFILES as o
-from src.utils.utils import NpEncoder
-# from src.utils import report
+from AmpliconComparison.metrics.features import *
+from AmpliconComparison.metrics.breakpoints import *
+from AmpliconComparison.metrics.distances import *
+from AmpliconComparison.utils import viz
+from AmpliconComparison.utils.utils import HEADER as ht
+from AmpliconComparison.utils.utils import DDT as ddt
+from AmpliconComparison.utils.utils import OUTFILES as o
+from AmpliconComparison.utils.utils import NpEncoder
+from AmpliconComparison.utils import report
 
 
 import warnings
@@ -63,7 +63,7 @@ def get_total_cost(dict_metrics):
 	return total_cost, total_cost_description
 
 
-def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True):
+def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=True):
 	"""
 	Entrypoint: compare the distance between two cycle sets.
 	Args:
@@ -134,6 +134,7 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True):
 	dict_metrics[ht.DISTANCES][ddt.CYCLES_DISTANCE] = round(overlap_cycles_distance,2)
 
 	# 6. Stoichiometry (compute distance of transforming one permutation in the other)
+	# missing
 
 	# 7. Merge results
 	total_cost, total_cost_description = get_total_cost(dict_metrics)
@@ -141,43 +142,43 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True):
 	dict_metrics[ht.DISTANCES][ddt.TOTAL_COST_DESCRIPTION] = total_cost_description
 	print("Total cost:",total_cost)
 
-	# # 8. Output
-	# if outdir:
-	# 	with open(os.path.join(outdir, o.METRICS_JSON), 'w', encoding='utf-8') as f:
-	# 		final_dict = remove_ref2methods(dict_metrics)
-	# 		json.dump(final_dict, f, ensure_ascii=False, indent=4, cls=NpEncoder)
-	#
-	# # plot total cost
-	# if plot:
-	# 	outfile = os.path.join(outdir, o.TOTAL_COST_PNG) if outdir else None
-	# 	viz.draw_total_cost(dict_metrics, outfile)
-	# 	outfile = os.path.join(outdir, o.TOTAL_COST_TABLE) if outdir else None
-	# 	viz.draw_total_cost_table(dict_metrics, outfile)
-	#
-	# # save and plot coverage profile
-	# if outdir:
-	# 	cn_profile_t.to_csv(os.path.join(outdir, o.COVERAGE_PROFILE_S1_TXT), header=True, index=False, sep="\t")
-	# 	cn_profile_r.to_csv(os.path.join(outdir, o.COVERAGE_PROFILE_S2_TXT), header=True, index=False, sep="\t")
-	# if plot:
-	# 	outfile = os.path.join(outdir, o.COVERAGE_PROFILE_PNG) if outdir else None
-	# 	viz.draw_cn(cn_profile_t, cn_profile_r, chrlist, outfile=outfile)
-	#
-	# # save breakpoints profile
-	# if outdir:
-	# 	br_t.to_csv(os.path.join(outdir, o.BREAKPOINTS_PROFILE_S1_TXT), header=True, index=False, sep="\t")
-	# 	br_r.to_csv(os.path.join(outdir, o.BREAKPOINTS_PROFILE_S2_TXT), header=True, index=False, sep="\t")
-	#
-	# # plot merged coverage and breakpoint profile
-	# max_coverage = max(np.max(cn_profile_t[ht.CN].tolist()), np.max(cn_profile_r[ht.CN].tolist()))
-	# max_coverage = max_coverage + 0.5 * max_coverage
-	# if plot:
-	# 	outfile = os.path.join(outdir, o.COVERAGE_BREAKPOINTS_PROFILE) if outdir else None
-	# 	viz.plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, breakpoint_matches, chrlist, max_coverage, outfile=outfile)
-	#
-	# # create report
-	# if outdir:
-	# 	report.generate_report(
-	# 		t_file,
-	# 		r_file,
-	# 		outdir=outdir,
-	# 		total_cost=total_cost)
+	# 8. Output
+	if outdir:
+		with open(os.path.join(outdir, o.METRICS_JSON), 'w', encoding='utf-8') as f:
+			final_dict = remove_ref2methods(dict_metrics)
+			json.dump(final_dict, f, ensure_ascii=False, indent=4, cls=NpEncoder)
+
+		# save coverage profile
+		cn_profile_t.to_csv(os.path.join(outdir, o.COVERAGE_PROFILE_S1_TXT), header=True, index=False, sep="\t")
+		cn_profile_r.to_csv(os.path.join(outdir, o.COVERAGE_PROFILE_S2_TXT), header=True, index=False, sep="\t")
+
+		# save breakpoint profile
+		br_t.to_csv(os.path.join(outdir, o.BREAKPOINTS_PROFILE_S1_TXT), header=True, index=False, sep="\t")
+		br_r.to_csv(os.path.join(outdir, o.BREAKPOINTS_PROFILE_S2_TXT), header=True, index=False, sep="\t")
+
+		if plot:
+
+			# plot coverage profile
+			outfile = os.path.join(outdir, o.COVERAGE_PROFILE_PNG)
+			viz.draw_cn(cn_profile_t, cn_profile_r, chrlist, outfile=outfile)
+
+			# plot merged coverage and breakpoint profile
+			max_coverage = max(np.max(cn_profile_t[ht.CN].tolist()), np.max(cn_profile_r[ht.CN].tolist()))
+			max_coverage = max_coverage + 0.5 * max_coverage
+
+			outfile = os.path.join(outdir, o.COVERAGE_BREAKPOINTS_PROFILE) if outdir else None
+			viz.plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, breakpoint_matches, chrlist, max_coverage, outfile=outfile)
+
+			# plot total cost
+			outfile = os.path.join(outdir, o.TOTAL_COST_PNG)
+			viz.draw_total_cost(dict_metrics, outfile)
+			outfile = os.path.join(outdir, o.TOTAL_COST_TABLE)
+			viz.draw_total_cost_table(dict_metrics, outfile)
+
+			# create report
+			if plot_report:
+				report.generate_report(
+					t_file,
+					r_file,
+					outdir=outdir,
+					total_cost=total_cost)
