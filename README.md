@@ -51,10 +51,8 @@ python main.py -a ../examples/ecdna1/true.bed \
 ### Help
 
 ```bash
-usage: AmpliconComparison [-h] -a FIRST_STRUCTURE -b SECOND_STRUCTURE -d OUTDIR [--cos-similarity COS_SIMILARITY] [--hamming-distance-norm HAMMING_DISTANCE_NORM]
-                          [--cosine-distance COSINE_DISTANCE] [--fragments-overlap-norm FRAGMENTS_OVERLAP_NORM] [--cycles-overlap-norm CYCLES_OVERLAP_NORM]
-                          [--euclidian-distance EUCLIDIAN_DISTANCE] [--euclidian-distance-threshold EUCLIDIAN_DISTANCE_THRESHOLD] [--relative-distance RELATIVE_DISTANCE]
-                          [--relative-distance-threshold RELATIVE_DISTANCE_THRESHOLD]
+usage: AmpliconComparison [-h] -a FIRST_STRUCTURE -b SECOND_STRUCTURE -d OUTDIR [--plot | --no-plot] [--report | --no-report] [--cn-hamming-dist CN_HAMMING_DIST] [--cn-cosine-dist CN_COSINE_DIST] [--cn-jc-dist CN_JC_DIST]
+                          [--fragments-dist FRAGMENTS_DIST] [--cycles-dist CYCLES_DIST] [--breakpoint-dist BREAKPOINT_DIST]
 
 AmpliconComparison - compare cycle sets
 
@@ -66,24 +64,22 @@ optional arguments:
                         Second structure (bed format)
   -d OUTDIR, --outdir OUTDIR
                         Output directory
-  --cos-similarity COS_SIMILARITY
-                        Cosine similarity between coverage tracks (default: True)
-  --hamming-distance-norm HAMMING_DISTANCE_NORM
+  --plot, --no-plot     Plot coverage profiles
+  --report, --no-report
+                        Generate report (this will set 'plot' also on True)
+  --cn-hamming-dist CN_HAMMING_DIST
                         Hamming distance between genomic footprint. Recommended when no copy-number information available (default: True)
-  --cosine-distance COSINE_DISTANCE
+  --cn-cosine-dist CN_COSINE_DIST
                         Cosine distance between the coverage profile.
-  --fragments-overlap-norm FRAGMENTS_OVERLAP_NORM
+  --cn-jc-dist CN_JC_DIST
+                        Min-max distance / Jaccard distance between the coverage profile.
+  --fragments-dist FRAGMENTS_DIST
                         Quantify the distance between fragments.
-  --cycles-overlap-norm CYCLES_OVERLAP_NORM
+  --cycles-dist CYCLES_DIST
                         Quantify the distance between cycles.
-  --euclidian-distance EUCLIDIAN_DISTANCE
-                        Use euclidian distance for breakpoint-pair matching (default: True)
-  --euclidian-distance-threshold EUCLIDIAN_DISTANCE_THRESHOLD
-                        Distance threshold to accept two breakpoint-pairs as matched (default: 1000)
-  --relative-distance RELATIVE_DISTANCE
-                        Relative distance score for breakpoint matching (default: False)
-  --relative-distance-threshold RELATIVE_DISTANCE_THRESHOLD
-                        Distance threshold to accept two breakpoint-pairs as matched (default: 0.3)
+  --breakpoint-dist BREAKPOINT_DIST
+                        Quantify the distance between cycles.
+
 
 ```
 
