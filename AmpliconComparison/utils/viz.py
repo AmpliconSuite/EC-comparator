@@ -49,8 +49,8 @@ def draw_total_cost(dict_metrics, outfile=None):
 	)
 
 	if outfile:
-		fig.write_image(outfile, scale=15, width=500, height=500)
-		fig.write_image(outfile + ".svg", scale=15, width=500, height=500, format="svg")
+		fig.write_image(outfile, scale=10, width=500, height=500)
+		fig.write_image(outfile + ".svg", scale=10, width=500, height=500, format="svg")
 	else:
 		# plot to stdin
 		fig.show()
@@ -85,8 +85,8 @@ def draw_total_cost_table(dict_metrics, outfile=None):
 	)
 
 	if outfile:
-		fig.write_image(outfile, scale=6, width=500, height=500)
-		fig.write_image(outfile + ".svg", scale=6, width=500, height=500, format="svg")
+		fig.write_image(outfile, scale=10, width=500, height=500)
+		fig.write_image(outfile + ".svg", scale=10, width=500, height=500, format="svg")
 	else:
 		# plot to stdin
 		fig.show()
@@ -266,12 +266,12 @@ def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=5, outfile=Non
 	# sns.set(rc={'figure.figsize': (width, height)})
 	cv_profile_t[ht.TRACK] = ht.S1
 	cv_profile_r[ht.TRACK] = ht.S2
-	c_new = break_cn(cv_profile_t).append(break_cn(cv_profile_r), ignore_index=True)
+	c_new = pd.concat([break_cn(cv_profile_t),break_cn(cv_profile_r)], ignore_index=True)
 
 	tracks = [ht.S1, ht.S2]
 	ncols = len(chrlist)
 	if fig is None or axs is None:
-		points_new = concat_all_breakpoints(cv_profile_t, cv_profile_r, ht.CHR, ht.CHR)
+		points_new = concat_all_breakpoints(cv_profile_t, cv_profile_r, ht.CHR, ht.CHR, ht.CHR, ht.START, ht.END)
 		compute_ratios = plot_ratios(chrlist, points_new)
 		fig, axs = plt.subplots(1, ncols, figsize=(width, height), sharey=True, gridspec_kw={'width_ratios': compute_ratios})
 	ax = None
@@ -334,8 +334,8 @@ def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=5, outfile=Non
 				alpha=0.8)
 
 	if outfile:
-		fig.savefig(outfile, bbox_inches='tight', dpi=72)
-		fig.savefig(outfile, bbox_inches='tight', format="svg")
+		fig.savefig(outfile, bbox_inches='tight', dpi=600)
+		fig.savefig(outfile+".svg", bbox_inches='tight', format="svg")
 	else:
 		fig.show()
 
@@ -373,16 +373,16 @@ def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=5, outfile=Non
 # g.add_legend()
 # g.fig.suptitle(plot_col)
 
-def concat_all_breakpoints(df1, df2, chr1, chr2):
-	br_t_1 = pd.DataFrame(np.concatenate((df1[[chr1, ht.START]].values,
-										  df1[[chr2, ht.END]].values),
+def concat_all_breakpoints(df1, df2, achr1, achr2, achr, astart, aend):
+	br_t_1 = pd.DataFrame(np.concatenate((df1[[achr1, astart]].values,
+										  df1[[achr2, aend]].values),
 										 axis=0))
-	br_r_1 = pd.DataFrame(np.concatenate((df2[[chr1, ht.START]].values,
-										  df2[[chr2, ht.END]].values),
+	br_r_1 = pd.DataFrame(np.concatenate((df2[[achr1, astart]].values,
+										  df2[[achr2, aend]].values),
 										 axis=0))
 
-	points_new = br_t_1.append(br_r_1, ignore_index=True).drop_duplicates()
-	points_new.columns = [ht.CHR, ht.START]
+	points_new = pd.concat([br_t_1,br_r_1], ignore_index=True).drop_duplicates()
+	points_new.columns = [achr, astart]
 	return points_new
 
 
@@ -418,7 +418,7 @@ def plot_breakpoints_location(br_t, br_r, max_y, chrlist, width=30, height=5):
 	sns.set_style("whitegrid")
 	sns.set_context("paper")
 
-	points_new = concat_all_breakpoints(br_t, br_r, ht.CHR1, ht.CHR2)
+	points_new = concat_all_breakpoints(br_t, br_r, ht.CHR1, ht.CHR2, ht.CHR, ht.START, ht.END)
 	ncols = len(chrlist)
 	compute_ratios = plot_ratios(chrlist, points_new)
 	fig, axs = plt.subplots(1, ncols, figsize=(width, height), sharey=True, gridspec_kw={'width_ratios': compute_ratios})
@@ -473,7 +473,7 @@ def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 	ax = None
 	ncols = len(chrlist)
 	if fig is None and axs is None:
-		points_new = concat_all_breakpoints(br_t, br_r, ht.CHR1, ht.CHR2)
+		points_new = concat_all_breakpoints(br_t, br_r, ht.CHR1, ht.CHR2, ht.CHR, ht.START, ht.END)
 		compute_ratios = plot_ratios(chrlist, points_new)
 		fig, axs = plt.subplots(1, ncols, figsize=(width, height), sharey=True, gridspec_kw={'width_ratios': compute_ratios})
 		ax = axs[0] if ncols > 1 else axs
@@ -580,7 +580,7 @@ def plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, breakpoint_matches, ch
 	draw_cn(cn_profile_t, cn_profile_r, chrlist, fig=fig, axs=axs)
 	plot_breakpoints_comparison(br_t, br_r, breakpoint_matches, chrlist, fig=fig, axs=axs, max_value=max_coverage, scale=True)
 	if outfile:
-		fig.savefig(outfile, bbox_inches='tight', dpi=72)
+		fig.savefig(outfile, bbox_inches='tight', dpi=600)
 		fig.savefig(outfile + ".svg", bbox_inches='tight', format="svg")
 	else:
 		fig.show()

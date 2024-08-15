@@ -31,8 +31,8 @@ def get_hamming_score(df_):
 	"""
 	df_[ddt.HAMMING] = df_.apply(lambda x: np.logical_xor(x.h1, x.h2), axis=1)
 	df_[ddt.HAMMING] = df_[ddt.HAMMING].astype(int)
-	df_[ddt.PROD] = df_[ddt.HAMMING] * (df_[ht.CEND] - df_[ht.CSTART])
-	df_[ddt.LEN] = abs(df_[ht.CEND] - df_[ht.CSTART]) * df_[ht.BIN_ENABLED]
+	df_[ddt.PROD] = df_[ddt.HAMMING] * (df_[ht.END] - df_[ht.START])
+	df_[ddt.LEN] = abs(df_[ht.END] - df_[ht.START]) * df_[ht.BIN_ENABLED]
 
 	return df_, df_[ddt.PROD].sum()
 
@@ -64,7 +64,7 @@ def get_overlap_fragments_weighted(df_):
 	"""
 	df_[ddt.OVERLAP_SCORE] = df_.apply(lambda x: abs(x.e1 - x.e2), axis=1)
 	# important to disable unused genomic bins
-	df_[ddt.LEN] = abs(df_[ht.CEND] - df_[ht.CSTART]) * df_[ht.BIN_ENABLED]
+	df_[ddt.LEN] = abs(df_[ht.END] - df_[ht.START]) * df_[ht.BIN_ENABLED]
 
 	# account for duplicated fragments
 	df_[ddt.TOTALLEN] = df_.apply(lambda x: max(x.e1, x.e2) * x.len, axis=1)
@@ -95,7 +95,7 @@ def count_cycles(results, e1,bins,c, col):
 
 	# merge results
 	results = pd.concat([results, overlap]).groupby(
-		[ht.CCHR, ht.CSTART, ht.CEND], observed=True, as_index=False).sum()
+		[ht.CHR, ht.START, ht.END], observed=True, as_index=False).sum()
 
 	return results
 
@@ -108,14 +108,14 @@ def get_overlap_cycles_weighted(e1, e2, bins):
 		e2 (pd.DataFrame): Second reconstruction
 		bins (pd.DataFrame): Bins of the intervals union e1 and e2
 	"""
-	pr_bins = pr.PyRanges(bins[[ht.CCHR,ht.CSTART,ht.CEND]])
+	pr_bins = pr.PyRanges(bins[[ht.CHR,ht.START,ht.END]])
 	c1 = e1[ht.CIRC_ID].drop_duplicates().tolist()
 	c2 = e2[ht.CIRC_ID].drop_duplicates().tolist()
 
 	overlap_parent1 = deepcopy(bins)
 	overlap_parent1[ht.S1] = 0
 
-	# overlap_parent1[ddt.LEN] = abs(overlap_parent1[ht.CEND] - overlap_parent1[ht.CSTART])
+	# overlap_parent1[ddt.LEN] = abs(overlap_parent1[ht.END] - overlap_parent1[ht.START])
 	for c in c1:
 		overlap_parent1 = count_cycles(overlap_parent1, e1, pr_bins, c, ht.S1)
 
@@ -125,11 +125,11 @@ def get_overlap_cycles_weighted(e1, e2, bins):
 	for c in c2:
 		overlap_parent2 = count_cycles(overlap_parent2, e2, pr_bins, c, ht.S2)
 
-	overlaps = pd.merge(overlap_parent1[[ht.CCHR, ht.CSTART, ht.CEND, ht.S1, ht.BIN_ENABLED]],
-						overlap_parent2[[ht.CCHR, ht.CSTART, ht.CEND, ht.S2, ht.BIN_ENABLED]], how='inner')
+	overlaps = pd.merge(overlap_parent1[[ht.CHR, ht.START, ht.END, ht.S1, ht.BIN_ENABLED]],
+						overlap_parent2[[ht.CHR, ht.START, ht.END, ht.S2, ht.BIN_ENABLED]], how='inner')
 
 	overlaps[ddt.OVERLAP_SCORE] = overlaps.apply(lambda x: abs(x[ht.S1] - x[ht.S2]), axis=1)
-	overlaps[ddt.LEN] = abs(overlaps[ht.CEND] - overlaps[ht.CSTART]) * overlaps[ht.BIN_ENABLED]
+	overlaps[ddt.LEN] = abs(overlaps[ht.END] - overlaps[ht.START]) * overlaps[ht.BIN_ENABLED]
 	overlaps[ddt.TOTALLEN] = overlaps.apply(lambda x: max(x[ht.S1], x[ht.S2]) * x.len, axis=1)
 	overlaps[ddt.PROD] = overlaps[ddt.OVERLAP_SCORE] * overlaps[ddt.LEN]
 
@@ -140,9 +140,9 @@ def get_cosine_distance_cn(cn_profile1, cn_profile2):
 	"""
 	Get cosine distance between the two copy number profiles
 	"""
-	cn_profile1["estimated_cn_normalized"] = cn_profile1.apply(lambda x: x[ht.CN] * abs(x[ht.CEND] - x[ht.CSTART]),
+	cn_profile1["estimated_cn_normalized"] = cn_profile1.apply(lambda x: x[ht.CN] * abs(x[ht.END] - x[ht.START]),
 															   axis=1)
-	cn_profile2["estimated_cn_normalized"] = cn_profile2.apply(lambda x: x[ht.CN] * abs(x[ht.CEND] - x[ht.CSTART]),
+	cn_profile2["estimated_cn_normalized"] = cn_profile2.apply(lambda x: x[ht.CN] * abs(x[ht.END] - x[ht.START]),
 															   axis=1)
 
 	# filter out bins which are disabled
@@ -159,7 +159,7 @@ def get_jc_distance_cn(cn_profile1, cn_profile2):
 	"""
 	Get jaccard index distance between the two copy number profiles
 	"""
-	cn_merge = pd.merge(cn_profile1, cn_profile2, on=[ht.CCHR, ht.CSTART, ht.CEND, ht.BIN_ENABLED])
+	cn_merge = pd.merge(cn_profile1, cn_profile2, on=[ht.CHR, ht.START, ht.END, ht.BIN_ENABLED])
 	cn_merge["max"] = cn_merge.apply(lambda x: max(x["estimated_cn_normalized_x"], x["estimated_cn_normalized_y"]),
 									 axis=1)
 	# overlap

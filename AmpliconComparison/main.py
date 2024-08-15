@@ -63,8 +63,8 @@ def main():
 		parser.add_argument('-a', '--first-structure', help='First structure (bed format)', required=True)
 		parser.add_argument('-b', '--second-structure', help='Second structure (bed format)', required=True)
 		parser.add_argument('-d', '--outdir', help='Output directory', required=True)
-		parser.add_argument('-p', '--plot', help='Plot coverage profiles', default=True, type=bool)
-		parser.add_argument('-r', '--report', help='Generate report (this will set \'plot\' also on True)', default=True, type=bool)
+		parser.add_argument('--plot', help='Plot coverage profiles', action=argparse.BooleanOptionalAction)
+		parser.add_argument('--report', help='Generate report (this will set \'plot\' also on True)', action=argparse.BooleanOptionalAction)
 		parser.add_argument('--cn-hamming-dist',
 							help='Hamming distance between genomic footprint. Recommended when no copy-number information available (default: %(default)s)',
 							required=False, default=True, type=bool)
@@ -110,8 +110,12 @@ def main():
 		os.makedirs(args.outdir, exist_ok=True)
 
 		# 3. Compare cycles
-		if args.report:
+		if args.report and args.report == True:
 			args.plot = True
+		if args.plot is None:
+			args.plot = False
+		if args.report is None:
+			args.report = False
 		compare.compare_cycles(args.first_structure,
 							   args.second_structure,
 							   args.outdir,

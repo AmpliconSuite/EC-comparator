@@ -28,7 +28,7 @@ def generate_report(path_s1,
                     outdir=None):
 
     if outdir:
-        env = Environment(loader=get_package_root(utils.PACKAGE_NAME))
+        env = Environment(loader=FileSystemLoader(get_package_root(utils.PACKAGE_NAME)))
         template = env.get_template("utils/report/results.html")
         html = template.render(page_title_text='AmpliconComparison report',
                                description_time=datetime.datetime.now(),

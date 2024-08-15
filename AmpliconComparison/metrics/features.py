@@ -85,8 +85,6 @@ def read_input(t_file, r_file):
 
 	t_collection = pd.read_csv(t_file, header=0, sep="\t", dtype=dtype)
 	r_collection = pd.read_csv(r_file, header=0, sep="\t", dtype=dtype)
-	print(t_collection)
-	print(r_collection)
 
 	# rename columns and check if all columns available
 	t_collection.rename(columns=rename_columns(t_collection.columns.tolist(), ht.DICT_HEADER), errors="raise",
@@ -223,25 +221,25 @@ def get_feature_cn(df_cycles, bins):
 	"""
 
 	# bins
-	a = BedTool.from_dataframe(bins[[ht.CCHR,
-									 ht.CSTART,
-									 ht.CEND,
+	a = BedTool.from_dataframe(bins[[ht.CHR,
+									 ht.START,
+									 ht.END,
 									 ht.BIN_ENABLED]])
 
 	# sum all cn for same bin
 	df_new = df_cycles[[ht.CHR, ht.START, ht.END, ht.CN]].\
 		groupby([ht.CHR, ht.START, ht.END], observed=True, as_index=False).sum()
-	df_new.columns = [ht.CCHR, ht.CSTART, ht.CEND, ht.CN]
+	df_new.columns = [ht.CHR, ht.START, ht.END, ht.CN]
 
-	b = BedTool.from_dataframe(df_new[[ht.CCHR, ht.CSTART, ht.CEND, ht.CN]])
+	b = BedTool.from_dataframe(df_new[[ht.CHR, ht.START, ht.END, ht.CN]])
 
 	# intersect them
 	o1 = a.intersect(b, wo=True, loj=True).to_dataframe().iloc[:, [0, 1, 2, 3, 7]]
-	o1.columns = [ht.CCHR, ht.CSTART, ht.CEND, ht.BIN_ENABLED, ht.CN]
+	o1.columns = [ht.CHR, ht.START, ht.END, ht.BIN_ENABLED, ht.CN]
 	o1.loc[o1[ht.CN] == ".", ht.CN] = 0
 
 	o1[ht.CN] = o1.apply(lambda x: round(float(x[ht.CN]),0), axis=1)
-	o1 = o1.groupby([ht.CCHR, ht.CSTART, ht.CEND, ht.BIN_ENABLED], observed=True, as_index=False).sum()
+	o1 = o1.groupby([ht.CHR, ht.START, ht.END, ht.BIN_ENABLED], observed=True, as_index=False).sum()
 
 	return o1
 

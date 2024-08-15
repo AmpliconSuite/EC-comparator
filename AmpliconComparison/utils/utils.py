@@ -18,12 +18,11 @@ class NpEncoder(json.JSONEncoder):
 
 class HEADER:
 	CIRC_ID = "circ_id"
-	CHR = "#chr"
-	CHRH2 = "#chr2"
-
-	START = "start"
-	END = "end"
-	STRAND = "strand"
+	CHR = "Chromosome"
+	CHRH2 = "Chromosome2"
+	START = "Start"
+	END = "End"
+	STRAND = "Stranded"
 	CN = "estimated_cn"
 	CHR1 = "chr1"
 	CHR2 = "chr2"
@@ -65,10 +64,6 @@ class HEADER:
 	CONFIGS = 'configs'
 	DISTANCES = 'distances'
 	DEFAULT = 'default'
-
-	CSTART = "Start"
-	CCHR = "Chromosome"
-	CEND = "End"
 
 
 class PROPS:
