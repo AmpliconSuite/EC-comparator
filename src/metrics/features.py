@@ -119,55 +119,26 @@ def bin_genome(t_collection, r_collection, margin_size=10000):
 	Bin the intervals by the breakpoints union.
 	Warning: Setting a margin size can effect the output of different distances
 	"""
-	# # binning using pybedtools
-	# df_bins = pd.DataFrame(np.concatenate((t_collection[[ht.CHR, ht.START, ht.END]].values,
-	# 									   r_collection[[ht.CHR, ht.START, ht.END]].values),
-	# 									  axis=0))
-	# df_bins.columns = [ht.CHR, ht.START, ht.END]
-	# a = BedTool.from_dataframe(df_bins).sort()
-	# # merge bins 500 apart
-	# df_bins_merged = a.merge(d=0).to_dataframe()
-	# df_bins_merged.columns = [ht.CHR, ht.START, ht.END]
-	# df_bins_merged[ht.LEN] = df_bins_merged.apply(lambda x: abs(x[ht.START] - x[ht.END]), axis=1)
-	# chrlist = df_bins[ht.CHR].drop_duplicates().tolist()
-	#
-	# print(df_bins_merged)
-	# print(chrlist)
-	#
-	# return df_bins_merged, chrlist
 
 	df_bins = pd.DataFrame(np.concatenate((t_collection[[ht.CHR, ht.START]].values,
 										   t_collection[[ht.CHR, ht.END]].values,
 										   r_collection[[ht.CHR, ht.START]].values,
 										   r_collection[[ht.CHR, ht.END]].values),
-										  axis=0))
+										  axis=0)).drop_duplicates()
 
 	df_bins.columns = [ht.CHR, ht.START]
-	df_bins[ht.START] = df_bins[ht.START]
-	df_bins = df_bins.drop_duplicates().sort_values(by=[ht.CHR, ht.START])
-
-	# get max and min for each chromosome
-	# df_bins_gr = df_bins.groupby([ht.CHR]).agg({ht.START: [np.min, np.max]}).reset_index()
-	# df_bins_gr.columns = [ht.CHR, "start_amin", "start_amax"]
-	# df_bins_gr["start_amin"] = df_bins_gr.apply(lambda x: max(0, x["start_amin"] - margin_size), axis=1)
-	# df_bins_gr["start_amax"] = df_bins_gr.apply(lambda x: x["start_amax"] + margin_size, axis=1)
-	#
-	# df_bins = pd.concat([df_bins, df_bins_gr[[ht.CHR, "start_amin"]].rename(columns={"start_amin": ht.START})],
-	# 					ignore_index=True)
-	# df_bins = pd.concat([df_bins, df_bins_gr[[ht.CHR, "start_amax"]].rename(columns={"start_amax": ht.START})],
-	# 					ignore_index=True)
-	# df_bins = df_bins.sort_values(by=[ht.CHR, ht.START]).drop_duplicates()
+	df_bins = df_bins.sort_values(by=[ht.CHR, ht.START])
 
 	# rotate with 1 up the start column
 	df_bins_suffix = df_bins.tail(-1)
-	df_bins_suffix = df_bins_suffix.append((df_bins.head(1)), ignore_index=True)
+	df_bins_suffix = pd.concat([df_bins_suffix,df_bins.head(1)], axis=0, ignore_index=True)
 
 	df_bins.reset_index(drop=True, inplace=True)
 	df_bins_suffix.reset_index(drop=True, inplace=True)
 	df_bins = pd.concat([df_bins, df_bins_suffix], axis=1, ignore_index=True)
-	df_bins.columns = [ht.CHR, ht.START, "#chr2", ht.END]
+	df_bins.columns = [ht.CHR, ht.START, ht.CHRH2, ht.END]
 	# keep only rows with same chr and non-negative distance
-	df_bins = df_bins[(df_bins[ht.CHR] == df_bins["#chr2"]) & (abs(df_bins[ht.START] - df_bins[ht.END]) >= 0)]
+	df_bins = df_bins[(df_bins[ht.CHR] == df_bins[ht.CHRH2]) & (abs(df_bins[ht.START] - df_bins[ht.END]) >= 0)]
 
 	# # merge intervals
 	# df_bins[ht.END] = df_bins.apply(lambda x: x[ht.END] if abs(x[ht.START] - x[ht.END]) < 50 else x[ht.END]-1, axis=1)
@@ -190,7 +161,12 @@ def bin_genome(t_collection, r_collection, margin_size=10000):
 
 def read_pyranges(df_t, df_r, bins):
 	"""
-	Load data as pyranges
+	Load data as pyranges.
+
+	Args:
+		df_t (pd.DataFrame): First dataframe containing reconstructed amplicons
+		df_r (pd.DataFrame): Second dataframe containing reconstructed amplicons
+		bins (pd.DataFrame): Genomic bins
 	"""
 	df_t_pr = pr.PyRanges(
 		df_t.rename(columns=rename_columns(df_t.columns.tolist(), p.DICT_COLS), errors="raise", inplace=False))
@@ -200,6 +176,40 @@ def read_pyranges(df_t, df_r, bins):
 		bins.rename(columns=rename_columns(bins.columns.tolist(), p.DICT_COLS), errors="raise", inplace=False))
 
 	return df_t_pr, df_r_pr, df_bins_pr
+
+def overlap_vector(e1, e2, bins):
+	"""
+	Overlap bins and the two reconstructed amplicons files
+
+	Args:
+		e1 (pr.PyRanges):
+		e2 (pr.PyRanges):
+		bins (pr.PyRanges):
+
+	Returns:
+
+		A dataframe containing the overlap between the three intervals.
+		Columns 'bins,e1,e2' show the overlap count between the sample and Chromosome:Start-End
+		Columns 'h1,h2' represent the indicator vectors of 'e1,e2'
+		Column 'bin_enabled' is set to 0 if 'e1' or 'e2' does not overlap with the bin
+
+		header: Chromosome	Start	End	bins	e1	e2	h1	h2	bin_enabled
+
+	"""
+	grs = {n: s for n, s in zip(["bins", "e1", "e2"], [bins, e1, e2])}
+	# Chromosome	Start	End	bins	e1	e2
+	overlaps = pr.count_overlaps(grs)
+	overlaps = overlaps.as_df()
+
+	# everything > 1 set to 1
+	overlaps['h1'] = overlaps['e1'].apply(lambda x: 1 if x >= 1 else 0)
+	overlaps['h2'] = overlaps['e2'].apply(lambda x: 1 if x >= 1 else 0)
+
+	# disable bins which are not covered by amplicons
+	overlaps[ht.BIN_ENABLED] = 1
+	overlaps.loc[(overlaps.h1 == 0) & (overlaps.h2 == 0), ht.BIN_ENABLED] = 0
+
+	return overlaps
 
 def get_bin_len(s_bins):
 	"""
@@ -211,21 +221,27 @@ def get_feature_cn(df_cycles, bins):
 	"""
 	Get copy-number binned using defined intervals
 	"""
+
 	# bins
-	a = BedTool.from_dataframe(bins[[ht.CHR, ht.START, ht.END]])
+	a = BedTool.from_dataframe(bins[[ht.CCHR,
+									 ht.CSTART,
+									 ht.CEND,
+									 ht.BIN_ENABLED]])
 
 	# sum all cn for same bin
-	df_new = df_cycles[[ht.CHR, ht.START, ht.END, ht.CN]].sort_values(by=[ht.CHR, ht.START, ht.END]).groupby(
-		[ht.CHR, ht.START, ht.END]).sum().reset_index()
-	b = BedTool.from_dataframe(df_new[[ht.CHR, ht.START, ht.END, ht.CN]])
+	df_new = df_cycles[[ht.CHR, ht.START, ht.END, ht.CN]].\
+		groupby([ht.CHR, ht.START, ht.END], observed=True, as_index=False).sum()
+	df_new.columns = [ht.CCHR, ht.CSTART, ht.CEND, ht.CN]
+
+	b = BedTool.from_dataframe(df_new[[ht.CCHR, ht.CSTART, ht.CEND, ht.CN]])
 
 	# intersect them
-	o1 = a.intersect(b, wo=True, loj=True).to_dataframe().iloc[:, [0, 1, 2, 6]]
-	o1.columns = [ht.CHR, ht.START, ht.END, ht.CN]
-
+	o1 = a.intersect(b, wo=True, loj=True).to_dataframe().iloc[:, [0, 1, 2, 3, 7]]
+	o1.columns = [ht.CCHR, ht.CSTART, ht.CEND, ht.BIN_ENABLED, ht.CN]
 	o1.loc[o1[ht.CN] == ".", ht.CN] = 0
+
 	o1[ht.CN] = o1.apply(lambda x: round(float(x[ht.CN]),0), axis=1)
-	o1 = o1.groupby([ht.CHR, ht.START, ht.END]).sum().reset_index()
+	o1 = o1.groupby([ht.CCHR, ht.CSTART, ht.CEND, ht.BIN_ENABLED], observed=True, as_index=False).sum()
 
 	return o1
 

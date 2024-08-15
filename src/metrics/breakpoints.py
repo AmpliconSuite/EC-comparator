@@ -75,7 +75,7 @@ def transform_fragments2breakpoints(df_cycle):
 					start = end
 					end = tmp
 
-				breakpoints = breakpoints.append({
+				breakpoints = pd.concat([breakpoints, pd.DataFrame({
 					ht.CHR1: chr1,
 					ht.START: start,
 					ht.IDX1: idx1,
@@ -84,7 +84,7 @@ def transform_fragments2breakpoints(df_cycle):
 					ht.IDX2: idx2,
 					ht.STRAND: strand,
 					ht.CIRC_ID: c,
-					ht.ISCYCLIC: iscyclic}, ignore_index=True)
+					ht.ISCYCLIC: iscyclic},index=[0])], ignore_index=True)
 
 		# multi-fragment path
 		else:
@@ -179,7 +179,7 @@ def transform_fragments2breakpoints(df_cycle):
 						idx2 = df_idex[i]
 						idx1 = df_idex[(i + 1) % count_fragments]
 
-				breakpoints = breakpoints.append({
+				breakpoints = pd.concat([breakpoints,pd.DataFrame({
 					ht.CHR1: chr1,
 					ht.START: start,
 					ht.IDX1: idx1,
@@ -188,7 +188,7 @@ def transform_fragments2breakpoints(df_cycle):
 					ht.IDX2: idx2,
 					ht.STRAND: strand,
 					ht.CIRC_ID: c,
-					ht.ISCYCLIC: iscyclic}, ignore_index=True)
+					ht.ISCYCLIC: iscyclic},index=[0])], ignore_index=True)
 
 	return breakpoints
 
@@ -438,6 +438,6 @@ def compute_breakpoint_distance(br_t, br_r, distance, threshold):
 	# get matches
 	matches, breakpoint_match = find_matching_breakpoints(G, t_nodes, r_nodes, threshold_max_value)
 	# compute jaccard distance
-	jd = 1 - len(breakpoint_match) / (len(br_t) + len(br_r) - len(breakpoint_match))
+	jd = 1 - 2 * len(breakpoint_match) / (len(br_t) + len(br_r))
 
 	return jd, matches, breakpoint_match

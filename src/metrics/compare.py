@@ -19,7 +19,7 @@ from src.utils.utils import HEADER as ht
 from src.utils.utils import DDT as ddt
 from src.utils.utils import OUTFILES as o
 from src.utils.utils import NpEncoder
-from src.utils import report
+# from src.utils import report
 
 
 import warnings
@@ -98,17 +98,19 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True):
 
 	# as pyranges objects
 	df_t_pr, df_r_pr, df_bins_pr = read_pyranges(df_t, df_r, bins)
+	# as dataframe
+	df_ = overlap_vector(df_t_pr, df_r_pr, df_bins_pr)
 
 	# 2. Compute hamming distance and others
-	h = get_hamming_score(df_t_pr, df_r_pr, df_bins_pr)
-	h_norm = get_hamming_score_norm(df_t_pr, df_r_pr, df_bins_pr)
+	df_, h = get_hamming_score(df_)
+	h_norm = get_hamming_score_norm(df_)
 
 	dict_metrics[ht.DISTANCES][ddt.HAMMING] = round(h,2)
 	dict_metrics[ht.DISTANCES][ddt.HAMMING_NORM] = round(h_norm,2)
 
 	# 3. Compute copy-number similarity
-	cn_profile_t = get_feature_cn(df_t, bins)
-	cn_profile_r = get_feature_cn(df_r, bins)
+	cn_profile_t = get_feature_cn(df_t, df_)
+	cn_profile_r = get_feature_cn(df_r, df_)
 
 	cv_distance = get_cosine_distance_cn(cn_profile_t, cn_profile_r)
 	dict_metrics[ht.DISTANCES][ddt.COSINE_DISTANCE] = round(cv_distance,2)
@@ -124,8 +126,10 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True):
 	# dict_metrics[ht.DISTANCES][ddt.JACCARD_DISTANCE] = 1
 
 	# 5. Penalize for cycles and fragments multiplicity (if the tool decompose in one or more cycles)
-	overlap_fragments_distance = get_overlap_fragments_weighted(df_t_pr, df_r_pr, df_bins_pr)
-	overlap_cycles_distance = get_overlap_cycles_weighted(df_t_pr, df_r_pr, df_bins_pr)
+	# overlap_fragments_distance = get_overlap_fragments_weighted(df_t_pr, df_r_pr, df_bins_pr)
+	# overlap_cycles_distance = get_overlap_cycles_weighted(df_t_pr, df_r_pr, df_bins_pr)
+	overlap_fragments_distance = get_overlap_fragments_weighted(df_)
+	overlap_cycles_distance = get_overlap_cycles_weighted(df_t, df_r,  df_)
 	dict_metrics[ht.DISTANCES][ddt.FRAGMENTS_DISTANCE] = round(overlap_fragments_distance,2)
 	dict_metrics[ht.DISTANCES][ddt.CYCLES_DISTANCE] = round(overlap_cycles_distance,2)
 
@@ -137,43 +141,43 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True):
 	dict_metrics[ht.DISTANCES][ddt.TOTAL_COST_DESCRIPTION] = total_cost_description
 	print("Total cost:",total_cost)
 
-	# 8. Output
-	if outdir:
-		with open(os.path.join(outdir, o.METRICS_JSON), 'w', encoding='utf-8') as f:
-			final_dict = remove_ref2methods(dict_metrics)
-			json.dump(final_dict, f, ensure_ascii=False, indent=4, cls=NpEncoder)
-
-	# plot total cost
-	if plot:
-		outfile = os.path.join(outdir, o.TOTAL_COST_PNG) if outdir else None
-		viz.draw_total_cost(dict_metrics, outfile)
-		outfile = os.path.join(outdir, o.TOTAL_COST_TABLE) if outdir else None
-		viz.draw_total_cost_table(dict_metrics, outfile)
-
-	# save and plot coverage profile
-	if outdir:
-		cn_profile_t.to_csv(os.path.join(outdir, o.COVERAGE_PROFILE_S1_TXT), header=True, index=False, sep="\t")
-		cn_profile_r.to_csv(os.path.join(outdir, o.COVERAGE_PROFILE_S2_TXT), header=True, index=False, sep="\t")
-	if plot:
-		outfile = os.path.join(outdir, o.COVERAGE_PROFILE_PNG) if outdir else None
-		viz.draw_cn(cn_profile_t, cn_profile_r, chrlist, outfile=outfile)
-
-	# save breakpoints profile
-	if outdir:
-		br_t.to_csv(os.path.join(outdir, o.BREAKPOINTS_PROFILE_S1_TXT), header=True, index=False, sep="\t")
-		br_r.to_csv(os.path.join(outdir, o.BREAKPOINTS_PROFILE_S2_TXT), header=True, index=False, sep="\t")
-
-	# plot merged coverage and breakpoint profile
-	max_coverage = max(np.max(cn_profile_t[ht.CN].tolist()), np.max(cn_profile_r[ht.CN].tolist()))
-	max_coverage = max_coverage + 0.5 * max_coverage
-	if plot:
-		outfile = os.path.join(outdir, o.COVERAGE_BREAKPOINTS_PROFILE) if outdir else None
-		viz.plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, breakpoint_matches, chrlist, max_coverage, outfile=outfile)
-
-	# create report
-	if outdir:
-		report.generate_report(
-			t_file,
-			r_file,
-			outdir=outdir,
-			total_cost=total_cost)
+	# # 8. Output
+	# if outdir:
+	# 	with open(os.path.join(outdir, o.METRICS_JSON), 'w', encoding='utf-8') as f:
+	# 		final_dict = remove_ref2methods(dict_metrics)
+	# 		json.dump(final_dict, f, ensure_ascii=False, indent=4, cls=NpEncoder)
+	#
+	# # plot total cost
+	# if plot:
+	# 	outfile = os.path.join(outdir, o.TOTAL_COST_PNG) if outdir else None
+	# 	viz.draw_total_cost(dict_metrics, outfile)
+	# 	outfile = os.path.join(outdir, o.TOTAL_COST_TABLE) if outdir else None
+	# 	viz.draw_total_cost_table(dict_metrics, outfile)
+	#
+	# # save and plot coverage profile
+	# if outdir:
+	# 	cn_profile_t.to_csv(os.path.join(outdir, o.COVERAGE_PROFILE_S1_TXT), header=True, index=False, sep="\t")
+	# 	cn_profile_r.to_csv(os.path.join(outdir, o.COVERAGE_PROFILE_S2_TXT), header=True, index=False, sep="\t")
+	# if plot:
+	# 	outfile = os.path.join(outdir, o.COVERAGE_PROFILE_PNG) if outdir else None
+	# 	viz.draw_cn(cn_profile_t, cn_profile_r, chrlist, outfile=outfile)
+	#
+	# # save breakpoints profile
+	# if outdir:
+	# 	br_t.to_csv(os.path.join(outdir, o.BREAKPOINTS_PROFILE_S1_TXT), header=True, index=False, sep="\t")
+	# 	br_r.to_csv(os.path.join(outdir, o.BREAKPOINTS_PROFILE_S2_TXT), header=True, index=False, sep="\t")
+	#
+	# # plot merged coverage and breakpoint profile
+	# max_coverage = max(np.max(cn_profile_t[ht.CN].tolist()), np.max(cn_profile_r[ht.CN].tolist()))
+	# max_coverage = max_coverage + 0.5 * max_coverage
+	# if plot:
+	# 	outfile = os.path.join(outdir, o.COVERAGE_BREAKPOINTS_PROFILE) if outdir else None
+	# 	viz.plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, breakpoint_matches, chrlist, max_coverage, outfile=outfile)
+	#
+	# # create report
+	# if outdir:
+	# 	report.generate_report(
+	# 		t_file,
+	# 		r_file,
+	# 		outdir=outdir,
+	# 		total_cost=total_cost)

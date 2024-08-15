@@ -18,80 +18,86 @@ import pyranges as pr
 
 from src.utils.utils import HEADER as ht
 from src.utils.utils import DDT as ddt
+from src.utils.utils import PROPS as p
+from src.metrics.features import rename_columns
 
-def get_hamming_score(e1, e2, bins):
+def get_hamming_score(df_):
 	"""
 	Compute hamming distance between the two reconstructions
 
 	Args:
-		e1 (pd.DataFrame): First reconstruction
-		e2 (pd.DataFrame): Second reconstruction
-		bins (pd.DataFrame): Bins of the intervals union e1 and e2
+		df_(pd.DataFrame):
+
 	"""
-	grs = {n: s for n, s in zip(["bins", "e1", "e2"], [bins, e1, e2])}
-	# Chromosome	Start	End	bins	e1	e2
-	overlaps = pr.count_overlaps(grs)
-	overlaps = overlaps.as_df()
+	df_[ddt.HAMMING] = df_.apply(lambda x: np.logical_xor(x.h1, x.h2), axis=1)
+	df_[ddt.HAMMING] = df_[ddt.HAMMING].astype(int)
+	df_[ddt.PROD] = df_[ddt.HAMMING] * (df_[ht.CEND] - df_[ht.CSTART])
+	df_[ddt.LEN] = abs(df_[ht.CEND] - df_[ht.CSTART]) * df_[ht.BIN_ENABLED]
 
-	# everything > 1 set to 1
-	overlaps['e1'] = overlaps['e1'].apply(lambda x: 1 if x >= 1 else 0)
-	overlaps['e2'] = overlaps['e2'].apply(lambda x: 1 if x >= 1 else 0)
-
-	overlaps['hamming'] = overlaps.apply(lambda x: np.logical_xor(x.e1, x.e2), axis=1)
-	overlaps['hamming'] = overlaps['hamming'].astype(int)
-
-	overlaps["prod"] = overlaps["hamming"] * (overlaps["End"] - overlaps["Start"])
-	return overlaps["prod"].sum()
+	return df_, df_[ddt.PROD].sum()
 
 
-def get_hamming_score_norm(e1, e2, bins):
+def get_hamming_score_norm(df_):
 	"""
 	Compute hamming distance between the two reconstructions
 
 	Args:
-		e1 (pd.DataFrame): First reconstruction
-		e2 (pd.DataFrame): Second reconstruction
-		bins (pd.DatamFrame): Bins of the intervals union e1 and e2
+		df_(pd.DataFrame)
 	"""
-	grs = {n: s for n, s in zip(["bins", "e1", "e2"], [bins, e1, e2])}
-	# Chromosome	Start	End	bins	e1	e2
-	overlaps = pr.count_overlaps(grs)
-	overlaps = overlaps.as_df()
 
-	# everything > 1 set to 1
-	overlaps['e1'] = overlaps['e1'].apply(lambda x: 1 if x >= 1 else 0)
-	overlaps['e2'] = overlaps['e2'].apply(lambda x: 1 if x >= 1 else 0)
+	# df_['hamming'] = df_.apply(lambda x: np.logical_xor(x.h1, x.h2), axis=1)
+	# df_['hamming'] = df_['hamming'].astype(int)
+	#
+	# # consider only bins used in the reconstruction of s1 or s2
+	# df_["len"] = abs(df_["End"] - df_["Start"]) * df_["bins"]
+	# df_["prod"] = df_["hamming"] * df_["len"]
 
-	overlaps['hamming'] = overlaps.apply(lambda x: np.logical_xor(x.e1, x.e2), axis=1)
-	overlaps['hamming'] = overlaps['hamming'].astype(int)
-
-	overlaps["len"] = abs(overlaps["End"] - overlaps["Start"])
-	overlaps["prod"] = overlaps["hamming"] * overlaps["len"]
-
-	return (overlaps["prod"].sum()) / (overlaps["len"].sum())
+	return (df_[ddt.PROD].sum()) / (df_[ddt.LEN].sum())
 
 
-def get_overlap_fragments_weighted(e1, e2, bins):
+def get_overlap_fragments_weighted(df_):
 	"""
 	Compute the overlap distance between the fragment counts of two reconstructions which overlap every genomic bin.
 
 	Args:
-		e1 (pd.DataFrame): First reconstruction
-		e2 (pd.DataFrame): Second reconstruction
-		bins (pd.DatamFrame): Bins of the intervals union e1 and e2
+		df_ (pd.DataFrame): Binned summary reconstructions
 	"""
-	grs = {n: s for n, s in zip(["bins", "e1", "e2"], [bins, e1, e2])}
-	# Chromosome	Start	End	bins	e1	e2
-	overlaps = pr.count_overlaps(grs)
-	overlaps = overlaps.as_df()
-	overlaps["overlapping_score"] = overlaps.apply(lambda x: abs(x.e1 - x.e2), axis=1)
-	overlaps["len"] = abs(overlaps["End"] - overlaps["Start"])
+	df_[ddt.OVERLAP_SCORE] = df_.apply(lambda x: abs(x.e1 - x.e2), axis=1)
+	# important to disable unused genomic bins
+	df_[ddt.LEN] = abs(df_[ht.CEND] - df_[ht.CSTART]) * df_[ht.BIN_ENABLED]
+
 	# account for duplicated fragments
-	overlaps["totallen"] = overlaps.apply(lambda x: max(x.e1, x.e2) * x.len, axis=1)
-	overlaps["prod"] = overlaps["overlapping_score"] * overlaps["len"]
+	df_[ddt.TOTALLEN] = df_.apply(lambda x: max(x.e1, x.e2) * x.len, axis=1)
+	df_[ddt.PROD] = df_[ddt.OVERLAP_SCORE] * df_[ddt.LEN]
 
-	return (overlaps["prod"].sum()) / (overlaps["totallen"].sum())
+	return (df_[ddt.PROD].sum()) / (df_[ddt.TOTALLEN].sum())
 
+def count_cycles(results, e1,bins,c, col):
+	"""
+	Args:
+		results (pd.DataFrame):
+		e1 (pd.DataFrame): Amplicon reconstructions
+		bins (pd.DataFrame): Reference genomic bins
+		c (str): Cycle_id
+		col (str): Has value 's1' or 's2'
+	"""
+
+	# filter pyrange by circle name
+	df_tmp = e1[e1[ht.CIRC_ID] == c]
+	df_tmp_pr = pr.PyRanges(
+		df_tmp.rename(columns=rename_columns(df_tmp.columns.tolist(), p.DICT_COLS), errors="raise", inplace=False))
+
+	# compute overlap
+	grs = {n: s for n, s in zip([ht.BINS, col], [bins, df_tmp_pr])}
+	overlap = pr.count_overlaps(grs).as_df()
+	# mark bin as covered by cycle c
+	overlap[col] = overlap[col].apply(lambda x: 1 if x >= 1 else 0)
+
+	# merge results
+	results = pd.concat([results, overlap]).groupby(
+		[ht.CCHR, ht.CSTART, ht.CEND], observed=True, as_index=False).sum()
+
+	return results
 
 def get_overlap_cycles_weighted(e1, e2, bins):
 	"""
@@ -100,84 +106,75 @@ def get_overlap_cycles_weighted(e1, e2, bins):
 	Args:
 		e1 (pd.DataFrame): First reconstruction
 		e2 (pd.DataFrame): Second reconstruction
-		bins (pd.DatamFrame): Bins of the intervals union e1 and e2
+		bins (pd.DataFrame): Bins of the intervals union e1 and e2
 	"""
-	c1 = e1.as_df()[ht.CIRC_ID].drop_duplicates().tolist()
-	c2 = e2.as_df()[ht.CIRC_ID].drop_duplicates().tolist()
+	pr_bins = pr.PyRanges(bins[[ht.CCHR,ht.CSTART,ht.CEND]])
+	c1 = e1[ht.CIRC_ID].drop_duplicates().tolist()
+	c2 = e2[ht.CIRC_ID].drop_duplicates().tolist()
 
-	overlap_parent1 = deepcopy(bins.as_df())
-	overlap_parent1["e1"] = 0
-	overlap_parent1["len"] = abs(overlap_parent1["End"] - overlap_parent1["Start"])
+	overlap_parent1 = deepcopy(bins)
+	overlap_parent1[ht.S1] = 0
+
+	# overlap_parent1[ddt.LEN] = abs(overlap_parent1[ht.CEND] - overlap_parent1[ht.CSTART])
 	for c in c1:
-		# filter pyrange by circle name
-		df_tmp = e1.as_df()
-		df_tmp = df_tmp[df_tmp[ht.CIRC_ID] == c]
-		df_tmp_pr = pr.PyRanges(df_tmp)
+		overlap_parent1 = count_cycles(overlap_parent1, e1, pr_bins, c, ht.S1)
 
-		# compute overlap
-		grs = {n: s for n, s in zip(["bins", "e1"], [bins, df_tmp_pr])}
-		overlap = pr.count_overlaps(grs).as_df()
-		overlap['e1'] = overlap['e1'].apply(lambda x: 1 if x >= 1 else 0)
-
-		# merge results
-		overlap_parent1 = pd.concat([overlap, overlap_parent1]).groupby(
-			["Chromosome", "Start", "End", "bins"]).sum().reset_index()
-
-	overlap_parent2 = deepcopy(bins.as_df())
-	overlap_parent2["e2"] = 0
+	overlap_parent2 = deepcopy(bins)
+	overlap_parent2[ht.S2] = 0
 
 	for c in c2:
-		# filter pyrange by circle name
-		df_tmp = e2.as_df()
-		df_tmp = df_tmp[df_tmp[ht.CIRC_ID] == c]
-		df_tmp_pr = pr.PyRanges(df_tmp)
+		overlap_parent2 = count_cycles(overlap_parent2, e2, pr_bins, c, ht.S2)
 
-		# compute overlap
-		grs = {n: s for n, s in zip(["bins", "e2"], [bins, df_tmp_pr])}
-		overlap = pr.count_overlaps(grs).as_df()
-		overlap['e2'] = overlap['e2'].apply(lambda x: 1 if x >= 1 else 0)
+	overlaps = pd.merge(overlap_parent1[[ht.CCHR, ht.CSTART, ht.CEND, ht.S1, ht.BIN_ENABLED]],
+						overlap_parent2[[ht.CCHR, ht.CSTART, ht.CEND, ht.S2, ht.BIN_ENABLED]], how='inner')
 
-		# merge results
-		overlap_parent2 = pd.concat([overlap, overlap_parent2]).groupby(
-			["Chromosome", "Start", "End", "bins"]).sum().reset_index()
+	overlaps[ddt.OVERLAP_SCORE] = overlaps.apply(lambda x: abs(x[ht.S1] - x[ht.S2]), axis=1)
+	overlaps[ddt.LEN] = abs(overlaps[ht.CEND] - overlaps[ht.CSTART]) * overlaps[ht.BIN_ENABLED]
+	overlaps[ddt.TOTALLEN] = overlaps.apply(lambda x: max(x[ht.S1], x[ht.S2]) * x.len, axis=1)
+	overlaps[ddt.PROD] = overlaps[ddt.OVERLAP_SCORE] * overlaps[ddt.LEN]
 
-	overlaps = pd.merge(overlap_parent1[["Chromosome", "Start", "End", "e1"]],
-						overlap_parent2[["Chromosome", "Start", "End", "e2"]], how='inner')
-
-	overlaps["overlapping_score"] = overlaps.apply(lambda x: abs(x.e1 - x.e2), axis=1)
-	overlaps["len"] = abs(overlaps["End"] - overlaps["Start"])
-	overlaps["totallen"] = overlaps.apply(lambda x: max(x.e1, x.e2) * x.len, axis=1)
-	overlaps["prod"] = overlaps["overlapping_score"] * overlaps["len"]
-
-	return (overlaps["prod"].sum()) / (overlaps["totallen"].sum())
+	return (overlaps[ddt.PROD].sum()) / (overlaps[ddt.TOTALLEN].sum())
 
 
 def get_cosine_distance_cn(cn_profile1, cn_profile2):
 	"""
 	Get cosine distance between the two copy number profiles
 	"""
-	cn_profile1["estimated_cn_normalized"] = cn_profile1.apply(lambda x: x[ht.CN] * abs(x[ht.END]-x[ht.START]), axis=1)
-	cn_profile2["estimated_cn_normalized"] = cn_profile2.apply(lambda x: x[ht.CN] * abs(x[ht.END]-x[ht.START]), axis=1)
+	cn_profile1["estimated_cn_normalized"] = cn_profile1.apply(lambda x: x[ht.CN] * abs(x[ht.CEND] - x[ht.CSTART]),
+															   axis=1)
+	cn_profile2["estimated_cn_normalized"] = cn_profile2.apply(lambda x: x[ht.CN] * abs(x[ht.CEND] - x[ht.CSTART]),
+															   axis=1)
 
-	return 1 - abs(cosine_similarity(np.array([cn_profile1["estimated_cn_normalized"].tolist()]),
-									 np.array([cn_profile2["estimated_cn_normalized"].tolist()]))[0][0])
+	# filter out bins which are disabled
+	cn_profile1_new = cn_profile1[cn_profile1[ht.BIN_ENABLED] == 1]
+	cn_profile2_new = cn_profile2[cn_profile2[ht.BIN_ENABLED] == 1]
+
+	a = np.array([cn_profile1_new["estimated_cn_normalized"].tolist()])
+	b = np.array([cn_profile2_new["estimated_cn_normalized"].tolist()])
+
+	return 1 - abs(cosine_similarity(a,b))[0][0]
+
 
 def get_jc_distance_cn(cn_profile1, cn_profile2):
 	"""
 	Get jaccard index distance between the two copy number profiles
 	"""
-	cn_merge = pd.merge(cn_profile1, cn_profile2, on=[ht.CHR, ht.START, ht.END])
-	cn_merge["max"] = cn_merge.apply(lambda x: max(x["estimated_cn_normalized_x"],x["estimated_cn_normalized_y"]),
-									  axis=1)
+	cn_merge = pd.merge(cn_profile1, cn_profile2, on=[ht.CCHR, ht.CSTART, ht.CEND, ht.BIN_ENABLED])
+	cn_merge["max"] = cn_merge.apply(lambda x: max(x["estimated_cn_normalized_x"], x["estimated_cn_normalized_y"]),
+									 axis=1)
 	# overlap
 	cn_merge["min"] = cn_merge.apply(lambda x: min(x["estimated_cn_normalized_x"], x["estimated_cn_normalized_y"]),
 									 axis=1)
+
+	# filter out unused bins
+	cn_merge = cn_merge[cn_merge[ht.BIN_ENABLED]==1]
 
 	# JC = matches / all
 	# 1 - JC means -> 0 highly similar, 1 - not similar
 	return 1 - cn_merge["min"].sum() / cn_merge["max"].sum()
 
-def euclidian_distance(cha, a, chb,  b, chx,x, chy, y):
+
+def euclidian_distance(cha, a, chb, b, chx, x, chy, y):
 	if cha == chx and chb == chy:
 		return math.sqrt((a - x) ** 2 + (b - y) ** 2)
 	elif cha == chy and chb == chx:
@@ -191,7 +188,6 @@ def euclidian_distance_norm_l2(a, b, x, y):
 	v2 = np.array([[x, y]])
 	v1_norm = preprocessing.normalize(v1, norm='l2')
 	v2_norm = preprocessing.normalize(v2, norm='l2')
-
 	return skl.euclidean_distances(v1_norm, v2_norm)
 
 
@@ -202,14 +198,12 @@ def euclidian_distance_norm_l1(a, b, x, y):
 	v2_norm = preprocessing.normalize(v2, norm='l1')
 	return skl.euclidean_distances(v1_norm, v2_norm)
 
-
 def auc_triangle(a, b, x, y):
 	return abs(a - x) * abs(b - y) / 2
 
 
 def auc_trapeze(a, b, x, y):
 	return (b + y) * abs(a - x) / 2
-
 
 def match_angle(a, b, x, y):
 	alpha = math.atan(abs(x - y) / abs(a - b))
@@ -280,3 +274,4 @@ dict_distance_paired_breakpoints_thresholds = {
 	ddt.MATCH_ANGLE: ddt.MATCH_ANGLE_THRESHOLD,
 	ddt.UNMATCHED: ddt.UNMATCHED_THRESHOLD
 }
+

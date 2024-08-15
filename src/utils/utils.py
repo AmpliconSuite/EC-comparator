@@ -15,10 +15,11 @@ class NpEncoder(json.JSONEncoder):
 			return obj.tolist()
 		return super(NpEncoder, self).default(obj)
 
-
 class HEADER:
 	CIRC_ID = "circ_id"
 	CHR = "#chr"
+	CHRH2 = "#chr2"
+
 	START = "start"
 	END = "end"
 	STRAND = "strand"
@@ -32,6 +33,8 @@ class HEADER:
 	S2 = "s2"
 	TRACK  = "track"
 	ISCYCLIC = "iscyclic"
+	BINS = "bins"
+	BIN_ENABLED = "bin_enabled"
 
 	HEADER_SORTED = [CHR, START, END, CIRC_ID, CN, STRAND, ISCYCLIC]
 	DICT_HEADER = {"#chr": CHR,
@@ -61,6 +64,10 @@ class HEADER:
 	CONFIGS = 'configs'
 	DISTANCES = 'distances'
 	DEFAULT = 'default'
+
+	CSTART = "Start"
+	CCHR = "Chromosome"
+	CEND = "End"
 
 
 class PROPS:
@@ -128,6 +135,10 @@ class DDT:
 	HAMMING = 'cn_hamming_dist'
 	HAMMING_NORM = 'cn_hamming_norm_dist'
 	OVERLAP = 'overlap'
+	OVERLAP_SCORE = 'overlapping_score'
+	PROD = 'prod'
+	LEN = 'len'
+	TOTALLEN = 'totallen'
 
 	COSINE_DISTANCE = 'cn_cos_dist'
 	BREAKPOINT_SIMILARITY = 'breakpoint_similarity'
