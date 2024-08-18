@@ -20,7 +20,15 @@ def read_cycles_file(fname):
             if line.startswith("Segment"):
                 fields = line.rstrip().rsplit()
                 segnum = int(fields[1])
-                dtup = (fields[2], int(fields[3]), int(fields[4]))
+
+                chr_ = fields[2]
+                start_ = int(fields[3])
+                end_ = int(fields[4])
+
+                # avoid 0 size intervals
+                end_ = end_ if start_ != end_ else end_+1
+                dtup = (chr_, start_, end_)
+
                 seglookup[segnum] = dtup
 
             elif line.startswith(("Cycle")):
@@ -45,49 +53,6 @@ def read_cycles_file(fname):
 
     return all_cycles_ivald, all_cycles
 
-
-def mergeIntervals(curr_cycle):
-    merge_ivals = []
-    for chrom, ivalt in curr_cycle.items():
-        try:
-            chrom_num = int(chrom.lstrip('chr'))
-        except ValueError:
-            chrom_num = chrom.lstrip('chr')
-
-        # Sorting based on the increasing order
-        # of the start intervals
-        arr = sorted([(x.begin, x.end) for x in ivalt])
-        # array to hold the merged intervals
-        m = []
-        s = -10000
-        max = -100000
-        for i in range(len(arr)):
-            a = arr[i]
-            if a[0] > max + 1:
-                if i != 0:
-                    m.append([chrom_num, s, max])
-                max = a[1]
-                s = a[0]
-            else:
-                if a[1] > max:
-                    max = a[1]
-
-        # 'max' value gives the last point of
-        # that particular interval
-        # 's' gives the starting point of that interval
-        # 'm' array contains the list of all merged intervals
-        if max != -100000 and [chrom_num, s, max] not in m:
-            m.append([chrom_num, s, max])
-
-        merge_ivals.extend(m)
-
-    s_ivals = sorted(merge_ivals, key=lambda x: x[0])
-    for i in range(len(s_ivals)):
-        s_ivals[i][0] = 'chr' + str(s_ivals[i][0])
-
-    return s_ivals
-
-
 def write_bed(prefix, merged_intervals):
     with open(prefix + ".bed", 'w') as outfile:
         for i in merged_intervals:
@@ -101,11 +66,14 @@ if __name__ == '__main__':
     parser.add_argument("-o", "--output", help="Output file", type=str, required=True)
     args = parser.parse_args()
 
+    print("In: ",args.cycles)
+    print("Out: ",args.output)
+    print()
+
     a_cycles_ivald, a_cycles_list = read_cycles_file(args.cycles)
 
     df_output = pd.DataFrame(columns=["#chr",	"start",	"end",	"strand",	"circ_id",	"estimated_cn"])
     for cnum, curr_cycle in a_cycles_ivald.items():
-        print(str(cnum))
         for t in a_cycles_list[cnum]:
             data = {"#chr":t[0],
                     "start":t[1],
