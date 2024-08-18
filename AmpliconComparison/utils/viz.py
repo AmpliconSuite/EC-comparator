@@ -65,7 +65,7 @@ def draw_total_cost_table(dict_metrics, outfile=None):
 	table_dist = []
 	table_val_w = []
 
-	pprint.pprint(dict_metrics)
+	# pprint.pprint(dict_metrics)
 
 	for d in dict_metrics[ht.DISTANCES]:
 		if d in dict_metrics[ht.DISTANCES][DDT.TOTAL_COST_DESCRIPTION]:

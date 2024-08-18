@@ -80,11 +80,20 @@ def read_input(t_file, r_file):
 			 'score': 'double',
 			 'estimated_cn': 'double',
 			 'strand': 'str',
-			 'orientation': 'str',
-			 'iscyclic': 'bool'}
+			 'orientation': 'str'}
 
 	t_collection = pd.read_csv(t_file, header=0, sep="\t", dtype=dtype)
 	r_collection = pd.read_csv(r_file, header=0, sep="\t", dtype=dtype)
+
+	if 'iscyclic' in t_collection.columns.tolist():
+		t_collection['iscyclic'] = t_collection['iscyclic'].astype(bool)
+	else:
+		t_collection['iscyclic'] = True
+
+	if 'iscyclic' in r_collection.columns.tolist():
+		r_collection['iscyclic'] = r_collection['iscyclic'].astype(bool)
+	else:
+		r_collection['iscyclic'] = True
 
 	# rename columns and check if all columns available
 	t_collection.rename(columns=rename_columns(t_collection.columns.tolist(), ht.DICT_HEADER), errors="raise",

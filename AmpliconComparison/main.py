@@ -117,6 +117,10 @@ def main():
 			args.plot = False
 		if args.report is None:
 			args.report = False
+
+		print("Structure A:",args.first_structure)
+		print("Structure B:", args.second_structure)
+		print("Outdir:",args.outdir)
 		compare.compare_cycles(args.first_structure,
 							   args.second_structure,
 							   args.outdir,
