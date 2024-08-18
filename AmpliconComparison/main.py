@@ -45,6 +45,7 @@ def config(args):
 	dict[h.BREAKPOINT_DISTANCE][d.RELATIVE_METRIC][h.THRESHOLD] = 0.3
 	if args.breakpoint_dist:
 		dict[h.BREAKPOINT_DISTANCE][h.DEFAULT] = d.EUCLIDIAN
+		dict[h.BREAKPOINT_DISTANCE][d.EUCLIDIAN][h.ENABLE] = True
 
 		# if dict[h.BREAKPOINT_DISTANCE][d.EUCLIDIAN][h.ENABLE]:
 		# 	dict[h.BREAKPOINT_DISTANCE][h.DEFAULT] = d.EUCLIDIAN

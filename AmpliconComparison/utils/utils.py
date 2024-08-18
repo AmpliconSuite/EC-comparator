@@ -6,6 +6,42 @@ import numpy as np
 
 PACKAGE_NAME = 'AmpliconComparison'
 
+
+def get_weight_distance(key, d, dict_metrics):
+
+	if key == HEADER.GENOMIC_FOOTPRINT:
+		# check if distance was enabled
+		if d in dict_metrics[HEADER.CONFIGS][key] and dict_metrics[HEADER.CONFIGS][key][d][HEADER.ENABLE]:
+			# distance is enabled
+			weight = dict_metrics[HEADER.CONFIGS][key][d][HEADER.WEIGHT]
+			return weight, d
+
+	elif key == HEADER.BREAKPOINT_DISTANCE:
+		def_dist = dict_metrics[HEADER.CONFIGS][key][HEADER.DEFAULT]
+		if def_dist in dict_metrics[HEADER.CONFIGS][key] and dict_metrics[HEADER.CONFIGS][key][def_dist][HEADER.ENABLE]:
+			weight = dict_metrics[HEADER.CONFIGS][key][def_dist][HEADER.WEIGHT]
+			return weight, def_dist
+
+	return None, None
+
+
+def get_value_distance(key, d, dict_metrics):
+
+	if key == HEADER.GENOMIC_FOOTPRINT:
+		if d in dict_metrics[HEADER.CONFIGS][key] and dict_metrics[HEADER.CONFIGS][key][d][HEADER.ENABLE]:
+			val = dict_metrics[HEADER.DISTANCES][d]
+			return val, d
+
+	elif key == HEADER.BREAKPOINT_DISTANCE:
+		def_dist = dict_metrics[HEADER.CONFIGS][key][HEADER.DEFAULT]
+		if def_dist in dict_metrics[HEADER.CONFIGS][key] and dict_metrics[HEADER.CONFIGS][key][def_dist][HEADER.ENABLE]:
+			val = dict_metrics[HEADER.DISTANCES][HEADER.BREAKPOINT_DISTANCE]
+			return val, HEADER.BREAKPOINT_DISTANCE
+
+	return None, None
+
+
+
 class NpEncoder(json.JSONEncoder):
 	def default(self, obj):
 		if isinstance(obj, np.integer):
@@ -58,7 +94,7 @@ class HEADER:
 	ENABLE = "enable"
 	DEFINITION = "definition"
 
-	BREAKPOINT_DISTANCE = 'breakpoint_distance'
+	BREAKPOINT_DISTANCE = 'breakpoint_dist'
 	GENOMIC_FOOTPRINT = 'genomic_footprint'
 	OTHER_PARAMS = 'other_params'
 	CONFIGS = 'configs'

@@ -20,6 +20,7 @@ from AmpliconComparison.utils.utils import DDT as ddt
 from AmpliconComparison.utils.utils import OUTFILES as o
 from AmpliconComparison.utils.utils import NpEncoder
 from AmpliconComparison.utils import report
+from AmpliconComparison.utils.utils import get_weight_distance, get_value_distance
 
 
 import warnings
@@ -44,21 +45,22 @@ def get_total_cost(dict_metrics):
 
 	total_cost = 0
 	total_cost_description = {}
+
 	for key in dict_metrics[ht.CONFIGS]:
+
 		if key == ht.GENOMIC_FOOTPRINT:
 			for d in dict_metrics[ht.CONFIGS][key]:
-				# distance is enabled
-				if dict_metrics[ht.CONFIGS][key][d][ht.ENABLE]:
-					weight = dict_metrics[ht.CONFIGS][key][d][ht.WEIGHT]
-					val = dict_metrics[ht.DISTANCES][d]
-					total_cost += weight * val
-					total_cost_description[d] = weight
+				weight, _ = get_weight_distance(key,d,dict_metrics)
+				val, _ = get_value_distance(key,d,dict_metrics)
+				total_cost += weight * val
+				total_cost_description[d] = weight
+
 		elif key == ht.BREAKPOINT_DISTANCE:
-			def_dist = dict_metrics[ht.CONFIGS][key][ht.DEFAULT]
-			weight = dict_metrics[ht.CONFIGS][key][def_dist][ddt.JACCARD_DISTANCE][ht.WEIGHT]
-			val = dict_metrics[ht.DISTANCES][ddt.JACCARD_DISTANCE]
+			# take the weight and value of the default distance for breakpoint-matching
+			weight, d = get_weight_distance(key, None, dict_metrics)
+			val, d = get_value_distance(key, None, dict_metrics)
 			total_cost += weight * val
-			total_cost_description[ddt.JACCARD_DISTANCE] = weight
+			total_cost_description[d] = weight
 
 	return total_cost, total_cost_description
 

@@ -1,4 +1,6 @@
 import math
+import pprint
+
 import pandas as pd
 import numpy as np
 from numpy import sin, cos, pi, linspace
@@ -14,6 +16,7 @@ from matplotlib.patches import ConnectionPatch, Circle
 from AmpliconComparison.utils.utils import DDT
 from AmpliconComparison.utils.utils import HEADER as ht
 from AmpliconComparison.utils.utils import PROPS
+from AmpliconComparison.utils.utils import get_weight_distance, get_value_distance
 
 tokeep = [DDT.HAMMING_NORM, DDT.COSINE_DISTANCE, DDT.CYCLES_DISTANCE, DDT.FRAGMENTS_DISTANCE,
 		  DDT.BREAKPOINT_DISTANCE, DDT.JACCARD_DISTANCE, DDT.TOTAL_COST, DDT.COPYNUMBER_JC]
@@ -60,22 +63,33 @@ def draw_total_cost_table(dict_metrics, outfile=None):
 	# table information
 	table_val = []
 	table_dist = []
+	table_val_w = []
 
-	for key in dict_metrics[ht.DISTANCES]:
-		if key in tokeep:
-			table_dist.append(key)
-			table_val.append(dict_metrics[ht.DISTANCES][key])
+	pprint.pprint(dict_metrics)
+
+	for d in dict_metrics[ht.DISTANCES]:
+		if d in dict_metrics[ht.DISTANCES][DDT.TOTAL_COST_DESCRIPTION]:
+			val = dict_metrics[ht.DISTANCES][d]
+			weight = dict_metrics[ht.DISTANCES][DDT.TOTAL_COST_DESCRIPTION][d]
+			table_dist.append(d)
+			table_val.append(round(val, 2))
+			table_val_w.append(round(val * weight, 2))
+
+	# add total cost
+	table_dist.append(DDT.TOTAL_COST)
+	table_val.append("")
+	table_val_w.append(dict_metrics[ht.DISTANCES][DDT.TOTAL_COST])
 
 	fig = go.Figure(data=go.Table(
 		header=dict(
-			values=["Distance", "Value"],
+			values=["Distance", "Value", "Weighted value"],
 			font=dict(color='darkslategray', size=14),
 			line_color=custom_gray,
 			fill_color='white',
 			align="left"
 		),
 		cells=dict(
-			values=[table_dist, table_val],
+			values=[table_dist, table_val, table_val_w],
 			align="left",
 			line_color=custom_gray,
 			fill_color='white',
@@ -322,7 +336,7 @@ def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=5, outfile=Non
 
 		# plot difference between the 2 profiles
 		x_diff = dict_x[ht.S1]
-		y_diff = [(np.log2(dict_y[ht.S1][k] + 1) - np.log2(abs(dict_y[ht.S2][k]) + 1)) for k in
+		y_diff = [(np.log2(dict_y[ht.S1][k] + 0.01) - np.log2(abs(dict_y[ht.S2][k]) + 0.01)) for k in
 				  range(0, len(dict_y[ht.S1]))]
 
 		ax.axhline(0, color="red", alpha=1, ls="--")
