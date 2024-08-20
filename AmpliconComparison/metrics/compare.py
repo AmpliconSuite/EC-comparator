@@ -65,7 +65,7 @@ def get_total_cost(dict_metrics):
 	return total_cost, total_cost_description
 
 
-def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=True):
+def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=True, s1=None,s2=None):
 	"""
 	Entrypoint: compare the distance between two cycle sets.
 	Args:
@@ -83,6 +83,9 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=
 		os.makedirs(outdir, exist_ok=True)
 
 	# pprint.pprint(dict_configs)
+	# set names
+	s1 = os.path.basename(t_file)
+	s2 = os.path.basename(r_file)
 
 	dict_metrics = {}
 	dict_metrics[ht.CONFIGS] = dict_configs
@@ -164,14 +167,17 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=
 
 			# plot coverage profile
 			outfile = os.path.join(outdir, o.COVERAGE_PROFILE_PNG)
-			viz.draw_cn(cn_profile_t, cn_profile_r, chrlist, outfile=outfile)
+			viz.draw_cn(cn_profile_t, cn_profile_r, chrlist,
+						outfile=outfile,s1=s1,s2=s2)
+
 
 			# plot merged coverage and breakpoint profile
 			max_coverage = max(np.max(cn_profile_t[ht.CN].tolist()), np.max(cn_profile_r[ht.CN].tolist()))
 			max_coverage = max_coverage + 0.5 * max_coverage
 
 			outfile = os.path.join(outdir, o.COVERAGE_BREAKPOINTS_PROFILE) if outdir else None
-			viz.plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, breakpoint_matches, chrlist, max_coverage, outfile=outfile)
+			viz.plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, breakpoint_matches,
+							  chrlist, max_coverage, outfile=outfile,s1=s1,s2=s2)
 
 			# plot total cost
 			outfile = os.path.join(outdir, o.TOTAL_COST_PNG)

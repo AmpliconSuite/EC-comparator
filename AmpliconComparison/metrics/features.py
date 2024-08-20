@@ -101,6 +101,9 @@ def read_input(t_file, r_file):
 	r_collection.rename(columns=rename_columns(r_collection.columns.tolist(), ht.DICT_HEADER), errors="raise",
 						inplace=True)
 
+	t_collection[ht.CHR] = t_collection[ht.CHR].astype(str)
+	r_collection[ht.CHR] = r_collection[ht.CHR].astype(str)
+
 	# reorder columns
 	keep1 = []
 	keep2 = []
@@ -249,6 +252,8 @@ def get_feature_cn(df_cycles, bins):
 
 	o1[ht.CN] = o1.apply(lambda x: round(float(x[ht.CN]),0), axis=1)
 	o1 = o1.groupby([ht.CHR, ht.START, ht.END, ht.BIN_ENABLED], observed=True, as_index=False).sum()
+
+	o1[ht.CHR] = o1[ht.CHR].astype(str)
 
 	return o1
 

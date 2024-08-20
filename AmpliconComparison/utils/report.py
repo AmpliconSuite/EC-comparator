@@ -11,6 +11,8 @@ import importlib.util
 import datetime
 from jinja2 import Environment, FileSystemLoader
 from xhtml2pdf import pisa
+from io import BytesIO
+
 from AmpliconComparison.utils.utils import OUTFILES as o
 from AmpliconComparison.utils import utils
 
@@ -22,6 +24,7 @@ def get_package_root(module_name):
     # Return the directory containing the module
     return os.path.dirname(os.path.abspath(module_location))
 
+
 def generate_report(path_s1,
                     path_s2,
                     total_cost,
@@ -30,7 +33,9 @@ def generate_report(path_s1,
     if outdir:
         env = Environment(loader=FileSystemLoader(get_package_root(utils.PACKAGE_NAME)))
         template = env.get_template("utils/report/results.html")
-        html = template.render(page_title_text='AmpliconComparison report',
+
+
+        html_content = template.render(page_title_text='AmpliconComparison report',
                                description_time=datetime.datetime.now(),
                                description_s1=path_s1,
                                description_s2=path_s2,
@@ -44,15 +49,26 @@ def generate_report(path_s1,
         outdirabs = os.path.abspath(outdir)
         outfile = os.path.join(outdirabs, 'report.html')
         with open(outfile, 'w') as f:
-            f.write(html)
+            f.write(html_content)
 
         # 6. Convert report to pdf
         outfile = os.path.join(outdirabs, 'report.pdf')
         os.chdir(outdirabs)
-        with open(outfile, "w+b") as out_pdf_file_handle:
-            pisa.CreatePDF(
-                src=html,  # HTML to convert
-                dest=out_pdf_file_handle)  # File handle to receive result
+
+        out_pdf_file_handle = BytesIO()
+        pisa.CreatePDF(
+            src=BytesIO(html_content.encode('utf-8')),  # HTML to convert
+            dest=out_pdf_file_handle)  # File handle to receive result
+
+        # Save to a file
+        with open(outfile, "wb") as f:
+            f.write(out_pdf_file_handle.getvalue())
+
+
+        # with open(outfile, "w+b") as out_pdf_file_handle:
+        #     pisa.CreatePDF(
+        #         src=html),  # HTML to convert
+        #         dest=out_pdf_file_handle)  # File handle to receive result
 
 if __name__ == "__main__":
     generate_report("/Users/madag/Projects/PhD/github/ecdna-compare/examples/COLODM320/COLO320DM_Hung2021_amplicon3_cycles.bed",

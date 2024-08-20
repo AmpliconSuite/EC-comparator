@@ -3,18 +3,16 @@
 <head>
     <title>AmpliconComparison</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
-        body,h1,h3,h2,h4,p {font-family: "Montserrat", sans-serif}
+        body,h1,h3,h2,h4,p {font-family: Arial, sans-serif}
         img {margin-bottom: -7px}
         .w3-row-padding img {margin-bottom: 20px}
         .w3-content {margin-left:20px}
         .negative-padding {margin-top: -20px}
         p,h3,h4 {margin-left: 40px}
         h1,h2 {margin-left: 20px}
+
     </style>
 </head>
 <body>
@@ -25,39 +23,37 @@
     <p><b>Sample s1</b>: {{description_s1}}</p>
     <p><b>Sample s2</b>: {{description_s2}}</p>
     <p><b>Output directory</b>: {{description_output}}</p>
-    </div>
-<div class="w3-content w3-row-padding" style="width:100%; display: block; min-width: 95% !important;">
-        <h2>Results:</h2>
-        <p>Here we compute the cycle distance between `s1` and `s2`.<br/><br/>
-            Distance description:<br/>
-            1. cn_cos_dist = measures the copy-number distance between the s1 and s2 using cosine distance<br/>
-            2. cn_jc_dist = measures the copy-number distance between the s1 and s2 using jaccard index distance<br/>
-            3. cn_hamming_norm_dist = measures the amount of dissimilar genomic bins usage for s1 and s2<br/>
-            4. fragments_dist = measures the amount of fragment usage per genomic bin which is dissimilar between s1
-            and s2<br/>
-            5. cycles_dist = measures the amount of cycles usage per genomic bin which is dissimilar between s1 and
-            s2<br/>
-            6. breakpoint_dist = measures how many breakpoints-pairs could not be matched between s1 and s2<br/><br/>
-            The radial plot shows all these distances, with values between 0 (low cost, high similarity) and 1 (high
-            cost, low similarity).<br/>
-            The more colorful the more distant are `s1` and `s2`.
-        </p>
-        <h4><b>Total cost</b>: {{total_cost}} (0 - highly similar, 5 - dissimilar)</h4>
-        <div class="w3-third ">
-            <img title="total_cost" src="./{{ path_total_cost }}" alt="Norway" style="width:400px"/>
-        </div>
-        <div class="w3-third">
-            <img title="table_distances" src="./{{ path_total_table }}" alt="Norway" style="width:500px"/>
-        </div>
-        <div class="w3-container">
-            <p>Coverage (gray track) and breakpoint-pairs matches for s1 (green) and s2 (blue).<br/>Unmached
-                breakpoint-pairs are displayed in gray. The log2(s1/s2) is displayed in black. The zero reference is displayed as dotted red line.<br/>
-            </p>
-            <img title="viz_breakpoints" src="./{{ path_plot_cn_sv }}" alt="Norway" style="width:1500px"/>
-        </div>
-    </div>
-
 </div>
-
+<div class="w3-content w3-row-padding" style="width:100%; display: block; min-width: 95% !important;">
+    <h2>Results:</h2>
+    <p>Here we compute the cycle distance between `s1` and `s2`.<br/><br/>
+        Distance description:<br/>
+        1. cn_cos_dist = measures the copy-number distance between the s1 and s2 using cosine distance<br/>
+        2. cn_jc_dist = measures the copy-number distance between the s1 and s2 using jaccard index distance<br/>
+        3. cn_hamming_norm_dist = measures the amount of dissimilar genomic bins usage for s1 and s2<br/>
+        4. fragments_dist = measures the amount of fragment usage per genomic bin which is dissimilar between s1
+        and s2<br/>
+        5. cycles_dist = measures the amount of cycles usage per genomic bin which is dissimilar between s1 and
+        s2<br/>
+        6. breakpoint_dist = measures how many breakpoints-pairs could not be matched between s1 and s2<br/><br/>
+        The radial plot shows all these distances, with values between 0 (low cost, high similarity) and 1 (high
+        cost, low similarity).<br/>
+        The more colorful the more distant are `s1` and `s2`.
+    </p>
+    <h4><b>Total cost</b>: {{total_cost}} (0 - highly similar, 5 - dissimilar)</h4>
+    <div class="w3-content">
+        <img title="total_cost" src="./{{ path_total_cost }}" style="width:400px"/>
+    </div>
+    <div class="w3-content">
+        <img title="table_distances" src="./{{ path_total_table }}" style="width:500px"/>
+    </div>
+    <div class="w3-content">
+        <p>Coverage (gray track) and breakpoint-pairs matches for s1 (green) and s2 (blue).<br/>Unmached
+            breakpoint-pairs are displayed in gray. The log2(s1/s2) is displayed in black. The zero reference is
+            displayed as dotted red line.<br/>
+        </p>
+        <img title="viz_breakpoints" src="./{{ path_plot_cn_sv }}" style="width:1500px"/>
+    </div>
+</div>
 </body>
 </html>

@@ -191,12 +191,14 @@ def draw_breakpoints_cross_ax(chr1, start, chr2, end, max_value, scale, color, a
 # 	plt.title(title)
 # 	plt.xlabel("")
 
-def add_text(ax, fig):
+def add_text(ax, fig, s1="", s2=""):
 	trans = mtransforms.ScaledTranslation(10 / 72, -5 / 72, fig.dpi_scale_trans)
-	ax.text(0.0, 1.0, ht.S1, transform=ax.transAxes + trans, fontsize='xx-large', verticalalignment='top')
+	ax.text(0.0, 1.0, ht.S1, transform=ax.transAxes + trans, fontsize='x-large', verticalalignment='top', zorder=10)
 	trans = mtransforms.ScaledTranslation(10 / 72, 15 / 72, fig.dpi_scale_trans)
-	ax.text(0.0, 0.0, ht.S2, transform=ax.transAxes + trans, fontsize='xx-large', verticalalignment='top')
+	ax.text(0.0, 0.0, ht.S2, transform=ax.transAxes + trans, fontsize='x-large', verticalalignment='top', zorder=10)
 
+	ax.text(0.0, -0.3, ht.S1 + "=" + s1, transform=ax.transAxes + trans, fontsize='x-large', verticalalignment='top', zorder=10)
+	ax.text(0.0, -0.35, ht.S2 + "=" + s2, transform=ax.transAxes + trans, fontsize='x-large', verticalalignment='top', zorder=10)
 
 def draw_breakpoints(chr1, start, chr2, end, max_value, scale, color, alpha,
 					 linesize=3, dotsize=10, w=5, ax=None, title="", flipped=False):
@@ -273,7 +275,7 @@ def break_cn(df):
 	return df_new
 
 
-def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=5, outfile=None, fig=None, axs=None):
+def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=3, outfile=None, fig=None, axs=None, s1="", s2=""):
 	sns.set_style("whitegrid")
 	sns.set_context("paper")
 
@@ -332,7 +334,7 @@ def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=5, outfile=Non
 
 			if i == 0:
 				ax.set_ylabel("estimated copy-number", fontsize=12)
-				add_text(ax, fig)
+				add_text(ax, fig, s1=s1, s2=s2)
 
 		# plot difference between the 2 profiles
 		x_diff = dict_x[ht.S1]
@@ -345,8 +347,8 @@ def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=5, outfile=Non
 				label=ht.S1 + "/" + ht.S2,
 				linewidth=4,
 				color="black",
-				alpha=0.8)
-
+				alpha=0.8,
+		        zorder=1)
 	if outfile:
 		fig.savefig(outfile, bbox_inches='tight', dpi=600)
 		fig.savefig(outfile+".svg", bbox_inches='tight', format="svg")
@@ -403,8 +405,9 @@ def concat_all_breakpoints(df1, df2, achr1, achr2, achr, astart, aend):
 def plot_ratios(chr_list, points_new, min_subplot_ratio=0.03):
 
 	ratios = []
+
 	for c in chr_list:
-		df_gr = points_new[points_new[ht.CHR]==c].groupby(by=ht.CHR).agg({ht.START: [np.min, np.max]}).reset_index()
+		df_gr = points_new[points_new[ht.CHR]==c].groupby(by=ht.CHR, observed=True,as_index=False).agg({ht.START: [np.min, np.max]})
 		min_, max_ = df_gr.iloc[0,1], df_gr.iloc[0,2]
 		ratios.append(max_ - min_)
 
@@ -424,7 +427,7 @@ def plot_ratios(chr_list, points_new, min_subplot_ratio=0.03):
 
 	return new_ratios_adj
 
-def plot_breakpoints_location(br_t, br_r, max_y, chrlist, width=30, height=5):
+def plot_breakpoints_location(br_t, br_r, max_y, chrlist, width=30, height=5, s1="", s2=""):
 	"""
 	Plot as dots all the breakpoints
 	"""
@@ -463,12 +466,12 @@ def plot_breakpoints_location(br_t, br_r, max_y, chrlist, width=30, height=5):
 
 		# label samples
 		if i == 0:
-			add_text(ax, fig)
+			add_text(ax, fig, s1=s1, s2=s2)
 	return fig, axs
 
 
 def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
-								width=30, height=3, max_value=None, scale=True, fig=None, axs=None):
+								width=30, height=3, max_value=None, scale=True, fig=None, axs=None, s1="",s2=""):
 	"""
 
 	Arguments:
@@ -492,7 +495,7 @@ def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 		fig, axs = plt.subplots(1, ncols, figsize=(width, height), sharey=True, gridspec_kw={'width_ratios': compute_ratios})
 		ax = axs[0] if ncols > 1 else axs
 		ax.set_yticklabels([])
-		add_text(ax, fig)
+		add_text(ax, fig, s1=s2, s2=s2)
 
 	if ncols > 1:
 		ax_dict = {chr: axs[i] for i, chr in enumerate(chrlist)}
@@ -588,11 +591,11 @@ def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 									  ax1, ax2, fig, flipped=flipped)
 
 
-def plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, breakpoint_matches, chrlist, max_coverage, outfile=None):
+def plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, breakpoint_matches, chrlist, max_coverage, outfile=None, s1="", s2=""):
 
 	fig, axs = plot_breakpoints_location(br_t, br_r, max_coverage, chrlist)
-	draw_cn(cn_profile_t, cn_profile_r, chrlist, fig=fig, axs=axs)
-	plot_breakpoints_comparison(br_t, br_r, breakpoint_matches, chrlist, fig=fig, axs=axs, max_value=max_coverage, scale=True)
+	draw_cn(cn_profile_t, cn_profile_r, chrlist, fig=fig, axs=axs, s1=s1, s2=s2)
+	plot_breakpoints_comparison(br_t, br_r, breakpoint_matches, chrlist, fig=fig, axs=axs, max_value=max_coverage, scale=True, s1=s1, s2=s2)
 	if outfile:
 		fig.savefig(outfile, bbox_inches='tight', dpi=600)
 		fig.savefig(outfile + ".svg", bbox_inches='tight', format="svg")
