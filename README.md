@@ -7,6 +7,8 @@ Please install `python3.9` and run the following code to install all dependencie
 
 ```bash
 cd AmpliconComparison
+mamba env create -f environment.yml
+conda activate comparator
 python -m pip install -r requirements.txt
 ```
 

@@ -81,12 +81,15 @@ class HEADER:
 				   "end": END,
 				   "circ_id": CIRC_ID,
 				   "cycle_id": CIRC_ID,
+				   "structure": CIRC_ID,
 				   "weight": CN,
+				   "coverage": CN,
 				   "score": CN,
 				   "proportions": CN,
 				   "estimated_cn": CN,
 				   "estimated_proportions":CN,
 				   "cn": CN,
+				   "direction": STRAND,
 				   "strand": STRAND,
 				   "orientation": STRAND}
 

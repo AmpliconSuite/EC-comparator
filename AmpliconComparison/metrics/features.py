@@ -77,9 +77,12 @@ def read_input(t_file, r_file, outdir, min_cn=0):
 			 'end': 'int',
 			 'circ_id': 'str',
 			 'cycle_id': 'str',
+			 'structure': 'str',
 			 'weight': 'double',
 			 'score': 'double',
 			 'estimated_cn': 'double',
+			 'coverage': 'double', 
+			 'direction': 'str',
 			 'strand': 'str',
 			 'orientation': 'str'}
 
