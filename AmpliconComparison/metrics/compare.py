@@ -103,6 +103,16 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=
 
 	# as data.frame objects
 	df_t, df_r = read_input(t_file, r_file, outdir, min_cn=min_cn)
+	
+	if df_t.shape[0] == 0:
+		raise Exception("""EC-comparator stoppe because of empty file: {} is empty""".format(t_file))
+
+	if df_r.shape[0] == 0:
+		raise Exception("""EC-comparator stoppe because of empty file: {} is empty""".format(r_file))
+	
+	print(df_t)
+	print(df_r)
+ 
 	bins, chrlist = bin_genome(df_t, df_r, margin_size=0)
 	chr_offsets = get_chromosome_offset(df_t, df_r)
 

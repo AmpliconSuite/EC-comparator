@@ -78,6 +78,8 @@ def read_input(t_file, r_file, outdir, min_cn=0):
 			 'circ_id': 'str',
 			 'cycle_id': 'str',
 			 'structure': 'str',
+			 'fragment_id': 'str',
+			 'fragment': 'str',
 			 'weight': 'double',
 			 'score': 'double',
 			 'estimated_cn': 'double',
@@ -89,21 +91,21 @@ def read_input(t_file, r_file, outdir, min_cn=0):
 	t_collection = pd.read_csv(t_file, header=0, sep="\t", dtype=dtype)
 	r_collection = pd.read_csv(r_file, header=0, sep="\t", dtype=dtype)
 
-	if 'iscyclic' in t_collection.columns.tolist():
-		t_collection['iscyclic'] = t_collection['iscyclic'].astype(bool)
-	else:
-		t_collection['iscyclic'] = True
-
-	if 'iscyclic' in r_collection.columns.tolist():
-		r_collection['iscyclic'] = r_collection['iscyclic'].astype(bool)
-	else:
-		r_collection['iscyclic'] = True
-
 	# rename columns and check if all columns available
 	t_collection.rename(columns=rename_columns(t_collection.columns.tolist(), ht.DICT_HEADER), errors="raise",
 						inplace=True)
 	r_collection.rename(columns=rename_columns(r_collection.columns.tolist(), ht.DICT_HEADER), errors="raise",
 						inplace=True)
+	
+	if ht.ISCYCLIC in t_collection.columns.tolist():
+		t_collection[ht.ISCYCLIC] = t_collection[ht.ISCYCLIC].astype(bool)
+	else:
+		t_collection[ht.ISCYCLIC] = True
+
+	if 'iscyclic' in r_collection.columns.tolist():
+		r_collection[ht.ISCYCLIC] = r_collection[ht.ISCYCLIC].astype(bool)
+	else:
+		r_collection[ht.ISCYCLIC] = True
 
 	t_collection[ht.CHR] = t_collection[ht.CHR].astype(str)
 	r_collection[ht.CHR] = r_collection[ht.CHR].astype(str)

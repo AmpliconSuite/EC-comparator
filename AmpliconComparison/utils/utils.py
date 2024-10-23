@@ -69,10 +69,11 @@ class HEADER:
 	S2 = "s2"
 	TRACK  = "track"
 	ISCYCLIC = "iscyclic"
+	FRAG_ID = "Frag_id"
 	BINS = "bins"
 	BIN_ENABLED = "bin_enabled"
 
-	HEADER_SORTED = [CHR, START, END, CIRC_ID, CN, STRAND, ISCYCLIC]
+	HEADER_SORTED = [CHR, START, END, CIRC_ID, CN, STRAND, ISCYCLIC, FRAG_ID]
 	DICT_HEADER = {"#chr": CHR,
 				   "chr": CHR,
 				   "chromosome": CHR,
@@ -82,8 +83,9 @@ class HEADER:
 				   "circ_id": CIRC_ID,
 				   "cycle_id": CIRC_ID,
 				   "structure": CIRC_ID,
+				   "fragment": FRAG_ID,
+				   "fragment_id": FRAG_ID,
 				   "weight": CN,
-				   "coverage": CN,
 				   "score": CN,
 				   "proportions": CN,
 				   "estimated_cn": CN,
@@ -91,7 +93,9 @@ class HEADER:
 				   "cn": CN,
 				   "direction": STRAND,
 				   "strand": STRAND,
-				   "orientation": STRAND}
+				   "orientation": STRAND,
+       			   "iscyclic":ISCYCLIC,
+             	   "Iscyclic":ISCYCLIC}
 
 	THRESHOLD = "threshold"
 	WEIGHT = "weight"
