@@ -428,10 +428,11 @@ def compute_breakpoint_distance(br_t, br_r, distance, threshold):
 
 	"""
 	# create bipartite graph
-	G, t_nodes, r_nodes, cost_matrix, threshold_max_value = create_bipartite_graph(br_t,
-												 br_r,
-												 dist=distance,
-												 threshold=threshold)
+	G, t_nodes, r_nodes, cost_matrix, threshold_max_value = create_bipartite_graph(
+																				br_t,
+																				br_r,
+																				dist=distance,
+																				threshold=threshold)
 	if G is None:
 		return 1, {}, []
 

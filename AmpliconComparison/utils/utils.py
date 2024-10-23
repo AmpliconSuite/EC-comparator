@@ -85,6 +85,7 @@ class HEADER:
 				   "score": CN,
 				   "proportions": CN,
 				   "estimated_cn": CN,
+				   "estimated_proportions":CN,
 				   "cn": CN,
 				   "strand": STRAND,
 				   "orientation": STRAND}
@@ -132,6 +133,7 @@ class PROPS:
 						"weight": "cn",
 						"score": "cn",
 						"proportions": "cn",
+						"estimated_proportions":"cn",
 						"strand": "strand",
 						"orientation": "strand"
 						}
