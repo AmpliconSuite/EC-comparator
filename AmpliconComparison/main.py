@@ -27,11 +27,11 @@ def config(args):
 	dict = Configs.DICT_DIST
 
 	# genomic footprint distance settings
-	dict[h.GENOMIC_FOOTPRINT][d.HAMMING_NORM][h.ENABLE] = args.cn_hamming_dist
-	dict[h.GENOMIC_FOOTPRINT][d.COSINE_DISTANCE][h.ENABLE] = args.cn_cosine_dist
-	dict[h.GENOMIC_FOOTPRINT][d.COPYNUMBER_JC][h.ENABLE] = args.cn_jc_dist
-	dict[h.GENOMIC_FOOTPRINT][d.FRAGMENTS_DISTANCE][h.ENABLE] = args.fragments_dist
-	dict[h.GENOMIC_FOOTPRINT][d.CYCLES_DISTANCE][h.ENABLE] = args.cycles_dist
+	dict[h.GENOMIC_FOOTPRINT][d.HAMMING_NORM][h.ENABLE] = True if args.cn_hamming_dist == 1 else False
+	dict[h.GENOMIC_FOOTPRINT][d.COSINE_DISTANCE][h.ENABLE] = True if args.cn_cosine_dist == 1 else False
+	dict[h.GENOMIC_FOOTPRINT][d.COPYNUMBER_JC][h.ENABLE] = True if args.cn_jc_dist == 1 else False
+	dict[h.GENOMIC_FOOTPRINT][d.FRAGMENTS_DISTANCE][h.ENABLE] = True if args.fragments_dist == 1 else False
+	dict[h.GENOMIC_FOOTPRINT][d.CYCLES_DISTANCE][h.ENABLE] = True if args.cycles_dist == 1 else False
 
 	# breakpoint matching distance settings
 	# dict[h.BREAKPOINT_DISTANCE][d.EUCLIDIAN][h.ENABLE] = args.euclidian_distance
@@ -65,34 +65,35 @@ def main():
 		parser.add_argument('-b', '--second-structure', help='Second structure (bed format)', required=True)
 		parser.add_argument('-d', '--outdir', help='Output directory', required=True)
 		parser.add_argument('--plot', help='Plot coverage profiles', action=argparse.BooleanOptionalAction)
-		parser.add_argument('--report', help='Generate report (this will set \'plot\' also on True)', action=argparse.BooleanOptionalAction)
+		parser.add_argument('--report', help='Generate report (this the flag is set, it will also set \'plot\')', action=argparse.BooleanOptionalAction)
+		parser.add_argument('--min-cn', help='Minimal copy-number or coverage (filter out structures with a lower value then min-cn, default: %(default)s)', required=False, default=0, type=float)
 		parser.add_argument('--cn-hamming-dist',
 							help='Hamming distance between genomic footprint. Recommended when no copy-number information available (default: %(default)s)',
-							required=False, default=True, type=bool)
+							required=False, default=1, type=int)
 		parser.add_argument('--cn-cosine-dist',
 						   help="Cosine distance between the coverage profile.",
-							required=False, default=True, type=bool)
+							required=False, default=1, type=int)
 		parser.add_argument('--cn-jc-dist',
 							help="Min-max distance / Jaccard distance between the coverage profile.",
-							required=False, default=True, type=bool)
+							required=False, default=1, type=int)
 		parser.add_argument('--fragments-dist',
 							help="Quantify the distance between fragments.",
-							required=False, default=True, type=bool)
+							required=False, default=1, type=int)
 		parser.add_argument('--cycles-dist',
 							help="Quantify the distance between cycles.",
-							required=False, default=True, type=bool)
+							required=False, default=1, type=int)
 		parser.add_argument('--breakpoint-dist',
 							help="Quantify the distance between cycles.",
-							required=False, default=True, type=bool)
+							required=False, default=1, type=int)
 		# parser.add_argument('--euclidian-distance',
 		# 					help='Use euclidian distance for breakpoint-pair matching (default: %(default)s)',
-		# 					required=False, default=True, type=bool)
+		# 					required=False, default=1, type=int)
 		# parser.add_argument('--euclidian-distance-threshold',
 		# 					help='Distance threshold to accept two breakpoint-pairs as matched  (default: %(default)s)',
 		# 					required=False, default=1000, type=float)
 		# parser.add_argument('--relative-distance',
 		# 					help='Relative distance score for breakpoint matching (default: %(default)s)',
-		# 					required=False, default=False, type=bool)
+		# 					required=False, default=0, type=int)
 		# parser.add_argument('--relative-distance-threshold',
 		# 					help='Distance threshold to accept two breakpoint-pairs as matched  (default: %(default)s)',
 		# 					required=False, default=0.3, type=float)
@@ -126,7 +127,8 @@ def main():
 							   args.outdir,
 							   dict_configs,
 							   plot=args.plot,
-							   plot_report=args.report)
+							   plot_report=args.report,
+          					   min_cn=args.min_cn)
 
 
 	except Exception:

@@ -65,16 +65,21 @@ def get_total_cost(dict_metrics):
 	return total_cost, total_cost_description
 
 
-def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=True, s1=None,s2=None):
+def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=True, min_cn=0, s1=None,s2=None):
 	"""
-	Entrypoint: compare the distance between two cycle sets.
+	Entrypoint: compare the distance between two structures sets.
 	Args:
-		t_file (str): First cycle set
-		r_file (str): Second cycle set
+		t_file (str): First structures set
+		r_file (str): Second structures set
 		outdir (str): Output directory
 		dict_configs (dict):
 							hamming (bool): Include copy-number similarity for the total distance if set to True or Hamming distance is copy-number not available
 							viz (bool): Enable visualization of the comparison
+       plot (bool): Generate coverage and breakpoints plot comparatively for first and second structure
+       plot_report (bool): Generate a report including a summary plot of the distances and coverage and breakpoints plots
+       min_cn (float): Set a minimal copy-number or coverage for the structures to be considered for comparison (default 0)
+       s1 (str): Name of structure 1
+       s2 (str): Name of structure 2
 
 	Returns:
 		Dictionary with different distances
@@ -97,7 +102,7 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=
 	# 1. Genome binning based on the breakpoints union
 
 	# as data.frame objects
-	df_t, df_r = read_input(t_file, r_file)
+	df_t, df_r = read_input(t_file, r_file, outdir, min_cn=min_cn)
 	bins, chrlist = bin_genome(df_t, df_r, margin_size=0)
 	chr_offsets = get_chromosome_offset(df_t, df_r)
 
