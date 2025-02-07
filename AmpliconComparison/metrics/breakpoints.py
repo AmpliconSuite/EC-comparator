@@ -32,7 +32,7 @@ def transform_fragments2breakpoints(df_cycle):
 	Returns:
 		list of tuples
 	"""
-	breakpoints = pd.DataFrame(columns=[ht.CHR1, ht.START, ht.CHR2, ht.END, ht.IDX1, ht.IDX2, ht.STRAND, ht.CIRC_ID, ht.ISCYCLIC])
+	breakpoints = pd.DataFrame(columns=[ht.CHR1, ht.START, ht.CHR2, ht.END, ht.IDX1, ht.IDX2, ht.STRAND, ht.CIRC_ID, ht.ISCYCLIC, ht.CN])
 	# get all circ_ids
 	circ_id = df_cycle[ht.CIRC_ID].drop_duplicates().tolist()
 	# count fragments per cycle
@@ -69,6 +69,7 @@ def transform_fragments2breakpoints(df_cycle):
 				strand = "+-"
 				start = df_temp.loc[:,ht.END].tolist()[0]
 				end = df_temp.loc[:, ht.START].tolist()[0]
+				cov = df_temp.loc[:, ht.CN].tolist()[0]
 
 				if start > end:
 					tmp = start
@@ -84,7 +85,9 @@ def transform_fragments2breakpoints(df_cycle):
 					ht.IDX2: idx2,
 					ht.STRAND: strand,
 					ht.CIRC_ID: c,
-					ht.ISCYCLIC: iscyclic},index=[0])], ignore_index=True)
+					ht.ISCYCLIC: iscyclic,
+					ht.CN:cov
+     				},index=[0])], ignore_index=True)
 
 		# multi-fragment path
 		else:
@@ -106,6 +109,7 @@ def transform_fragments2breakpoints(df_cycle):
 				chr2 = None
 				idx1 = None
 				idx2 = None
+				cov = row1[ht.CN]
 
 				if row1[ht.STRAND] == "+" and row2[ht.STRAND] == "+":
 					# head to tail
@@ -133,6 +137,7 @@ def transform_fragments2breakpoints(df_cycle):
 						chr2 = row2[ht.CHR]
 						start = row1[ht.END]
 						end = row2[ht.END]
+
 						idx1 = df_idex[i]
 						idx2 = df_idex[(i + 1) % count_fragments]
 					else:
@@ -188,7 +193,8 @@ def transform_fragments2breakpoints(df_cycle):
 					ht.IDX2: idx2,
 					ht.STRAND: strand,
 					ht.CIRC_ID: c,
-					ht.ISCYCLIC: iscyclic},index=[0])], ignore_index=True)
+					ht.ISCYCLIC: iscyclic,
+     				ht.CN: cov},index=[0])], ignore_index=True)
 
 	return breakpoints
 
@@ -420,6 +426,37 @@ def find_matching_breakpoints(G, t_nodes, r_nodes, threshold_max_value):
 	return matches, breakpoint_match
 
 
+def compute_jc_distance(breakpoint_match, br_t, br_r):
+	"""
+	Compute jaccard distance between the matched and unmached breakpoints 
+ 
+	Arguments:
+		breakpoint_match
+		br_t
+		br_r
+		how (str): How you do the matching 
+ 
+ 	"""
+	match_score = 0
+	total_score = 0
+	
+	for key in breakpoint_match:
+		# add the weights for the two matched breakpoints
+		# unweighted means breakpoint_match[key][0] == breakpoint_match[key][1] == 1
+		# weight of the first breakpoint - breakpoint_match[key][0] 
+		# weight of the second breakpoint - breakpoint_match[key][1] 
+		match_score += breakpoint_match[key][0] + breakpoint_match[key][1]
+	
+	# weight of the individual
+	for key in br_t:
+		total_score += br_t[key]
+
+	for key in br_r:
+		total_score += br_r[key]
+	
+	return 1 - match_score / total_score
+
+
 def compute_breakpoint_distance(br_t, br_r, distance, threshold):
 	"""
 	Compute breakpoint-pairs similarity.
@@ -439,6 +476,7 @@ def compute_breakpoint_distance(br_t, br_r, distance, threshold):
 	# get matches
 	matches, breakpoint_match = find_matching_breakpoints(G, t_nodes, r_nodes, threshold_max_value)
 	# compute jaccard distance
-	jd = 1 - 2 * len(breakpoint_match) / (len(br_t) + len(br_r))
+	# jd = 1 - 2 * len(breakpoint_match) / (len(br_t) + len(br_r))
+	jd = compute_jc_distance(breakpoint_match, br_t, br_r)
 
 	return jd, matches, breakpoint_match

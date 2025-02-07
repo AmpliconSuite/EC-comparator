@@ -481,6 +481,7 @@ def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 		chrlist:
 	Returns:
 	"""
+	max_cov = max(br_t[ht.CN].tolist() + br_r[ht.CN].tolist())
 	matched_br_t = [a[0] for a in breakpoint_match]
 	matched_br_r = [a[1] for a in breakpoint_match]
 
@@ -527,7 +528,7 @@ def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 			# check if the breakpoint is a match
 			color = PROPS.UNMATCHED[PROPS.COLOR]
 			alpha = PROPS.UNMATCHED[PROPS.ALPHA]
-
+			cn = row[ht.CN] / max_cov * 8 # scale
 			flipped = True if row[ht.TRACK] == ht.S2 else False
 
 			# if s1 and matched breakpoint
@@ -540,7 +541,7 @@ def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 				alpha = PROPS.MATCHED[PROPS.ALPHA]
 
 			draw_breakpoints(c1, p1, c2, p2, max_value, scale,
-							 color, alpha, ax=ax, flipped=flipped)
+							 color, alpha, linesize=cn, ax=ax, flipped=flipped)
 
 			if max_value:
 				ax.set_ylim(-max_value, max_value)
