@@ -67,7 +67,7 @@ def rename_columns(df_cols, dict_mapping_cols):
 	return dict_newcols
 
 
-def read_input(t_file, r_file, outdir, min_cn=0):
+def read_input(t_file, r_file, tempdir, min_cn=0):
 	"""
 	Read input true and reconstruct file
 	"""
@@ -131,8 +131,8 @@ def read_input(t_file, r_file, outdir, min_cn=0):
 	t_collection = t_collection[t_collection[ht.CN]>=min_cn]
 	r_collection = r_collection[r_collection[ht.CN]>=min_cn]
 	
-	t_collection.to_csv(os.path.join(outdir,"s1_input_filtered.bed"), header=True, sep="\t", index=False)
-	r_collection.to_csv(os.path.join(outdir,"s2_input_filtered.bed"), header=True, sep="\t", index=False)
+	t_collection.to_csv(os.path.join(tempdir,"s1_input_filtered.bed"), header=True, sep="\t", index=False)
+	r_collection.to_csv(os.path.join(tempdir,"s2_input_filtered.bed"), header=True, sep="\t", index=False)
 
 	return t_collection[keep1], r_collection[keep2]
 

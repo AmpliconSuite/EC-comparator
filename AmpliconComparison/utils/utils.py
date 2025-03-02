@@ -103,6 +103,7 @@ class HEADER:
 	DEFINITION = "definition"
 
 	BREAKPOINT_DISTANCE = 'breakpoint_dist'
+	BREAKPOINT_DISTANCE_CALCULATION = 'breakpoint_dist_calc'
 	GENOMIC_FOOTPRINT = 'genomic_footprint'
 	OTHER_PARAMS = 'other_params'
 	CONFIGS = 'configs'
@@ -150,6 +151,9 @@ class PROPS:
 class DDT:
 	EUCLIDIAN = 'euclidian'
 	EUCLIDIAN_THRESHOLD = 3000
+	
+	EUCLIDIAN_WEIGHTED = 'euclidian_weighted'
+	EUCLIDIAN_WEIGHTED_THRESHOLD = 3000
 
 	EUCLIDIAN_NORM_L1 = 'euclidian_norm_l1'
 	EUCLIDIAN_THRESHOLD_L1 = 0.3
@@ -171,7 +175,9 @@ class DDT:
 
 	UNMATCHED = 'unmatched'
 	UNMATCHED_THRESHOLD = 10000
-	SIGMOID_THRESHOLD = 250
+	MANHATTEN = 'manhatten'
+	MANHATTEN_THRESHOLD = 500
+	SIGMOID_THRESHOLD = 500
 
 	HAMMING = 'cn_hamming_dist'
 	HAMMING_NORM = 'cn_hamming_norm_dist'
@@ -191,6 +197,12 @@ class DDT:
 
 	TOTAL_COST = 'total_cost'
 	TOTAL_COST_DESCRIPTION = 'total_cost_description'
+ 
+	COVERAGE = 'coverage'
+	MEAN_COVERAGE = 'mean_coverage'
+	BP_MATCH_UNWEIGHTED = 'breakpoint_match_unweighted'
+	BP_MATCH_CN_WEIGHTED = 'breakpoint_match_cn_weighted'
+	BP_OPTIONS = [BP_MATCH_UNWEIGHTED, BP_MATCH_CN_WEIGHTED]
 
 class OUTFILES:
 	TOTAL_COST_PNG = 'total_cost.png'

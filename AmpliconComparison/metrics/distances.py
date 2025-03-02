@@ -174,7 +174,24 @@ def get_jc_distance_cn(cn_profile1, cn_profile2):
 	return 1 - cn_merge["min"].sum() / cn_merge["max"].sum()
 
 
-def euclidian_distance(cha, a, chb, b, chx, x, chy, y):
+def euclidian_distance(cha, a, chb, b, cov1, chx, x, chy, y ,cov2):
+	"""
+	Distance representing the matching panelty between 2 breakpoint-pairs
+	"""
+	# check chromosomes
+	if cha == chx and chb == chy:
+		return math.sqrt((a - x) ** 2 + (b - y) ** 2)
+	elif cha == chy and chb == chx:
+		return math.sqrt((a - y) ** 2 + (b - x) ** 2)
+	else:
+		return np.nan
+
+
+def euclidian_distance_weighted(cha, a, chb, b, cov1, chx, x, chy, y ,cov2):
+	"""
+	Distance representing the matching panelty between 2 breakpoint-pairs
+	"""
+	# check chromosomes
 	if cha == chx and chb == chy:
 		return math.sqrt((a - x) ** 2 + (b - y) ** 2)
 	elif cha == chy and chb == chx:
@@ -198,6 +215,7 @@ def euclidian_distance_norm_l1(a, b, x, y):
 	v2_norm = preprocessing.normalize(v2, norm='l1')
 	return skl.euclidean_distances(v1_norm, v2_norm)
 
+
 def auc_triangle(a, b, x, y):
 	return abs(a - x) * abs(b - y) / 2
 
@@ -211,7 +229,7 @@ def match_angle(a, b, x, y):
 	# return 1 - alpha / alpha_45
 	return alpha / alpha_45
 
-def match_score(a, b, x, y):
+def match_score(cha, a, chb, b, cov1, chx, x, chy, y ,cov2):
 	"""
 	Compute the similarity between relative distances of the breakpoints.
 
@@ -223,7 +241,15 @@ def match_score(a, b, x, y):
 	Returns:
 		score
 	"""
+	if not (cha == chx and chb == chy) and not (cha == chy and chb == chx):
+		return np.nan
 
+	if cha == chy and chb == chx:
+    	# swap
+		temp = x
+		x = y
+		y = temp
+    
 	v1 = np.array([[a - x,
 					a - b,
 					a - y]])
@@ -243,6 +269,19 @@ def match_score(a, b, x, y):
 	# return (cos1 + cos2) / 2
 	return 1 - abs((cos1 + cos2) / 2)
 
+def weight_nodes_cn(df_br, i, m):
+    """
+    Return the copy-number for the individual breakpoint
+    """
+    return df_br.loc[i,ht.CN]
+    
+def weight_nodes_mean_cn(df_br, i, m):
+    """
+    Return the mean copy-number for all breakpoints clustering together 
+    """
+    adj_nodes = [j for j in range(m.shape[0]) if m[i,j] is not np.nan and i!=j]
+    cluster_nodes = [k for j in adj_nodes for k in range(m.shape[0]) if m[k,j] is not np.nan and k!=j]
+    return np.mean(df_br.loc[cluster_nodes,ht.CN].tolist())
 
 # distance for the copy-number profile
 dict_distance_function = {ddt.HAMMING: get_hamming_score,
@@ -256,12 +295,13 @@ dict_distance_function = {ddt.HAMMING: get_hamming_score,
 # distance between paired breapoints
 dict_distance_paired_breakpoints = {
 	ddt.EUCLIDIAN: euclidian_distance,
+	ddt.EUCLIDIAN_WEIGHTED: euclidian_distance_weighted,
 	# ddt.EUCLIDIAN_NORM_L1: euclidian_distance_norm_l1,
 	# ddt.EUCLIDIAN_NORM_L2: euclidian_distance_norm_l2,
 	# "auc_triangle": auc_triangle,
 	# "auc_trapeze": auc_trapeze,
 	# "match_angle": match_angle,
-	# ddt.RELATIVE_METRIC: match_score
+	ddt.RELATIVE_METRIC: match_score
 }
 
 dict_distance_paired_breakpoints_thresholds = {
@@ -273,5 +313,10 @@ dict_distance_paired_breakpoints_thresholds = {
 	ddt.RELATIVE_METRIC: ddt.RELATIVE_METRIC_THRESHOLD,
 	ddt.MATCH_ANGLE: ddt.MATCH_ANGLE_THRESHOLD,
 	ddt.UNMATCHED: ddt.UNMATCHED_THRESHOLD
+}
+
+dict_weight_nodes = {
+	ddt.COVERAGE: weight_nodes_cn,
+	ddt.MEAN_COVERAGE: weight_nodes_mean_cn,
 }
 

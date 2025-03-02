@@ -96,7 +96,7 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=
 	dict_metrics[ht.CONFIGS] = dict_configs
 	default_breakpoint_distance = dict_metrics[ht.CONFIGS][ht.BREAKPOINT_DISTANCE][ht.DEFAULT]
 	default_breakpoint_distance_threshold = dict_metrics[ht.CONFIGS][ht.BREAKPOINT_DISTANCE][default_breakpoint_distance][ht.THRESHOLD]
-
+	default_breakpoint_distance_calculation = dict_metrics[ht.CONFIGS][ht.BREAKPOINT_DISTANCE][ht.BREAKPOINT_DISTANCE_CALCULATION]
 	dict_metrics[ht.DISTANCES] = {}
 
 	# 1. Genome binning based on the breakpoints union
@@ -141,7 +141,8 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=
 	br_t, br_r = get_breakpoints_pairs(df_t, df_r)
 	jc, matches, breakpoint_matches = compute_breakpoint_distance(br_t, br_r,
 																  distance=default_breakpoint_distance,
-																  threshold=default_breakpoint_distance_threshold)
+																  threshold=default_breakpoint_distance_threshold,
+                  												  how=default_breakpoint_distance_calculation)
 	dict_metrics[ht.DISTANCES][ddt.JACCARD_DISTANCE] = round(jc,2)
 	# dict_metrics[ht.DISTANCES][ddt.JACCARD_DISTANCE] = 1
 

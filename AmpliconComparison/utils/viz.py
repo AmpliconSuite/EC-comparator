@@ -575,7 +575,7 @@ def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 			# check if the breakpoint is a match
 			color = PROPS.UNMATCHED[PROPS.COLOR]
 			alpha = PROPS.UNMATCHED[PROPS.ALPHA]
-
+			cn = row[ht.CN] / max_cov * 8 # scale
 			# set if flipped or not
 			flipped = True if row[ht.TRACK] == ht.S2 else False
 
@@ -589,7 +589,7 @@ def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 				alpha = PROPS.MATCHED[PROPS.ALPHA]
 
 			draw_breakpoints_cross_ax(c1, p1, c2, p2, max_value, scale, color, alpha,
-									  ax1, ax2, fig, flipped=flipped)
+									  ax1, ax2, fig, linesize=cn, flipped=flipped)
 
 
 def plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, breakpoint_matches, chrlist, max_coverage, outfile=None, s1="", s2=""):
