@@ -99,7 +99,7 @@ def main():
 							help="Quantify the distance between cycles.",
 							required=False, default=1, type=int)
 		parser.add_argument('--breakpoint-dist-calc',
-							help="Define how to compute distance between breakpoints pairs. Options: " + ','.join(d.BP_OPTIONS),
+							help="Define how to compute distance between breakpoints pairs. Options: " + ', '.join(d.BP_OPTIONS),
 							required=False, default=d.BP_MATCH_UNWEIGHTED, type=str)
 		# parser.add_argument('--euclidian-distance',
 		# 					help='Use euclidian distance for breakpoint-pair matching (default: %(default)s)',
