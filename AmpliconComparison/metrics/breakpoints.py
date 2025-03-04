@@ -30,9 +30,9 @@ def transform_fragments2breakpoints(df_cycle):
 	Creates the list of breakpoints
 
 	Arguments:
-					df_cycle:
+		df_cycle:
 	Returns:
-					list of tuples
+		list of tuples
 	"""
 	breakpoints = pd.DataFrame(
 		columns=[
@@ -59,7 +59,7 @@ def transform_fragments2breakpoints(df_cycle):
 	df_col = df_cycle.columns.tolist()
 
 	for c in circ_id:
-		print("Detect breakpoints for circle", c)
+		# print("Detect breakpoints for circle", c)
 		df_temp = df_cycle[df_cycle[ht.CIRC_ID] == c]
 		df_idex = df_temp.index.tolist()
 		# count fragments
@@ -72,7 +72,7 @@ def transform_fragments2breakpoints(df_cycle):
 		if ht.ISCYCLIC in df_col:
 			iscyclic = df_temp.loc[:, ht.ISCYCLIC].tolist()[0]
 
-		print("Iscyclic", iscyclic)
+		# print("Iscyclic", iscyclic)
 
 		# single fragment path
 		if count_fragments == 1:
@@ -242,8 +242,8 @@ def get_breakpoints_pairs(df_t, df_r):
 	Get the breakpoints for both true and reconstruction
 
 	Arguments:
-					df_t (pd.DataFrame):
-					df_r (pd.DataFrame):
+		df_t (pd.DataFrame):
+		df_r (pd.DataFrame):
 
 	Returns:
 
@@ -269,27 +269,63 @@ def sigmoid_unmatched(x, a=ddt.SIGMOID_THRESHOLD):
 	return False
 
 
-def is_unmatched(row1, row2, strandness=True):
+def is_unmatched(
+	row1,
+	row2,
+	unmatched_dist=ddt.MANHATTEN,
+	unmatched_threshold=ddt.MANHATTEN_THRESHOLD,
+	strandness=True,
+):
 	"""
 	Check if breakpoints are matched or unmatched (True).
 	"""
 	# ensure strandness of the breakpoints
+	if row1[ht.START] > row1[ht.END]:
+		tmp = row1[ht.START]
+		row1[ht.START] = row1[ht.END]
+		row1[ht.END] = tmp
+		row1[ht.STRAND] = "+" if row1[ht.STRAND] == "-" else "+"
+
+	if row2[ht.START] > row2[ht.END]:
+		tmp = row2[ht.START]
+		row2[ht.START] = row2[ht.END]
+		row2[ht.END] = tmp
+		row2[ht.STRAND] = "+" if row2[ht.STRAND] == "-" else "+"
+
 	if strandness and row1[ht.STRAND] != row2[ht.STRAND]:
 		return True
 
 	# manhattan distance larger than the sigmoid function
 	d = None
 
-	if row1[ht.CHR1] == row2[ht.CHR1]:
-		if row1[ht.CHR2] != row2[ht.CHR2]:
-			return True
-		d = abs(row1[ht.START] - row2[ht.START]) + abs(row1[ht.END] - row2[ht.END])
-	elif row1[ht.CHR1] == row2[ht.CHR2]:
-		if row1[ht.CHR2] != row2[ht.CHR1]:
-			return True
-		d = abs(row1[ht.START] - row2[ht.END]) + abs(row1[ht.END] - row2[ht.START])
-	if sigmoid_unmatched(d):
+	if (
+		row1[ht.CHR1] == row2[ht.CHR1]
+		and row1[ht.CHR2] != row2[ht.CHR2]
+		or row1[ht.CHR1] == row2[ht.CHR2]
+		and row1[ht.CHR2] != row2[ht.CHR1]
+	):
 		return True
+
+	if unmatched_dist == ddt.MANHATTEN:
+		if row1[ht.CHR1] == row2[ht.CHR1]:
+			d = abs(row1[ht.START] - row2[ht.START]) + abs(row1[ht.END] - row2[ht.END])
+		elif row1[ht.CHR1] == row2[ht.CHR2]:
+			d = abs(row1[ht.START] - row2[ht.END]) + abs(row1[ht.END] - row2[ht.START])
+		if sigmoid_unmatched(d, a=unmatched_threshold):
+			return True
+	elif unmatched_dist == ddt.EUCLIDIAN:
+		if row1[ht.CHR1] == row2[ht.CHR1]:
+			d = math.sqrt(
+				(row1[ht.START] - row2[ht.START]) ** 2
+				+ (row1[ht.END] - row2[ht.END]) ** 2
+			)
+		elif row1[ht.CHR1] == row2[ht.CHR2]:
+			d = math.sqrt(
+				(row1[ht.START] - row2[ht.END]) ** 2
+				+ (row1[ht.END] - row2[ht.START]) ** 2
+			)
+		if sigmoid_unmatched(d, a=unmatched_threshold):
+			return True
 
 	return False
 
@@ -299,15 +335,15 @@ def create_cost_matrix(br_t, br_r, dist=ddt.EUCLIDIAN):
 	Create the cost matrix for the breakpoints pair.
 
 	Arguments:
-					br_t (pd.DataFrame): Breakpoints true
-					br_r (pd.DataFrame): Breakpoints reconstructed
-									Example
-																	chr1	start	chr2	end	idx1	idx2	strand	circ_id
-													0	chr1	5000	chr1	6100	0	1	+-	1
-													1	chr1	100		chr1	1000	1	0	-+	1
-													2	chr1	6100	chr1	15000	2	3	++	2
-													3	chr1	3000	chr1	26000	2	3	++	2
-					dist:
+			br_t (pd.DataFrame): Breakpoints true
+			br_r (pd.DataFrame): Breakpoints reconstructed
+					Example
+					chr1	start	chr2	end	idx1	idx2	strand	circ_id
+					0	chr1	5000	chr1	6100	0	1	+-	1
+					1	chr1	100		chr1	1000	1	0	-+	1
+					2	chr1	6100	chr1	15000	2	3	++	2
+					3	chr1	3000	chr1	26000	2	3	++	2
+			dist:
 
 	Return:
 
@@ -335,18 +371,33 @@ def create_cost_matrix(br_t, br_r, dist=ddt.EUCLIDIAN):
 	return m
 
 
-def remove_unmatched(m, br_t, br_r, threshold=3000, strandness=True, dist=ddt.EUCLIDIAN):
+def remove_unmatched(
+	m,
+	br_t,
+	br_r,
+	dist=ddt.EUCLIDIAN,
+	dist_t=ddt.EUCLIDIAN_THRESHOLD,
+	unmatched_dist=ddt.MANHATTEN,
+	unmatched_threshold=ddt.MANHATTEN_THRESHOLD,
+	strandness=True,
+):
 	"""
 	Set breakpoints with x-x' or y-y' > unmatched as infinity distance
 	"""
 	# remove edges in the cost matrix if not meeting the criteria
 	for i in range(0, br_t.shape[0]):
 		for j in range(0, br_r.shape[0]):
-			if dist == ddt.EUCLIDIAN and is_unmatched(br_t.loc[i, :], br_r.loc[j, :], strandness=strandness):
+			if dist == ddt.EUCLIDIAN and is_unmatched(
+				br_t.loc[i, :],
+				br_r.loc[j, :],
+				unmatched_dist=unmatched_dist,
+				unmatched_threshold=unmatched_threshold,
+				strandness=strandness,
+			):
 				m[i, j] = np.nan
-			# if dist == ddt.EUCLIDIAN and m[i, j] >= threshold:
-			# 	m[i, j] = np.nan
-			if dist == ddt.RELATIVE_METRIC and m[i, j] >= threshold:
+			if dist == ddt.EUCLIDIAN and m[i, j] >= dist_t:
+				m[i, j] = np.nan
+			if dist == ddt.RELATIVE_METRIC and m[i, j] >= dist_t:
 				m[i, j] = np.nan
 
 	# replace all nan values with a max value
@@ -427,7 +478,11 @@ def create_bipartite_graph(m, br_t, br_r, nodes_weight_function=ddt.COVERAGE):
 			list_of_tuples.append((p.TNULL, k, np.nan))
 
 	# Ensure the graph remains connected by linking max_node to all reconstruct_nodes
-	list_of_tuples.extend((max_node, l, np.nan) for l in reconstruct_nodes if l not in visited_nodes_t[max_node])
+	list_of_tuples.extend(
+		(max_node, l, np.nan)
+		for l in reconstruct_nodes
+		if l not in visited_nodes_t[max_node]
+	)
 
 	G = nx.Graph()
 
@@ -448,7 +503,7 @@ def find_matching_breakpoints(G, t_nodes, r_nodes, threshold_max_value):
 	Find best matching breakpoints.
 
 	Returns:
-					breakpoint_match=[(2,2,"+"),(3,3,"-")...]
+		breakpoint_match=[(2,2,"+"),(3,3,"-")...]
 	"""
 	#  - minimum_weight_full_matching specifically wants a full matching with minimum weight: in a bipartite graph with bipartition (𝑈,𝑉)
 	# , it wants a matching of size min{|𝑈|,|𝑉|}
@@ -486,15 +541,15 @@ def find_matching_breakpoints(G, t_nodes, r_nodes, threshold_max_value):
 				id_pair_t = t_nodes[k]
 				id_pair_r = r_nodes[matches[k]]
 				props = G.get_edge_data(k, matches[k])
-				print(id_pair_t, id_pair_r, props)
+				# print(id_pair_t, id_pair_r, props)
 				if props is not None and props["weight"] < threshold_max_value:
 					breakpoint_match.append(
 						(
-							id_pair_t[0], # id true
-							id_pair_r[0], # id reconstruct
-							props["weight"], # edge weight
-							id_pair_t[1], # node weight
-							id_pair_r[1], # node weight
+							id_pair_t[0],  # id true
+							id_pair_r[0],  # id reconstruct
+							props["weight"],  # edge weight
+							id_pair_t[1],  # node weight
+							id_pair_r[1],  # node weight
 						)
 					)
 				else:
@@ -507,21 +562,29 @@ def find_matching_breakpoints(G, t_nodes, r_nodes, threshold_max_value):
 	return matches, breakpoint_match
 
 
-def compute_jc_distance(breakpoint_match, t_nodes, r_nodes, how=ddt.BP_MATCH_UNWEIGHTED):
+def compute_jc_distance(
+	breakpoint_match, t_nodes, r_nodes, how=ddt.BP_MATCH_UNWEIGHTED
+):
 	"""
 	Compute jaccard distance between the matched and unmached breakpoints
 
 	Arguments:
-					breakpoint_match (list): List of tuples (node1_id, node2_id, edge_match_weight, node1_weight, node2_weight)
-					t_nodes (dict): Dictionary of all breakpoint pairs in first sample (node_id, node_weight)
-					r_nodes (dict): Dictionary of all breakpoint pairs in second sample (node_id, node_weight)
-					how (str): How you do the matching
+		breakpoint_match (list): List of tuples (node1_id, node2_id, edge_match_weight, node1_weight, node2_weight)
+		t_nodes (dict): Dictionary of all breakpoint pairs in first sample (node_id, node_weight)
+		r_nodes (dict): Dictionary of all breakpoint pairs in second sample (node_id, node_weight)
+		how (str): How you do the matching
 
 	"""
 	match_score = 0
 	total_score = 0
 
-	for (node1_id, node2_id, edge_match_weight, node1_weight, node2_weight) in breakpoint_match:
+	for (
+		node1_id,
+		node2_id,
+		edge_match_weight,
+		node1_weight,
+		node2_weight,
+	) in breakpoint_match:
 		# add the weights for the two matched breakpoints
 		# unweighted means node1_weight == node1_weight == 1
 		if how == ddt.BP_MATCH_UNWEIGHTED:
@@ -540,21 +603,40 @@ def compute_jc_distance(breakpoint_match, t_nodes, r_nodes, how=ddt.BP_MATCH_UNW
 			elif how == ddt.BP_MATCH_CN_WEIGHTED:
 				total_score += value[1]
 
+	print(
+		"Breakpoint maching: Match score: ", match_score, ", Total score: ", total_score
+	)
 	return 1 - 1.0 * match_score / total_score
 
 
-def compute_breakpoint_distance(br_t, br_r, distance, threshold, how):
+def compute_breakpoint_distance(
+	br_t,
+	br_r,
+	distance=ddt.EUCLIDIAN,
+	distance_threshold=ddt.EUCLIDIAN_THRESHOLD,
+	unmatched_dist=ddt.UNMATCHED_DISTANCE,
+	unmatched_threshold=ddt.UNMATCHED_THRESHOLD,
+	how=ddt.BP_MATCH_UNWEIGHTED,
+):
 	"""
-	Compute breakpoint-pairs similarity.
-	Do not consider breakpoints for which (x-x') > unmatched or (y-y') > unmatched
+	Compute breakpoint-pairs distance.
+	Do not consider breakpoints for which |x-x'| + |y-y'| >= unmatched
 	Use `distance` to evaluate if the breakpoints are matched or not.
-
+	USe `how` to compute the breakpoint-pairs distance.
 	"""
 	# 1. create cost matrix
 	m = create_cost_matrix(br_t, br_r, dist=distance)
 
 	# 2. remove unmatched edges
-	m = remove_unmatched(m, br_t, br_r, threshold=threshold, dist=distance)
+	m = remove_unmatched(
+		m,
+		br_t,
+		br_r,
+		dist=distance,
+		dist_t=distance_threshold,
+		unmatched_dist=unmatched_dist,
+		unmatched_threshold=unmatched_threshold,
+	)
 
 	# 3. create bipartite graph
 	G, t_nodes, r_nodes = create_bipartite_graph(
@@ -565,12 +647,11 @@ def compute_breakpoint_distance(br_t, br_r, distance, threshold, how):
 
 	# 4. get matches
 	matches, breakpoint_match = find_matching_breakpoints(
-		G, t_nodes, r_nodes, threshold_max_value=threshold
+		G, t_nodes, r_nodes, threshold_max_value=distance_threshold
 	)
 
 	# 5. compute jaccard distance
 	# jd = 1 - 2 * len(breakpoint_match) / (len(br_t) + len(br_r))
 	jd = compute_jc_distance(breakpoint_match, t_nodes, r_nodes, how=how)
-	print("JD:",jd)
 
 	return jd, matches, breakpoint_match

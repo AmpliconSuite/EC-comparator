@@ -312,7 +312,6 @@ dict_distance_paired_breakpoints_thresholds = {
 	ddt.AUC_TRAPEZE: ddt.AUC_TRAPEZE_THRESHOLD,
 	ddt.RELATIVE_METRIC: ddt.RELATIVE_METRIC_THRESHOLD,
 	ddt.MATCH_ANGLE: ddt.MATCH_ANGLE_THRESHOLD,
-	ddt.UNMATCHED: ddt.UNMATCHED_THRESHOLD
 }
 
 dict_weight_nodes = {

@@ -26,16 +26,17 @@ from AmpliconComparison.utils.utils import get_weight_distance, get_value_distan
 import warnings
 warnings.filterwarnings("ignore")
 
-def remove_ref2methods(dict_configs):
+def remove_key(d, key_to_remove='definition'):
 	"""
 	Remove from dictionary all values which are pointers to methods
 	"""
-	for key in dict_configs[ht.CONFIGS]:
-		if key in [ht.BREAKPOINT_DISTANCE, ht.GENOMIC_FOOTPRINT]:
-			for d in dict_configs[ht.CONFIGS][key]:
-				if ht.DEFINITION in dict_configs[ht.CONFIGS][key][d]:
-					del dict_configs[ht.CONFIGS][key][d][ht.DEFINITION]
-	return dict_configs
+	if isinstance(d, dict):
+		return {k: remove_key(v, key_to_remove) for k, v in d.items() if k != key_to_remove}
+	elif isinstance(d, list):
+		return [remove_key(v, key_to_remove) for v in d]
+	else:
+		return d
+
 
 
 def get_total_cost(dict_metrics):
@@ -94,8 +95,17 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=
 
 	dict_metrics = {}
 	dict_metrics[ht.CONFIGS] = dict_configs
+	
+	
+	# umatching breakpoints 
+	default_unmatching_distance = dict_metrics[ht.CONFIGS][ht.BREAKPOINT_DISTANCE][ddt.UNMATCHED_DISTANCE]
+	default_unmatching_threshold = dict_metrics[ht.CONFIGS][ht.BREAKPOINT_DISTANCE][ddt.UNMATCHED_THRESHOLD]
+	
+	# compute cost matrix using distance d
 	default_breakpoint_distance = dict_metrics[ht.CONFIGS][ht.BREAKPOINT_DISTANCE][ht.DEFAULT]
 	default_breakpoint_distance_threshold = dict_metrics[ht.CONFIGS][ht.BREAKPOINT_DISTANCE][default_breakpoint_distance][ht.THRESHOLD]
+ 
+	# how to compute the breakpoint matching distance
 	default_breakpoint_distance_calculation = dict_metrics[ht.CONFIGS][ht.BREAKPOINT_DISTANCE][ht.BREAKPOINT_DISTANCE_CALCULATION]
 	dict_metrics[ht.DISTANCES] = {}
 
@@ -110,8 +120,8 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=
 	if df_r.shape[0] == 0:
 		raise Exception("""EC-comparator stoppe because of empty file: {} is empty""".format(r_file))
 	
-	print(df_t)
-	print(df_r)
+	# print(df_t)
+	# print(df_r)
  
 	bins, chrlist = bin_genome(df_t, df_r, margin_size=0)
 	chr_offsets = get_chromosome_offset(df_t, df_r)
@@ -141,8 +151,11 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=
 	br_t, br_r = get_breakpoints_pairs(df_t, df_r)
 	jc, matches, breakpoint_matches = compute_breakpoint_distance(br_t, br_r,
 																  distance=default_breakpoint_distance,
-																  threshold=default_breakpoint_distance_threshold,
+																  distance_threshold=default_breakpoint_distance_threshold,
+																  unmatched_dist=default_unmatching_distance,
+																  unmatched_threshold=default_unmatching_threshold,
                   												  how=default_breakpoint_distance_calculation)
+	print("Breakpoint maching: JD:", jc)
 	dict_metrics[ht.DISTANCES][ddt.JACCARD_DISTANCE] = round(jc,2)
 	# dict_metrics[ht.DISTANCES][ddt.JACCARD_DISTANCE] = 1
 
@@ -168,7 +181,7 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=
 	# 8. Output
 	if outdir:
 		with open(os.path.join(outdir, o.METRICS_JSON), 'w', encoding='utf-8') as f:
-			final_dict = remove_ref2methods(dict_metrics)
+			final_dict = remove_key(dict_metrics,key_to_remove='definition')
 			json.dump(final_dict, f, ensure_ascii=False, indent=4, cls=NpEncoder)
 
 		# save coverage profile

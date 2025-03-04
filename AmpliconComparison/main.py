@@ -10,6 +10,7 @@ import argparse
 import os
 import traceback
 import datetime
+import pprint
 
 from AmpliconComparison.configs import Configs
 from AmpliconComparison.utils.utils import DDT as d
@@ -23,8 +24,12 @@ def format_print(dict):
     """
     Print configuration
     """
-    print(f"### Candidates for breakpoint maching: {dict[h.BREAKPOINT_DISTANCE][h.DEFAULT]}")
+    print()
+    pprint.pprint(dict)
+    print(f"### Candidates for breakpoint maching: {dict[h.BREAKPOINT_DISTANCE][d.UNMATCHED_DISTANCE]}, {dict[h.BREAKPOINT_DISTANCE][d.UNMATCHED_THRESHOLD]}")
+    print(f"### Cost matrix function for minimum matching bipartite graph: {dict[h.BREAKPOINT_DISTANCE][h.DEFAULT]}")
     print(f"### Compute distance similarity using: {dict[h.BREAKPOINT_DISTANCE][h.BREAKPOINT_DISTANCE_CALCULATION]}")
+    print()
 
 def config(args):
 	"""
@@ -50,6 +55,8 @@ def config(args):
 	dict[h.BREAKPOINT_DISTANCE][d.EUCLIDIAN][h.THRESHOLD] = 1000
 	dict[h.BREAKPOINT_DISTANCE][d.RELATIVE_METRIC][h.ENABLE] = False
 	dict[h.BREAKPOINT_DISTANCE][d.RELATIVE_METRIC][h.THRESHOLD] = 0.3
+	dict[h.BREAKPOINT_DISTANCE][d.UNMATCHED_DISTANCE] = args.unmatched_distance
+	dict[h.BREAKPOINT_DISTANCE][d.UNMATCHED_THRESHOLD] = args.unmatched_threshold
  
 	# how to compute distance between breakpoints
 	dict[h.BREAKPOINT_DISTANCE][h.BREAKPOINT_DISTANCE_CALCULATION] = args.breakpoint_dist_calc
@@ -113,9 +120,15 @@ def main():
 		# parser.add_argument('--relative-distance-threshold',
 		# 					help='Distance threshold to accept two breakpoint-pairs as matched  (default: %(default)s)',
 		# 					required=False, default=0.3, type=float)
-		# parser.add_argument('--unmatched-distance',
-		# 					help='Max distance for which two breakpoint-pairs are considered unmatched (default: %(default)s)',
-		# 					required=False, default=ddt["unmatched"], type=float)
+		parser.add_argument('--min-matching-distance',
+							help='Distance used to compute the cost matrix (default: %(default)s)',
+							required=False, default=d.EUCLIDIAN, type=str)
+		parser.add_argument('--unmatched-distance',
+							help='Distance for which two breakpoint-pairs are considered unmatched (default: %(default)s)',
+							required=False, default=d.MANHATTEN, type=str)
+		parser.add_argument('--unmatched-threshold',
+							help='Threshold for which two breakpoint-pairs are considered unmatched (default: %(default)s)',
+							required=False, default=d.MANHATTEN_THRESHOLD, type=str)
 		args = parser.parse_args()
 
 		# 1. Get all configurations
