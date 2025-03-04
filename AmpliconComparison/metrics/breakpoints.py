@@ -279,19 +279,6 @@ def is_unmatched(
 	"""
 	Check if breakpoints are matched or unmatched (True).
 	"""
-	# ensure strandness of the breakpoints
-	if row1[ht.START] > row1[ht.END]:
-		tmp = row1[ht.START]
-		row1[ht.START] = row1[ht.END]
-		row1[ht.END] = tmp
-		row1[ht.STRAND] = "+" if row1[ht.STRAND] == "-" else "+"
-
-	if row2[ht.START] > row2[ht.END]:
-		tmp = row2[ht.START]
-		row2[ht.START] = row2[ht.END]
-		row2[ht.END] = tmp
-		row2[ht.STRAND] = "+" if row2[ht.STRAND] == "-" else "+"
-
 	if strandness and row1[ht.STRAND] != row2[ht.STRAND]:
 		return True
 
@@ -394,11 +381,11 @@ def remove_unmatched(
 				unmatched_threshold=unmatched_threshold,
 				strandness=strandness,
 			):
-				m[i, j] = np.nan
+				m[i, j] = np.inf
 			if dist == ddt.EUCLIDIAN and m[i, j] >= dist_t:
-				m[i, j] = np.nan
+				m[i, j] = np.inf
 			if dist == ddt.RELATIVE_METRIC and m[i, j] >= dist_t:
-				m[i, j] = np.nan
+				m[i, j] = np.inf
 
 	# replace all nan values with a max value
 	# max_ = max(np.nanmax(m), threshold)
@@ -420,7 +407,7 @@ def create_bipartite_graph(m, br_t, br_r, nodes_weight_function=ddt.COVERAGE):
 
 	visited_nodes_t = collections.defaultdict(list)
 	visited_nodes_r = collections.defaultdict(list)
-
+	
 	# rename the nodes
 	true_nodes = {
 		"t" + str(v): [v, dict_weight_nodes[nodes_weight_function](br_t, v, m)]
@@ -430,10 +417,6 @@ def create_bipartite_graph(m, br_t, br_r, nodes_weight_function=ddt.COVERAGE):
 		"r" + str(v): [v, dict_weight_nodes[nodes_weight_function](br_r, v, m)]
 		for v in range(0, m.shape[1])
 	}
-
-	# null nodes which connect the unmatched nodes from the other shore
-	reconstruct_nodes[p.RNULL] = [-1, np.nan]
-	true_nodes[p.TNULL] = [-1, np.nan]
 
 	# initialize visited nodes
 	list_of_tuples = []
@@ -454,35 +437,23 @@ def create_bipartite_graph(m, br_t, br_r, nodes_weight_function=ddt.COVERAGE):
 				visited_nodes_t[k].append(l)
 				visited_nodes_r[l].append(k)
 
-	# add minimal amount of edges which will make the graph connected
-	max_degree = -1
-	max_node = -1
-	for k in {**visited_nodes_t, **visited_nodes_r}:
-		if k not in {p.RNULL, p.TNULL}:
-			degree = len(visited_nodes_t.get(k, [])) + len(visited_nodes_r.get(k, []))
-			if degree > max_degree:
-				max_degree = degree
-				max_node = k
-
-	# print(max_value, max_node)
+	
+	# null nodes which connect the unmatched nodes from the other shore
+	reconstruct_nodes[p.RNULL] = [-1, np.inf]
+	true_nodes[p.TNULL] = [-1, np.inf]
 
 	# connect null and other node if the node does not have any
 	for k in visited_nodes_t:
 		# unmatched breakpoint
-		if k != p.TNULL and len(visited_nodes_t[k]) == 0:
-			list_of_tuples.append((k, p.RNULL, np.nan))
+		if k != p.TNULL:
+			list_of_tuples.append((k, p.RNULL, np.inf))
 
 	for k in visited_nodes_r:
 		# unmatched breakpoint
-		if k != p.RNULL and len(visited_nodes_r[k]) == 0:
-			list_of_tuples.append((p.TNULL, k, np.nan))
-
-	# Ensure the graph remains connected by linking max_node to all reconstruct_nodes
-	list_of_tuples.extend(
-		(max_node, l, np.nan)
-		for l in reconstruct_nodes
-		if l not in visited_nodes_t[max_node]
-	)
+		if k != p.RNULL:
+			list_of_tuples.append((p.TNULL, k, np.inf))
+   
+	list_of_tuples.append((p.TNULL, p.RNULL, np.inf))
 
 	G = nx.Graph()
 
@@ -519,15 +490,18 @@ def find_matching_breakpoints(G, t_nodes, r_nodes, threshold_max_value):
 	# V = list(right)
 	U = list(t_nodes.keys())
 	V = list(r_nodes.keys())
+ 
 	weights_sparse = nx.algorithms.bipartite.biadjacency_matrix(
 		G, row_order=U, column_order=V, weight="weight", format="coo"
 	)
-	weights = np.full(weights_sparse.shape, threshold_max_value)
-	weights[weights_sparse.row, weights_sparse.col] = weights_sparse.data
+ 
+	weights = np.array(weights_sparse.toarray())
+	weights[np.isinf(weights)] = threshold_max_value + 1
+
 	left_matches = sp.optimize.linear_sum_assignment(weights)
 	# keep only left matches (graph is undirected)
 	matches = {U[u]: V[v] for u, v in zip(*left_matches)}
-
+ 
 	breakpoint_match = []
 	todel = [p.RNULL, p.TNULL]
 	# transform this match back to a breakpoint point match
@@ -558,7 +532,6 @@ def find_matching_breakpoints(G, t_nodes, r_nodes, threshold_max_value):
 	for k in todel:
 		if k in matches:
 			del matches[k]
-
 	return matches, breakpoint_match
 
 
@@ -642,6 +615,7 @@ def compute_breakpoint_distance(
 	G, t_nodes, r_nodes = create_bipartite_graph(
 		m, br_t, br_r, nodes_weight_function=ddt.COVERAGE
 	)
+ 
 	if G is None:
 		return 1, {}, []
 
@@ -649,6 +623,7 @@ def compute_breakpoint_distance(
 	matches, breakpoint_match = find_matching_breakpoints(
 		G, t_nodes, r_nodes, threshold_max_value=distance_threshold
 	)
+	print(matches, breakpoint_match)
 
 	# 5. compute jaccard distance
 	# jd = 1 - 2 * len(breakpoint_match) / (len(br_t) + len(br_r))
