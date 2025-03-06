@@ -202,7 +202,8 @@ class DDT:
 	MEAN_COVERAGE = 'mean_coverage'
 	BP_MATCH_UNWEIGHTED = 'breakpoint_match_unweighted'
 	BP_MATCH_CN_WEIGHTED = 'breakpoint_match_cn_weighted'
-	BP_OPTIONS = [BP_MATCH_UNWEIGHTED, BP_MATCH_CN_WEIGHTED]
+	BP_MATCH_CN_WEIGHTED_AVG = 'breakpoint_match_cn_weighted_avg'
+	BP_OPTIONS = [BP_MATCH_UNWEIGHTED, BP_MATCH_CN_WEIGHTED, BP_MATCH_CN_WEIGHTED_AVG]
 
 class OUTFILES:
 	TOTAL_COST_PNG = 'total_cost.png'

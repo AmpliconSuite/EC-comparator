@@ -1,0 +1,71 @@
+{
+    "configs": {
+        "breakpoint_dist": {
+            "euclidian": {
+                "weight": 1,
+                "threshold": 1000,
+                "enable": true,
+                "breakpoint_dist": {
+                    "weight": 1,
+                    "enable": true
+                }
+            },
+            "match_score": {
+                "weight": 1,
+                "threshold": 0.3,
+                "enable": false,
+                "breakpoint_dist": {
+                    "weight": 1,
+                    "enable": true
+                }
+            },
+            "breakpoint_dist": {
+                "weight": 1,
+                "enable": false
+            },
+            "breakpoint_dist_calc": "breakpoint_match_unweighted",
+            "default": "euclidian"
+        },
+        "genomic_footprint": {
+            "cn_hamming_norm_dist": {
+                "weight": 1,
+                "enable": true
+            },
+            "cn_cos_dist": {
+                "weight": 1,
+                "enable": true
+            },
+            "cn_jc_dist": {
+                "weight": 1,
+                "enable": true
+            },
+            "fragments_dist": {
+                "weight": 0.5,
+                "enable": true
+            },
+            "cycles_dist": {
+                "weight": 0.5,
+                "enable": true
+            }
+        },
+        "other_params": {}
+    },
+    "distances": {
+        "cn_hamming_dist": 2000500,
+        "cn_hamming_norm_dist": 0.12,
+        "cn_cos_dist": 0.0,
+        "cn_jc_dist": 0.11,
+        "breakpoint_dist": 0.33,
+        "fragments_dist": 0.12,
+        "cycles_dist": 0.12,
+        "total_cost": 0.68,
+        "total_cost_description": {
+            "breakpoint_dist": 1,
+            "cn_hamming_norm_dist": 1,
+            "cn_cos_dist": 1,
+            "cn_jc_dist": 1,
+            "fragments_dist": 0.5,
+            "cycles_dist": 0.5
+        }
+    }
+}

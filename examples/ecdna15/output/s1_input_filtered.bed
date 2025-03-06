@@ -1,0 +1,3 @@
+Chromosome	Start	End	Stranded	circ_id	iscyclic	estimated_cn
+chr5	43907343	45907343	+	1	True	5.0
+chr5	63907343	78907343	+	2	True	100.0

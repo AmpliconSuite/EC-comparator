@@ -1,0 +1,2 @@
+chr1	Start	chr2	End	idx1	idx2	Stranded	circ_id	iscyclic	estimated_cn
+chr5	63907043	chr5	78907153	0	0	+-	1	True	90.0

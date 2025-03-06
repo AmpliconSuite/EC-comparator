@@ -30,9 +30,9 @@ def transform_fragments2breakpoints(df_cycle):
 	Creates the list of breakpoints
 
 	Arguments:
-		df_cycle:
+			df_cycle:
 	Returns:
-		list of tuples
+			list of tuples
 	"""
 	breakpoints = pd.DataFrame(
 		columns=[
@@ -242,8 +242,8 @@ def get_breakpoints_pairs(df_t, df_r):
 	Get the breakpoints for both true and reconstruction
 
 	Arguments:
-		df_t (pd.DataFrame):
-		df_r (pd.DataFrame):
+			df_t (pd.DataFrame):
+			df_r (pd.DataFrame):
 
 	Returns:
 
@@ -322,15 +322,15 @@ def create_cost_matrix(br_t, br_r, dist=ddt.EUCLIDIAN):
 	Create the cost matrix for the breakpoints pair.
 
 	Arguments:
-			br_t (pd.DataFrame): Breakpoints true
-			br_r (pd.DataFrame): Breakpoints reconstructed
-					Example
-					chr1	start	chr2	end	idx1	idx2	strand	circ_id
-					0	chr1	5000	chr1	6100	0	1	+-	1
-					1	chr1	100		chr1	1000	1	0	-+	1
-					2	chr1	6100	chr1	15000	2	3	++	2
-					3	chr1	3000	chr1	26000	2	3	++	2
-			dist:
+					br_t (pd.DataFrame): Breakpoints true
+					br_r (pd.DataFrame): Breakpoints reconstructed
+									Example
+									chr1	start	chr2	end	idx1	idx2	strand	circ_id
+									0	chr1	5000	chr1	6100	0	1	+-	1
+									1	chr1	100		chr1	1000	1	0	-+	1
+									2	chr1	6100	chr1	15000	2	3	++	2
+									3	chr1	3000	chr1	26000	2	3	++	2
+					dist:
 
 	Return:
 
@@ -407,7 +407,7 @@ def create_bipartite_graph(m, br_t, br_r, nodes_weight_function=ddt.COVERAGE):
 
 	visited_nodes_t = collections.defaultdict(list)
 	visited_nodes_r = collections.defaultdict(list)
-	
+
 	# rename the nodes
 	true_nodes = {
 		"t" + str(v): [v, dict_weight_nodes[nodes_weight_function](br_t, v, m)]
@@ -437,7 +437,6 @@ def create_bipartite_graph(m, br_t, br_r, nodes_weight_function=ddt.COVERAGE):
 				visited_nodes_t[k].append(l)
 				visited_nodes_r[l].append(k)
 
-	
 	# null nodes which connect the unmatched nodes from the other shore
 	reconstruct_nodes[p.RNULL] = [-1, np.inf]
 	true_nodes[p.TNULL] = [-1, np.inf]
@@ -452,7 +451,7 @@ def create_bipartite_graph(m, br_t, br_r, nodes_weight_function=ddt.COVERAGE):
 		# unmatched breakpoint
 		if k != p.RNULL:
 			list_of_tuples.append((p.TNULL, k, np.inf))
-   
+
 	list_of_tuples.append((p.TNULL, p.RNULL, np.inf))
 
 	G = nx.Graph()
@@ -474,7 +473,7 @@ def find_matching_breakpoints(G, t_nodes, r_nodes, threshold_max_value):
 	Find best matching breakpoints.
 
 	Returns:
-		breakpoint_match=[(2,2,"+"),(3,3,"-")...]
+			breakpoint_match=[(2,2,"+"),(3,3,"-")...]
 	"""
 	#  - minimum_weight_full_matching specifically wants a full matching with minimum weight: in a bipartite graph with bipartition (𝑈,𝑉)
 	# , it wants a matching of size min{|𝑈|,|𝑉|}
@@ -490,18 +489,18 @@ def find_matching_breakpoints(G, t_nodes, r_nodes, threshold_max_value):
 	# V = list(right)
 	U = list(t_nodes.keys())
 	V = list(r_nodes.keys())
- 
+
 	weights_sparse = nx.algorithms.bipartite.biadjacency_matrix(
 		G, row_order=U, column_order=V, weight="weight", format="coo"
 	)
- 
+
 	weights = np.array(weights_sparse.toarray())
 	weights[np.isinf(weights)] = threshold_max_value + 1
 
 	left_matches = sp.optimize.linear_sum_assignment(weights)
 	# keep only left matches (graph is undirected)
 	matches = {U[u]: V[v] for u, v in zip(*left_matches)}
- 
+
 	breakpoint_match = []
 	todel = [p.RNULL, p.TNULL]
 	# transform this match back to a breakpoint point match
@@ -519,8 +518,10 @@ def find_matching_breakpoints(G, t_nodes, r_nodes, threshold_max_value):
 				if props is not None and props["weight"] < threshold_max_value:
 					breakpoint_match.append(
 						(
-							id_pair_t[0],  # id true
-							id_pair_r[0],  # id reconstruct
+							# id_pair_t[0],  # id true
+							# id_pair_r[0],  # id reconstruct
+							k,
+							matches[k],
 							props["weight"],  # edge weight
 							id_pair_t[1],  # node weight
 							id_pair_r[1],  # node weight
@@ -535,19 +536,18 @@ def find_matching_breakpoints(G, t_nodes, r_nodes, threshold_max_value):
 	return matches, breakpoint_match
 
 
-def compute_jc_distance(
-	breakpoint_match, t_nodes, r_nodes, how=ddt.BP_MATCH_UNWEIGHTED
-):
-	"""
-	Compute jaccard distance between the matched and unmached breakpoints
+def compute_jc_distance_unweighted(breakpoint_match, t_nodes, r_nodes, G):
 
-	Arguments:
-		breakpoint_match (list): List of tuples (node1_id, node2_id, edge_match_weight, node1_weight, node2_weight)
-		t_nodes (dict): Dictionary of all breakpoint pairs in first sample (node_id, node_weight)
-		r_nodes (dict): Dictionary of all breakpoint pairs in second sample (node_id, node_weight)
-		how (str): How you do the matching
+	print(
+		"Breakpoint maching: Match score: ",
+		len(breakpoint_match),
+		", Total score: ",
+		(len(t_nodes) + len(r_nodes)),
+	)
+	return 1 - 1.0 * 2 * len(breakpoint_match) / (len(t_nodes) + len(r_nodes))
 
-	"""
+
+def compute_jc_distance_cn_weighted(breakpoint_match, t_nodes, r_nodes, G):
 	match_score = 0
 	total_score = 0
 
@@ -558,12 +558,7 @@ def compute_jc_distance(
 		node1_weight,
 		node2_weight,
 	) in breakpoint_match:
-		# add the weights for the two matched breakpoints
-		# unweighted means node1_weight == node1_weight == 1
-		if how == ddt.BP_MATCH_UNWEIGHTED:
-			match_score += 1 + 1
-		elif how == ddt.BP_MATCH_CN_WEIGHTED:
-			match_score += node1_weight + node2_weight
+		match_score += node1_weight + node2_weight
 
 	# weight of the individual
 	for key, value in {**t_nodes, **r_nodes}.items():
@@ -571,15 +566,67 @@ def compute_jc_distance(
 		# key - node id
 		# value - tuple (breakpoint id, weight)
 		if key not in {p.RNULL, p.TNULL}:
-			if how == ddt.BP_MATCH_UNWEIGHTED:
-				total_score += 1
-			elif how == ddt.BP_MATCH_CN_WEIGHTED:
-				total_score += value[1]
+			total_score += value[1]
 
 	print(
 		"Breakpoint maching: Match score: ", match_score, ", Total score: ", total_score
 	)
 	return 1 - 1.0 * match_score / total_score
+
+
+def avg_connections(node, G):
+
+	neighbors_weights = [ G.nodes[nbr].get("weight", None) for nbr in G.neighbors(node) if G[node][nbr]["weight"] < np.inf]
+	return np.mean(neighbors_weights)
+
+
+def compute_jc_distance_weighted_avg(breakpoint_match, t_nodes, r_nodes, G):
+
+	match_score = 0
+	total_score = 0
+
+	for (
+		node1_id,
+		node2_id,
+		edge_match_weight,
+		node1_weight,
+		node2_weight,
+	) in breakpoint_match:
+		wn1 = avg_connections(node2_id, G)
+		wn2 = avg_connections(node1_id, G)
+		match_score += wn1 + wn2
+
+	# weight of the individual
+	for key, value in {**t_nodes, **r_nodes}.items():
+
+		# key - node id
+		# value - tuple (breakpoint id, weight)
+		if key not in {p.RNULL, p.TNULL}:
+			total_score += value[1]
+
+	print(
+		"Breakpoint maching: Match score: ", match_score, ", Total score: ", total_score
+	)
+	return 1 - 1.0 * match_score / total_score
+
+
+def compute_jc_distance(
+	breakpoint_match, t_nodes, r_nodes, G, how=ddt.BP_MATCH_UNWEIGHTED
+):
+	"""
+	Compute jaccard distance between the matched and unmached breakpoints
+
+	Arguments:
+			breakpoint_match (list): List of tuples (node1_id, node2_id, edge_match_weight, node1_weight, node2_weight)
+			t_nodes (dict): Dictionary of all breakpoint pairs in first sample (node_id, node_weight)
+			r_nodes (dict): Dictionary of all breakpoint pairs in second sample (node_id, node_weight)
+			how (str): How you do the matching
+
+	"""
+	jd = dict_breakpoint_distance_calculation[how](
+		breakpoint_match, t_nodes, r_nodes, G
+	)
+	return jd
 
 
 def compute_breakpoint_distance(
@@ -615,7 +662,7 @@ def compute_breakpoint_distance(
 	G, t_nodes, r_nodes = create_bipartite_graph(
 		m, br_t, br_r, nodes_weight_function=ddt.COVERAGE
 	)
- 
+
 	if G is None:
 		return 1, {}, []
 
@@ -626,7 +673,14 @@ def compute_breakpoint_distance(
 	print(matches, breakpoint_match)
 
 	# 5. compute jaccard distance
-	# jd = 1 - 2 * len(breakpoint_match) / (len(br_t) + len(br_r))
-	jd = compute_jc_distance(breakpoint_match, t_nodes, r_nodes, how=how)
+	print(how)
+	jd = compute_jc_distance(breakpoint_match, t_nodes, r_nodes, G, how=how)
 
 	return jd, matches, breakpoint_match
+
+
+dict_breakpoint_distance_calculation = {
+	ddt.BP_MATCH_UNWEIGHTED: compute_jc_distance_unweighted,
+	ddt.BP_MATCH_CN_WEIGHTED: compute_jc_distance_cn_weighted,
+	ddt.BP_MATCH_CN_WEIGHTED_AVG: compute_jc_distance_weighted_avg,
+}

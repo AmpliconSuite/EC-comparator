@@ -25,7 +25,7 @@ def format_print(dict):
     Print configuration
     """
     print()
-    pprint.pprint(dict)
+    # pprint.pprint(dict)
     print(f"### Candidates for breakpoint maching: {dict[h.BREAKPOINT_DISTANCE][d.UNMATCHED_DISTANCE]}, {dict[h.BREAKPOINT_DISTANCE][d.UNMATCHED_THRESHOLD]}")
     print(f"### Cost matrix function for minimum matching bipartite graph: {dict[h.BREAKPOINT_DISTANCE][h.DEFAULT]}")
     print(f"### Compute distance similarity using: {dict[h.BREAKPOINT_DISTANCE][h.BREAKPOINT_DISTANCE_CALCULATION]}")
