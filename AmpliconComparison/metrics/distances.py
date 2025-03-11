@@ -184,7 +184,7 @@ def euclidian_distance(cha, a, chb, b, cov1, chx, x, chy, y ,cov2):
 	elif cha == chy and chb == chx:
 		return math.sqrt((a - y) ** 2 + (b - x) ** 2)
 	else:
-		return np.nan
+		return np.inf
 
 
 def euclidian_distance_weighted(cha, a, chb, b, cov1, chx, x, chy, y ,cov2):

@@ -105,6 +105,9 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=
 	default_breakpoint_distance = dict_metrics[ht.CONFIGS][ht.BREAKPOINT_DISTANCE][ht.DEFAULT]
 	default_breakpoint_distance_threshold = dict_metrics[ht.CONFIGS][ht.BREAKPOINT_DISTANCE][default_breakpoint_distance][ht.THRESHOLD]
  
+	# allow nonlinear matching of breakpoints
+	default_match_nonlinear = dict_metrics[ht.CONFIGS][ht.BREAKPOINT_DISTANCE][ddt.MATCH_NONLINEAR]
+ 
 	# how to compute the breakpoint matching distance
 	default_breakpoint_distance_calculation = dict_metrics[ht.CONFIGS][ht.BREAKPOINT_DISTANCE][ht.BREAKPOINT_DISTANCE_CALCULATION]
 	dict_metrics[ht.DISTANCES] = {}
@@ -154,11 +157,11 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=
 																  distance_threshold=default_breakpoint_distance_threshold,
 																  unmatched_dist=default_unmatching_distance,
 																  unmatched_threshold=default_unmatching_threshold,
-                  												  how=default_breakpoint_distance_calculation)
+																  how=default_breakpoint_distance_calculation,
+                  												  match_nonlinear=default_match_nonlinear)
 	print("Breakpoint maching: JD:", jc)
 	dict_metrics[ht.DISTANCES][ddt.JACCARD_DISTANCE] = round(jc,2)
-	# dict_metrics[ht.DISTANCES][ddt.JACCARD_DISTANCE] = 1
-
+ 
 	# 5. Penalize for cycles and fragments multiplicity (if the tool decompose in one or more cycles)
 	# overlap_fragments_distance = get_overlap_fragments_weighted(df_t_pr, df_r_pr, df_bins_pr)
 	# overlap_cycles_distance = get_overlap_cycles_weighted(df_t_pr, df_r_pr, df_bins_pr)

@@ -115,7 +115,7 @@ class PROPS:
 	# visualization
 	ALPHA = 'alpha'
 	COLOR = 'color'
-	MATCHED = {ALPHA: 0.7}
+	MATCHED = {ALPHA: 0.9}
 	UNMATCHED = {ALPHA: 0.3,
 				 COLOR: 'gray'}
 	MAX_COST = 100000
@@ -175,8 +175,8 @@ class DDT:
 
 	UNMATCHED_DISTANCE = 'unmatched_distance'
 	UNMATCHED_THRESHOLD = 'umatched_treshold'
-	MANHATTEN = 'manhatten'
-	MANHATTEN_THRESHOLD = 1000
+	MANHATTAN = 'manhattan'
+	MANHATTAN_THRESHOLD = 1000
 	SIGMOID_THRESHOLD = 1000
 
 	HAMMING = 'cn_hamming_dist'
@@ -204,6 +204,14 @@ class DDT:
 	BP_MATCH_CN_WEIGHTED = 'breakpoint_match_cn_weighted'
 	BP_MATCH_CN_WEIGHTED_AVG = 'breakpoint_match_cn_weighted_avg'
 	BP_OPTIONS = [BP_MATCH_UNWEIGHTED, BP_MATCH_CN_WEIGHTED, BP_MATCH_CN_WEIGHTED_AVG]
+ 
+	MATCH_NONLINEAR = 'match_nonlinear'
+	MATCH_NONLINEAR_F1 = 'neg_exp'
+	MATCH_NONLINEAR_F2 = 'hssp_curve'
+	BP_OPTIONS_NONLINEAR = [MATCH_NONLINEAR_F1,MATCH_NONLINEAR_F2]
+	MATCH_NONLINEAR_F1_THRESHOLD = 1000
+	MATCH_NONLINEAR_F2_THRESHOLD = 1000
+
 
 class OUTFILES:
 	TOTAL_COST_PNG = 'total_cost.png'

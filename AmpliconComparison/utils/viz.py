@@ -469,6 +469,9 @@ def plot_breakpoints_location(br_t, br_r, max_y, chrlist, width=30, height=5, s1
 			add_text(ax, fig, s1=s1, s2=s2)
 	return fig, axs
 
+# Define the asymptotic function
+def asymptotic_function(y, A=10, B=5):
+    return (A * y) / (B + y)
 
 def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 								width=30, height=3, max_value=None, scale=True, fig=None, axs=None, s1="",s2=""):
@@ -528,15 +531,15 @@ def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 			# check if the breakpoint is a match
 			color = PROPS.UNMATCHED[PROPS.COLOR]
 			alpha = PROPS.UNMATCHED[PROPS.ALPHA]
-			cn = row[ht.CN] / max_cov * 8 # scale
+			cn = asymptotic_function(1+row[ht.CN] / max_cov * 9) # scale
 			flipped = True if row[ht.TRACK] == ht.S2 else False
 
 			# if s1 and matched breakpoint
-			if row[ht.TRACK] == ht.S1 and index in matched_br_t:
+			if row[ht.TRACK] == ht.S1 and f"t{index}" in matched_br_t:
 				color = colors[0]
 				alpha = PROPS.MATCHED[PROPS.ALPHA]
 
-			if row[ht.TRACK] == ht.S2 and index in matched_br_r:
+			if row[ht.TRACK] == ht.S2 and f"r{index}" in matched_br_r:
 				color = colors[1]
 				alpha = PROPS.MATCHED[PROPS.ALPHA]
 
@@ -575,16 +578,16 @@ def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 			# check if the breakpoint is a match
 			color = PROPS.UNMATCHED[PROPS.COLOR]
 			alpha = PROPS.UNMATCHED[PROPS.ALPHA]
-			cn = row[ht.CN] / max_cov * 8 # scale
+			cn = asymptotic_function(1+row[ht.CN] / max_cov * 9) # scale
 			# set if flipped or not
 			flipped = True if row[ht.TRACK] == ht.S2 else False
 
 			# if s1 and matched breakpoint
-			if row[ht.TRACK] == ht.S1 and index in matched_br_t:
+			if row[ht.TRACK] == ht.S1 and f"t{index}" in matched_br_t:
 				color = colors[0]
 				alpha = PROPS.MATCHED[PROPS.ALPHA]
 
-			if row[ht.TRACK] == ht.S2 and index in matched_br_r:
+			if row[ht.TRACK] == ht.S2 and f"r{index}" in matched_br_r:
 				color = colors[1]
 				alpha = PROPS.MATCHED[PROPS.ALPHA]
 

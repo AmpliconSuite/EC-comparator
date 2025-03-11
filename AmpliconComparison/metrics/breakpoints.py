@@ -268,12 +268,88 @@ def sigmoid_unmatched(x, a=ddt.SIGMOID_THRESHOLD):
 	# breakpoints match
 	return False
 
+def f3(x,d=1):
+	return np.exp(-x/d)
+
+
+def f2_sim(x,d=3000,a=3):
+	return d/a * np.log(1.0 * d/x)  
+
+
+def f2(x, d=3000, a=3):
+	return d * np.exp(-1.0 * a * x/d)
+
+
+def f1(x):
+	return 1.0 * x/(x*x)
+
+
+def hssp_curve_derivative(x,a=0.7,b=-97,c=8400):
+	return -a * c * (x ** (-a-1)) * (1+np.exp(-1.0 * x/c)) - x ** (-a) * np.exp(-1.0 * x/c)
+
+
+def linear_function(x,d):
+	return -x+d
+
+
+def inverse_function(x,d):
+	return 1.0 * d/x
+	
+	
+# Define the HSSP function
+def hssp_curve(x,a=0.7,b=-97,c=8400):
+	# return c * x ** -a * (1 + e ** -x/c) + b
+	# a = 0.5
+	# b = 0
+	# c = 100
+	return c * (x ** (-a)) * (1 + np.exp(-x / c)) + b
+
+
+def is_unmatched_unlinear(
+	row1,
+	row2,
+	match_nonlinear
+):
+	"""
+	Use a nonlinear function to match breakpoint-pairs.  
+	"""
+	if (
+		row1[ht.CHR1] == row2[ht.CHR1]
+		and row1[ht.CHR2] != row2[ht.CHR2]
+		or row1[ht.CHR1] == row2[ht.CHR2]
+		and row1[ht.CHR2] != row2[ht.CHR1]
+	):
+		return True
+
+	dx = abs(row1[ht.START] - row2[ht.START]) if row1[ht.CHR1] == row2[ht.CHR1] else abs(row1[ht.START] - row2[ht.END])
+	dy = abs(row1[ht.END] - row2[ht.END]) if row1[ht.CHR1] == row2[ht.CHR1] else abs(row1[ht.END] - row2[ht.START])
+	
+	if dx > dy:
+		tmp = dx
+		dx = dy
+		dy = tmp
+ 
+	if match_nonlinear == ddt.MATCH_NONLINEAR_F1:
+		# match
+		if hssp_curve(dx) > dy:
+			return False
+		else:
+			return True
+	elif match_nonlinear == ddt.MATCH_NONLINEAR_F2:
+		# match
+		if f2(dx) > dy:
+			return False
+		else:
+			return True
+
+	return False 
+
 
 def is_unmatched(
 	row1,
 	row2,
-	unmatched_dist=ddt.MANHATTEN,
-	unmatched_threshold=ddt.MANHATTEN_THRESHOLD,
+	unmatched_dist=ddt.MANHATTAN,
+	unmatched_threshold=ddt.MANHATTAN_THRESHOLD,
 	strandness=True,
 ):
 	"""
@@ -293,7 +369,7 @@ def is_unmatched(
 	):
 		return True
 
-	if unmatched_dist == ddt.MANHATTEN:
+	if unmatched_dist == ddt.MANHATTAN:
 		if row1[ht.CHR1] == row2[ht.CHR1]:
 			d = abs(row1[ht.START] - row2[ht.START]) + abs(row1[ht.END] - row2[ht.END])
 		elif row1[ht.CHR1] == row2[ht.CHR2]:
@@ -364,9 +440,10 @@ def remove_unmatched(
 	br_r,
 	dist=ddt.EUCLIDIAN,
 	dist_t=ddt.EUCLIDIAN_THRESHOLD,
-	unmatched_dist=ddt.MANHATTEN,
-	unmatched_threshold=ddt.MANHATTEN_THRESHOLD,
+	unmatched_dist=ddt.MANHATTAN,
+	unmatched_threshold=ddt.MANHATTAN_THRESHOLD,
 	strandness=True,
+	match_nonlinear=None
 ):
 	"""
 	Set breakpoints with x-x' or y-y' > unmatched as infinity distance
@@ -386,6 +463,10 @@ def remove_unmatched(
 				m[i, j] = np.inf
 			if dist == ddt.RELATIVE_METRIC and m[i, j] >= dist_t:
 				m[i, j] = np.inf
+    
+			# elif match_nonlinear:
+			# 	if is_unmatched_unlinear(br_t.loc[i, :], br_r.loc[j, :],match_nonlinear, dict_distance_unlinear[match_nonlinear]):
+			# 		m[i, j] = np.nan
 
 	# replace all nan values with a max value
 	# max_ = max(np.nanmax(m), threshold)
@@ -432,10 +513,9 @@ def create_bipartite_graph(m, br_t, br_r, nodes_weight_function=ddt.COVERAGE):
 			# include tuple only if the distance is smaller than threshold
 			i = true_nodes[k][0]
 			j = reconstruct_nodes[l][0]
-			if not np.isnan(m[i, j]):
-				list_of_tuples.append((k, l, m[i, j]))
-				visited_nodes_t[k].append(l)
-				visited_nodes_r[l].append(k)
+			list_of_tuples.append((k, l, m[i, j]))
+			visited_nodes_t[k].append(l)
+			visited_nodes_r[l].append(k)
 
 	# null nodes which connect the unmatched nodes from the other shore
 	reconstruct_nodes[p.RNULL] = [-1, np.inf]
@@ -514,17 +594,19 @@ def find_matching_breakpoints(G, t_nodes, r_nodes, threshold_max_value):
 				id_pair_t = t_nodes[k]
 				id_pair_r = r_nodes[matches[k]]
 				props = G.get_edge_data(k, matches[k])
+				print("Pair ids: [s1], [s2] ", id_pair_t, id_pair_r)
 				# print(id_pair_t, id_pair_r, props)
 				if props is not None and props["weight"] < threshold_max_value:
 					breakpoint_match.append(
 						(
 							# id_pair_t[0],  # id true
 							# id_pair_r[0],  # id reconstruct
-							k,
-							matches[k],
+							k,				 # id true
+							matches[k],		 # id reconstruct
 							props["weight"],  # edge weight
 							id_pair_t[1],  # node weight
 							id_pair_r[1],  # node weight
+
 						)
 					)
 				else:
@@ -539,7 +621,7 @@ def find_matching_breakpoints(G, t_nodes, r_nodes, threshold_max_value):
 def compute_jc_distance_unweighted(breakpoint_match, t_nodes, r_nodes, G):
 
 	print(
-		"Breakpoint maching: Match score: ",
+		"Breakpoint maching unweighted: Match score: ",
 		len(breakpoint_match),
 		", Total score: ",
 		(len(t_nodes) + len(r_nodes)),
@@ -569,7 +651,7 @@ def compute_jc_distance_cn_weighted(breakpoint_match, t_nodes, r_nodes, G):
 			total_score += value[1]
 
 	print(
-		"Breakpoint maching: Match score: ", match_score, ", Total score: ", total_score
+		"Breakpoint maching cn weighted: Match score: ", match_score, ", Total score: ", total_score
 	)
 	return 1 - 1.0 * match_score / total_score
 
@@ -605,7 +687,7 @@ def compute_jc_distance_weighted_avg(breakpoint_match, t_nodes, r_nodes, G):
 			total_score += value[1]
 
 	print(
-		"Breakpoint maching: Match score: ", match_score, ", Total score: ", total_score
+		"Breakpoint maching cn avg weighted: Match score: ", match_score, ", Total score: ", total_score
 	)
 	return 1 - 1.0 * match_score / total_score
 
@@ -637,6 +719,7 @@ def compute_breakpoint_distance(
 	unmatched_dist=ddt.UNMATCHED_DISTANCE,
 	unmatched_threshold=ddt.UNMATCHED_THRESHOLD,
 	how=ddt.BP_MATCH_UNWEIGHTED,
+	match_nonlinear=None
 ):
 	"""
 	Compute breakpoint-pairs distance.
@@ -646,7 +729,7 @@ def compute_breakpoint_distance(
 	"""
 	# 1. create cost matrix
 	m = create_cost_matrix(br_t, br_r, dist=distance)
-
+	
 	# 2. remove unmatched edges
 	m = remove_unmatched(
 		m,
@@ -656,6 +739,7 @@ def compute_breakpoint_distance(
 		dist_t=distance_threshold,
 		unmatched_dist=unmatched_dist,
 		unmatched_threshold=unmatched_threshold,
+		match_nonlinear=match_nonlinear
 	)
 
 	# 3. create bipartite graph
@@ -673,7 +757,6 @@ def compute_breakpoint_distance(
 	print(matches, breakpoint_match)
 
 	# 5. compute jaccard distance
-	print(how)
 	jd = compute_jc_distance(breakpoint_match, t_nodes, r_nodes, G, how=how)
 
 	return jd, matches, breakpoint_match
@@ -683,4 +766,9 @@ dict_breakpoint_distance_calculation = {
 	ddt.BP_MATCH_UNWEIGHTED: compute_jc_distance_unweighted,
 	ddt.BP_MATCH_CN_WEIGHTED: compute_jc_distance_cn_weighted,
 	ddt.BP_MATCH_CN_WEIGHTED_AVG: compute_jc_distance_weighted_avg,
+}
+
+dict_distance_unlinear = {
+	ddt.MATCH_NONLINEAR_F1: ddt.MATCH_NONLINEAR_F1_THRESHOLD,
+	ddt.MATCH_NONLINEAR_F2: ddt.MATCH_NONLINEAR_F2_THRESHOLD,
 }
