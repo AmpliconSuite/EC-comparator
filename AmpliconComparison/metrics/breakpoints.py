@@ -653,7 +653,7 @@ def compute_jc_distance_cn_weighted(breakpoint_match, t_nodes, r_nodes, G):
 	print(
 		"Breakpoint maching cn weighted: Match score: ", match_score, ", Total score: ", total_score
 	)
-	return 1 - 1.0 * match_score / total_score
+	return max(0, 1 - 1.0 * match_score / total_score)
 
 
 def avg_connections(node, G):

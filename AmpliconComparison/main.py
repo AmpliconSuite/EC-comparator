@@ -51,7 +51,7 @@ def config(args):
 	# dict[h.BREAKPOINT_DISTANCE][d.RELATIVE_METRIC][h.THRESHOLD] = args.relative_distance_threshold
 
 	dict[h.BREAKPOINT_DISTANCE][d.EUCLIDIAN][h.ENABLE] = False
-	dict[h.BREAKPOINT_DISTANCE][d.EUCLIDIAN][h.THRESHOLD] = 1000
+	dict[h.BREAKPOINT_DISTANCE][d.EUCLIDIAN][h.THRESHOLD] = 3000
 	dict[h.BREAKPOINT_DISTANCE][d.RELATIVE_METRIC][h.ENABLE] = False
 	dict[h.BREAKPOINT_DISTANCE][d.RELATIVE_METRIC][h.THRESHOLD] = 0.3
 	dict[h.BREAKPOINT_DISTANCE][d.UNMATCHED_DISTANCE] = args.unmatched_distance
@@ -61,6 +61,15 @@ def config(args):
 	dict[h.BREAKPOINT_DISTANCE][h.BREAKPOINT_DISTANCE_CALCULATION] = args.breakpoint_dist_calc
 	dict[h.BREAKPOINT_DISTANCE][d.MATCH_NONLINEAR] = args.match_breakpoints_nonlinear
 	
+	if args.matching_distance == d.EUCLIDIAN:
+		dict[h.BREAKPOINT_DISTANCE][h.DEFAULT] = d.EUCLIDIAN
+		dict[h.BREAKPOINT_DISTANCE][d.EUCLIDIAN][h.ENABLE] = True
+		dict[h.BREAKPOINT_DISTANCE][d.EUCLIDIAN][h.THRESHOLD] = args.matching_distance_threshold
+	elif args.matching_distance == d.RELATIVE_METRIC:
+		dict[h.BREAKPOINT_DISTANCE][h.DEFAULT] = d.RELATIVE_METRIC
+		dict[h.BREAKPOINT_DISTANCE][d.RELATIVE_METRIC][h.ENABLE] = True
+		dict[h.BREAKPOINT_DISTANCE][d.RELATIVE_METRIC][h.THRESHOLD] = args.matching_distance_threshold
+  
 	# how to find breakpoint matching candidates
 	if not args.no_breakpoint_dist:
 		dict[h.BREAKPOINT_DISTANCE][h.DEFAULT] = d.EUCLIDIAN
@@ -131,15 +140,18 @@ def main():
 		# optional_args_bp.add_argument('--relative-distance-threshold',
 		# 					help='Distance threshold to accept two breakpoint-pairs as matched  (default: %(default)s)',
 		# 					required=False, default=0.3, type=float)
-		optional_args_bp.add_argument('--min-matching-distance',
+		optional_args_bp.add_argument('--matching-distance',
 							help='Distance used to compute the cost matrix (default: %(default)s)',
 							required=False, default=d.EUCLIDIAN, type=str)
+		optional_args_bp.add_argument('--matching-distance-threshold',
+							help='Distance used to compute the cost matrix (default: %(default)s)',
+							required=False, default=d.EUCLIDIAN_THRESHOLD, type=int)
 		optional_args_bp.add_argument('--unmatched-distance',
 							help='Distance for which two breakpoint-pairs are considered unmatched (default: %(default)s)',
 							required=False, default=d.MANHATTAN, type=str)
 		optional_args_bp.add_argument('--unmatched-threshold',
 							help='Threshold for which two breakpoint-pairs are considered unmatched (default: %(default)s)',
-							required=False, default=d.MANHATTAN_THRESHOLD, type=str)
+							required=False, default=d.MANHATTAN_THRESHOLD, type=int)
 		optional_args_bp.add_argument('--match-breakpoints-nonlinear',
 							help='Match breakpoints-pairs nonlinear, i.e. allow for high variability on one side if the other side matches good  (default: %(default)s). ' +
 							'Options: ' + ', '.join(d.BP_OPTIONS_NONLINEAR),
