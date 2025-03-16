@@ -19,7 +19,7 @@ from AmpliconComparison.metrics.distances import *
 import numpy as np
 import scipy as sp
 import scipy.optimize  # call as sp.optimize
-
+from tabulate import tabulate
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -622,11 +622,11 @@ def compute_jc_distance_unweighted(breakpoint_match, t_nodes, r_nodes, G):
 
 	print(
 		"Breakpoint maching unweighted: Match score: ",
-		len(breakpoint_match),
+		2 * len(breakpoint_match),
 		", Total score: ",
-		(len(t_nodes) + len(r_nodes)),
-	)
-	return 1 - 1.0 * 2 * len(breakpoint_match) / (len(t_nodes) + len(r_nodes))
+		(len(t_nodes) + len(r_nodes) - 2), 
+	) # -2 excludes the "null" nodes
+	return 1 - 1.0 * 2 * len(breakpoint_match) / (len(t_nodes) + len(r_nodes) - 2)
 
 
 def compute_jc_distance_cn_weighted(breakpoint_match, t_nodes, r_nodes, G):
@@ -658,7 +658,10 @@ def compute_jc_distance_cn_weighted(breakpoint_match, t_nodes, r_nodes, G):
 
 def avg_connections(node, G):
 
+	# print("Neigbors for: ", node)
+	# print(G.neighbors(node))
 	neighbors_weights = [ G.nodes[nbr].get("weight", None) for nbr in G.neighbors(node) if G[node][nbr]["weight"] < np.inf]
+	# print(neighbors_weights)
 	return np.mean(neighbors_weights)
 
 
@@ -666,6 +669,12 @@ def compute_jc_distance_weighted_avg(breakpoint_match, t_nodes, r_nodes, G):
 
 	match_score = 0
 	total_score = 0
+	
+	# print()
+	# print(breakpoint_match)
+	# m = nx.to_numpy_array(G, weight="weight")
+	# print(tabulate(m, tablefmt="grid", floatfmt=".3f"))
+
 
 	for (
 		node1_id,

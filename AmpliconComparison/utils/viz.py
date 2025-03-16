@@ -201,7 +201,7 @@ def add_text(ax, fig, s1="", s2=""):
 	ax.text(0.0, -0.35, ht.S2 + "=" + s2, transform=ax.transAxes + trans, fontsize='x-large', verticalalignment='top', zorder=10)
 
 def draw_breakpoints(chr1, start, chr2, end, max_value, scale, color, alpha,
-					 linesize=3, dotsize=10, w=5, ax=None, title="", flipped=False):
+					 linesize=3, dotsize=10, w=5, ax=None, title="", flipped=False, debug_br=""):
 	arc_start = 0
 	arc_end = 1
 	if flipped:
@@ -223,6 +223,10 @@ def draw_breakpoints(chr1, start, chr2, end, max_value, scale, color, alpha,
 			ax.scatter(xs[-1], 0, s=w * dotsize, color=color, alpha=alpha)
 			ax.set_xlabel(chr1, fontsize=12)
 			ax.title.set_text(title)
+			if flipped == False:
+				ax.text(xs[-int(len(xs)/9)],ys[int(len(ys)/5.5)], f't:{debug_br}', fontsize=16)
+			else:
+				ax.text(xs[int(len(xs)/9)],ys[int(len(ys)/5.5)],f'r:{debug_br}', fontsize=16)
 			# ax.set_yticks([])
 			ax.set_xticklabels(np.array(ax.get_xticks()).astype(int),
 							   rotation=90,
@@ -544,7 +548,7 @@ def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 				alpha = PROPS.MATCHED[PROPS.ALPHA]
 
 			draw_breakpoints(c1, p1, c2, p2, max_value, scale,
-							 color, alpha, linesize=cn, ax=ax, flipped=flipped)
+							 color, alpha, debug_br=index, linesize=cn, ax=ax, flipped=flipped)
 
 			if max_value:
 				ax.set_ylim(-max_value, max_value)
