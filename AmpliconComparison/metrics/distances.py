@@ -197,7 +197,7 @@ def euclidian_distance_weighted(cha, a, chb, b, cov1, chx, x, chy, y ,cov2):
 	elif cha == chy and chb == chx:
 		return math.sqrt((a - y) ** 2 + (b - x) ** 2)
 	else:
-		return np.nan
+		return np.inf
 
 
 def euclidian_distance_norm_l2(a, b, x, y):
@@ -244,12 +244,12 @@ def match_score(cha, a, chb, b, cov1, chx, x, chy, y ,cov2):
 	if not (cha == chx and chb == chy) and not (cha == chy and chb == chx):
 		return np.nan
 
-	if cha == chy and chb == chx:
-    	# swap
+	if cha != chy:
+		# swap
 		temp = x
 		x = y
 		y = temp
-    
+	
 	v1 = np.array([[a - x,
 					a - b,
 					a - y]])
@@ -269,19 +269,72 @@ def match_score(cha, a, chb, b, cov1, chx, x, chy, y ,cov2):
 	# return (cos1 + cos2) / 2
 	return 1 - abs((cos1 + cos2) / 2)
 
+
+def min_max_scale(arr, a):
+	""" arr can be a value of an array
+	"""
+	return 1.0 * arr / 2 * a
+
+def uniformity_scale(a,b):
+    """ return a [0,1] number describing the uniformity of these numbers
+    """
+    return abs(a-b)/math.sqrt(2)
+
+def gaussian_contribution_scaled(x, A, mu, sigma):
+	""" This is the gaussian distribution scaled, 
+		meaning the 1/(sigma * math.sqrt(2 * math.pi)) not included
+	"""
+	val = A * np.exp(-0.500000 * ((x - mu) * 1.0000000 / sigma)**2)
+	return round(val,4)
+
+def gaussian_distance(cha, a, chb, b, cov1, chx, x, chy, y ,cov2):
+	
+	# check if the chromosoma match
+	if not (cha == chx and chb == chy) and not (cha == chy and chb == chx):
+		return np.inf
+
+	if cha != chx:
+		# swap
+		temp = x
+		x = y
+		y = temp
+
+	# i=a is mean, and j=x is x
+	cleft = gaussian_contribution_scaled(x,ddt.GAUSSIAN_AMPL,a,ddt.GAUSSIAN_SIGMA)
+	cright = gaussian_contribution_scaled(y,ddt.GAUSSIAN_AMPL,b,ddt.GAUSSIAN_SIGMA)
+	
+	contribution = cleft + cright if cleft > 0 and cright > 0 else 0
+	total_distance = np.inf
+ 
+	if contribution > 0:
+		contribution = min_max_scale(contribution, ddt.GAUSSIAN_AMPL)
+		total_distance = 1 - contribution
+
+	print("contribution, total_distance", contribution, total_distance)
+	return total_distance
+
+	# cleft = gaussian_contribution(x,ddt.GAUSSIAN_AMPL,a,ddt.GAUSSIAN_SIGMA)
+	# cright = gaussian_contribution(y,ddt.GAUSSIAN_AMPL,b,ddt.GAUSSIAN_SIGMA)
+	
+	# if cleft > 0 or cright > 0:
+	# 	return 1 - uniformity_scale(cleft, cright)
+	# else:
+	# 	return np.inf
+
+	
 def weight_nodes_cn(df_br, i, m):
-    """
-    Return the copy-number for the individual breakpoint
-    """
-    return df_br.loc[i,ht.CN]
-    
+	"""
+	Return the copy-number for the individual breakpoint
+	"""
+	return df_br.loc[i,ht.CN]
+	
 def weight_nodes_mean_cn(df_br, i, m):
-    """
-    Return the mean copy-number for all breakpoints clustering together 
-    """
-    adj_nodes = [j for j in range(m.shape[0]) if m[i,j] is not np.nan and i!=j]
-    cluster_nodes = [k for j in adj_nodes for k in range(m.shape[0]) if m[k,j] is not np.nan and k!=j]
-    return np.mean(df_br.loc[cluster_nodes,ht.CN].tolist())
+	"""
+	Return the mean copy-number for all breakpoints clustering together 
+	"""
+	adj_nodes = [j for j in range(m.shape[0]) if m[i,j] is not np.nan and i!=j]
+	cluster_nodes = [k for j in adj_nodes for k in range(m.shape[0]) if m[k,j] is not np.nan and k!=j]
+	return np.mean(df_br.loc[cluster_nodes,ht.CN].tolist())
 
 # distance for the copy-number profile
 dict_distance_function = {ddt.HAMMING: get_hamming_score,
@@ -296,6 +349,7 @@ dict_distance_function = {ddt.HAMMING: get_hamming_score,
 dict_distance_paired_breakpoints = {
 	ddt.EUCLIDIAN: euclidian_distance,
 	ddt.EUCLIDIAN_WEIGHTED: euclidian_distance_weighted,
+	ddt.GAUSSIAN: gaussian_distance,
 	# ddt.EUCLIDIAN_NORM_L1: euclidian_distance_norm_l1,
 	# ddt.EUCLIDIAN_NORM_L2: euclidian_distance_norm_l2,
 	# "auc_triangle": auc_triangle,
@@ -312,6 +366,8 @@ dict_distance_paired_breakpoints_thresholds = {
 	ddt.AUC_TRAPEZE: ddt.AUC_TRAPEZE_THRESHOLD,
 	ddt.RELATIVE_METRIC: ddt.RELATIVE_METRIC_THRESHOLD,
 	ddt.MATCH_ANGLE: ddt.MATCH_ANGLE_THRESHOLD,
+	ddt.GAUSSIAN_DEF_AMPL: ddt.GAUSSIAN_AMPL,
+	ddt.GAUSSIAN_DEF_SIGMA: ddt.GAUSSIAN_DEF_SIGMA
 }
 
 dict_weight_nodes = {

@@ -149,6 +149,15 @@ class PROPS:
 	TNULL = "tnull"
 
 class DDT:
+    
+	# breakpoints candidates selection using Gaussian distribution as cost function
+	GAUSSIAN = 'gaussian'
+	GAUSSIAN_DEF_SIGMA = 'sigma'
+	GAUSSIAN_SIGMA = 500
+	GAUSSIAN_DEF_AMPL = 'amplitude'
+	GAUSSIAN_AMPL = 1
+ 	   
+	# breakpoints candidates selection using Euclidian distance as cost function
 	EUCLIDIAN = 'euclidian'
 	EUCLIDIAN_THRESHOLD = 3000
 	
@@ -203,8 +212,18 @@ class DDT:
 	BP_MATCH_UNWEIGHTED = 'breakpoint_match_unweighted'
 	BP_MATCH_CN_WEIGHTED = 'breakpoint_match_cn_weighted'
 	BP_MATCH_CN_WEIGHTED_AVG = 'breakpoint_match_cn_weighted_avg'
-	BP_OPTIONS = [BP_MATCH_UNWEIGHTED, BP_MATCH_CN_WEIGHTED, BP_MATCH_CN_WEIGHTED_AVG]
- 
+	# in combination with gaussian  breakpoint matching
+	BP_MATCH_UNWEIGHTED_CONFIDENCE = 'breakpoint_match_unweighted_confidence'
+	BP_MATCH_CN_WEIGHTED_CONFIDENCE = 'breakpoint_match_cn_weighted_confidence'
+	BP_MATCH_CN_WEIGHTED_AVG_CONFIDENCE = 'breakpoint_match_cn_weighted_avg_confidence'
+	BP_GAUSSIAN_CONFIDENCE = 'breakpoint_gaussian_confidence'
+	
+	BP_OPTIONS = [BP_MATCH_UNWEIGHTED, BP_MATCH_CN_WEIGHTED, BP_MATCH_CN_WEIGHTED_AVG,
+               	BP_MATCH_UNWEIGHTED_CONFIDENCE,BP_MATCH_CN_WEIGHTED_CONFIDENCE,BP_MATCH_CN_WEIGHTED_AVG_CONFIDENCE,
+                BP_GAUSSIAN_CONFIDENCE]
+	BP_CANDIDATES_SELECTION = [MANHATTAN, GAUSSIAN, RELATIVE_METRIC]
+	BP_COST_FUNCTION = [EUCLIDIAN, GAUSSIAN, RELATIVE_METRIC]
+	
 	MATCH_NONLINEAR = 'match_nonlinear'
 	MATCH_NONLINEAR_F1 = 'neg_exp'
 	MATCH_NONLINEAR_F2 = 'hssp_curve'

@@ -5,10 +5,11 @@ Created using PyCharm
 
 Configs
 """
-
+import numpy as np
 from AmpliconComparison.utils.utils import HEADER as h
 from AmpliconComparison.utils.utils import DDT as d
-from AmpliconComparison.metrics import compare as m
+from AmpliconComparison.metrics import distances as m
+from AmpliconComparison.metrics import breakpoints as bp
 
 
 class Configs:
@@ -35,12 +36,24 @@ class Configs:
 					h.ENABLE: True
 				}
 			},
+			d.GAUSSIAN: {
+				h.WEIGHT: 1,
+				h.THRESHOLD: 2 * d.GAUSSIAN_AMPL,
+				h.DEFINITION: m.gaussian_distance,
+				h.ENABLE: False,
+				d.GAUSSIAN_DEF_SIGMA: d.GAUSSIAN_SIGMA,
+				d.GAUSSIAN_DEF_AMPL: d.GAUSSIAN_AMPL,
+				d.JACCARD_DISTANCE: {
+					h.WEIGHT: 1,
+					h.ENABLE: True
+				}
+    
+			},
 			d.JACCARD_DISTANCE: {
 				h.WEIGHT: 1,
-				h.DEFINITION: m.compute_breakpoint_distance,
+				h.DEFINITION: bp.compute_breakpoint_distance,
 				h.ENABLE: False
-			}
-
+			},
 		},
 		h.GENOMIC_FOOTPRINT: {
 			# genomic footprint distances
