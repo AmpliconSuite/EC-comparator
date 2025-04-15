@@ -927,7 +927,7 @@ def compute_breakpoint_distance(
 	matches, breakpoint_match = find_matching_breakpoints(
 		G, t_nodes, r_nodes, threshold_max_value=distance_threshold
 	)
-
+ 
 	# 5. breakpoint distance
 	if how in [
 		ddt.BP_GAUSSIAN_CONFIDENCE_UNWEIGHTED,
