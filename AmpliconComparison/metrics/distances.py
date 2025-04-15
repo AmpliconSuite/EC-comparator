@@ -276,9 +276,9 @@ def min_max_scale(arr, a):
 	return 1.0 * arr / 2 * a
 
 def uniformity_scale(a,b):
-    """ return a [0,1] number describing the uniformity of these numbers
-    """
-    return abs(a-b)/math.sqrt(2)
+	""" return a [0,1] number describing the uniformity of these numbers
+	"""
+	return abs(a-b)/math.sqrt(2)
 
 def gaussian_contribution_scaled(x, A, mu, sigma):
 	""" This is the gaussian distribution scaled, 
@@ -310,7 +310,7 @@ def gaussian_distance(cha, a, chb, b, cov1, chx, x, chy, y ,cov2):
 		contribution = min_max_scale(contribution, ddt.GAUSSIAN_AMPL)
 		total_distance = 1 - contribution
 
-	print("contribution, total_distance", contribution, total_distance)
+	# print("contribution, total_distance", contribution, total_distance)
 	return total_distance
 
 	# cleft = gaussian_contribution(x,ddt.GAUSSIAN_AMPL,a,ddt.GAUSSIAN_SIGMA)

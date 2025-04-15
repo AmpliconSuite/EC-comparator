@@ -28,7 +28,7 @@ def draw_total_cost(dict_metrics, outfile=None):
 	r = []
 	theta = []
 	for key in dict_metrics[ht.DISTANCES][DDT.TOTAL_COST_DESCRIPTION]:
-		theta.append(key)
+		theta.append(DDT.RENAME[key])
 		r.append(dict_metrics[ht.DISTANCES][key])
 
 	df = pd.DataFrame(dict(
@@ -48,12 +48,12 @@ def draw_total_cost(dict_metrics, outfile=None):
 				range=[0, 1]
 			)),
 		showlegend=True,
-		font=dict(color='darkslategray', size=10)
+		font=dict(color='darkslategray', size=13)
 	)
 
 	if outfile:
-		fig.write_image(outfile, scale=10, width=500, height=500)
-		fig.write_image(outfile + ".svg", scale=10, width=500, height=500, format="svg")
+		fig.write_image(outfile, scale=10, width=400, height=400)
+		fig.write_image(outfile + ".svg", scale=10, width=400, height=400, format="svg")
 	else:
 		# plot to stdin
 		fig.show()
@@ -71,7 +71,7 @@ def draw_total_cost_table(dict_metrics, outfile=None):
 		if d in dict_metrics[ht.DISTANCES][DDT.TOTAL_COST_DESCRIPTION]:
 			val = dict_metrics[ht.DISTANCES][d]
 			weight = dict_metrics[ht.DISTANCES][DDT.TOTAL_COST_DESCRIPTION][d]
-			table_dist.append(d)
+			table_dist.append(DDT.RENAME[d])
 			table_val.append(round(val, 2))
 			table_val_w.append(round(val * weight, 2))
 

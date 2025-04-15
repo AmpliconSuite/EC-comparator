@@ -6,7 +6,6 @@ import numpy as np
 
 PACKAGE_NAME = 'AmpliconComparison'
 
-
 def get_weight_distance(key, d, dict_metrics):
 
 	if key == HEADER.GENOMIC_FOOTPRINT:
@@ -94,8 +93,8 @@ class HEADER:
 				   "direction": STRAND,
 				   "strand": STRAND,
 				   "orientation": STRAND,
-       			   "iscyclic":ISCYCLIC,
-             	   "Iscyclic":ISCYCLIC}
+	   			   "iscyclic":ISCYCLIC,
+			 	   "Iscyclic":ISCYCLIC}
 
 	THRESHOLD = "threshold"
 	WEIGHT = "weight"
@@ -149,7 +148,7 @@ class PROPS:
 	TNULL = "tnull"
 
 class DDT:
-    
+	
 	# breakpoints candidates selection using Gaussian distribution as cost function
 	GAUSSIAN = 'gaussian'
 	GAUSSIAN_DEF_SIGMA = 'sigma'
@@ -216,11 +215,12 @@ class DDT:
 	BP_MATCH_UNWEIGHTED_CONFIDENCE = 'breakpoint_match_unweighted_confidence'
 	BP_MATCH_CN_WEIGHTED_CONFIDENCE = 'breakpoint_match_cn_weighted_confidence'
 	BP_MATCH_CN_WEIGHTED_AVG_CONFIDENCE = 'breakpoint_match_cn_weighted_avg_confidence'
-	BP_GAUSSIAN_CONFIDENCE = 'breakpoint_gaussian_confidence'
+	BP_GAUSSIAN_CONFIDENCE_UNWEIGHTED = 'breakpoint_gaussian_confidence_unweighted'
+	BP_GAUSSIAN_CONFIDENCE_CN_WEIGHTED = 'breakpoint_gaussian_confidence_cn_weighted'
 	
 	BP_OPTIONS = [BP_MATCH_UNWEIGHTED, BP_MATCH_CN_WEIGHTED, BP_MATCH_CN_WEIGHTED_AVG,
-               	BP_MATCH_UNWEIGHTED_CONFIDENCE,BP_MATCH_CN_WEIGHTED_CONFIDENCE,BP_MATCH_CN_WEIGHTED_AVG_CONFIDENCE,
-                BP_GAUSSIAN_CONFIDENCE]
+			   	BP_MATCH_UNWEIGHTED_CONFIDENCE,BP_MATCH_CN_WEIGHTED_CONFIDENCE,BP_MATCH_CN_WEIGHTED_AVG_CONFIDENCE,
+				BP_GAUSSIAN_CONFIDENCE_UNWEIGHTED,BP_GAUSSIAN_CONFIDENCE_CN_WEIGHTED]
 	BP_CANDIDATES_SELECTION = [MANHATTAN, GAUSSIAN, RELATIVE_METRIC]
 	BP_COST_FUNCTION = [EUCLIDIAN, GAUSSIAN, RELATIVE_METRIC]
 	
@@ -230,6 +230,15 @@ class DDT:
 	BP_OPTIONS_NONLINEAR = [MATCH_NONLINEAR_F1,MATCH_NONLINEAR_F2]
 	MATCH_NONLINEAR_F1_THRESHOLD = 1000
 	MATCH_NONLINEAR_F2_THRESHOLD = 1000
+ 
+	RENAME = {COSINE_DISTANCE:'d2',
+			 COPYNUMBER_JC:'d3',
+             HAMMING_NORM: 'd1',
+             FRAGMENTS_DISTANCE: 'd4',
+             CYCLES_DISTANCE: 'd5',
+             BREAKPOINT_DISTANCE: 'd6',
+             JACCARD_DISTANCE:'d6'
+             }
 
 
 class OUTFILES:

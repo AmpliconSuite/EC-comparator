@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AmpliconComparison</title>
+    <title>EC-comparator</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
     <style>
         body,h1,h3,h2,h4,p {font-family: Arial, sans-serif}
         img {margin-bottom: -7px}
-        .w3-row-padding img {margin-bottom: 20px}
-        .w3-content {margin-left:20px}
+        .w3-row-padding img {margin-bottom: 10px}
+        .w3-content {margin-left:10px}
         .negative-padding {margin-top: -20px}
         p,h3,h4 {margin-left: 40px}
         h1,h2 {margin-left: 20px}
@@ -17,7 +17,7 @@
 </head>
 <body>
 <div class="w3-content w3-row-padding" style="max-width:1500px">
-    <h1>AmpliconComparison results</h1>
+    <h1>EC-comparator results</h1>
     <h2>Setup:</h2>
     <p><b>Date</b>: {{description_time}}</p>
     <p><b>Sample s1</b>: {{description_s1}}</p>
@@ -28,14 +28,12 @@
     <h2>Results:</h2>
     <p>Here we compute the cycle distance between `s1` and `s2`.<br/><br/>
         Distance description:<br/>
-        1. cn_cos_dist = measures the copy-number distance between the s1 and s2 using cosine distance<br/>
-        2. cn_jc_dist = measures the copy-number distance between the s1 and s2 using jaccard index distance<br/>
-        3. cn_hamming_norm_dist = measures the amount of dissimilar genomic bins usage for s1 and s2<br/>
-        4. fragments_dist = measures the amount of fragment usage per genomic bin which is dissimilar between s1
-        and s2<br/>
-        5. cycles_dist = measures the amount of cycles usage per genomic bin which is dissimilar between s1 and
-        s2<br/>
-        6. breakpoint_dist = measures how many breakpoints-pairs could not be matched between s1 and s2<br/><br/>
+        d1 = measures differences of genomic regions presence / absence for s1 and s2<br/>
+        d2 = measures the copy-number distance between the s1 and s2 using cosine distance<br/>
+        d3 = measures the copy-number distance between the s1 and s2 using jaccard distance<br/>
+        d4 = measures differences of genomic bins usage<br/>
+        d5 = measures differences of paths decomposition between s1 and s2<br/>
+        d6 = measures differences between the breakpoint junctions profiles between s1 and s2<br/><br/>
         The radial plot shows all these distances, with values between 0 (low cost, high similarity) and 1 (high
         cost, low similarity).<br/>
         The more colorful the more distant are `s1` and `s2`.
@@ -52,7 +50,7 @@
             breakpoint-pairs are displayed in gray. The log2(s1/s2) is displayed in black. The zero reference is
             displayed as dotted red line.<br/>
         </p>
-        <img title="viz_breakpoints" src="./{{ path_plot_cn_sv }}" style="width:1500px"/>
+        <img title="viz_breakpoints" src="./{{ path_plot_cn_sv }}" style="width:1000px"/>
     </div>
 </div>
 </body>
