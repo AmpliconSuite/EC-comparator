@@ -90,7 +90,7 @@ def generate_pairs(input,output,project,prefix_root=None,root=None,genelist=None
 	df = df[~df["AA amplicon number"].isna()]
  
 	# Use ProcessPoolExecutor to run the subprocesses in parallel
-	with ProcessPoolExecutor(max_workers=4) as executor:
+	with ProcessPoolExecutor(max_workers=10) as executor:
 		# Submit all commands to be run in parallel
 		futures = {
 			executor.submit(run_subprocess, i, df, project, prefix_root, root, genelist): i for i in range(0,df.shape[0])
@@ -172,9 +172,9 @@ if __name__ == "__main__":
 	print("Root path:", args.root)
 	print("Filtered genes:", args.filtered_genes)
 	generate_pairs(args.input,
-				args.output,
-				args.project,
-				args.prefix_root,
-				args.root,
-				args.filtered_genes)
+                args.output,
+                args.project,
+                args.prefix_root,
+                args.root,
+                args.filtered_genes)
 	
