@@ -108,10 +108,7 @@ def generate_pairs(input,output,project,prefix_root=None,root=None,genelist=None
 	
 	# Merge all resulting dataframes
 	merged_df = pd.concat(results, ignore_index=True)
-	return merged_df
-	
-	
-	df_out.to_csv(output, sep="\t",header=True,index=None)
+	merged_df.to_csv(output, sep="\t",header=True,index=None)
 
 def parse_args():
 	parser = argparse.ArgumentParser(
