@@ -175,18 +175,9 @@ if __name__ == "__main__":
 	print("Root path:", args.root)
 	print("Filtered genes:", args.filtered_genes)
 	generate_pairs(args.input,
-<<<<<<< HEAD
                 args.output,
                 args.project,
                 args.prefix_root,
                 args.root,
                 args.filtered_genes)
 	
-=======
-				args.output,
-				args.project,
-				args.prefix_root,
-				args.root,
-				args.filtered_genes)
-	
->>>>>>> 76f541ccebf2b0c4613beee2e57a841d257996f6
