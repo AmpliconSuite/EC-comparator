@@ -5,6 +5,8 @@ import ast
 import os
 import argparse
 import pandas as pd
+import subprocess
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 def get_directory(i,df):
 	return os.path.dirname(df.iloc[i,22])
@@ -38,13 +40,7 @@ def overlap(i,j,df,genelist):
 
 	return	True, ",".join(genes1), ",".join(genes2)
 
-  
-def generate_pairs(input,output,project,prefix_root=None,root=None,genelist=None):
-    
-	df = pd.read_csv(input, header=0, sep=",",index_col=0)
-	
-	# keep only entries having an amplicon
-	df = df[~df["AA amplicon number"].isna()]
+def run_subprocess(i,df,project, prefix_root, root, genelist):
 	
 	df_out = pd.DataFrame(columns=["project",
 								   "sample1","sample2",
@@ -54,35 +50,66 @@ def generate_pairs(input,output,project,prefix_root=None,root=None,genelist=None
 								   "sampletype1","sampletype2",
 								   "genes1","genes2",
 								   "amplicon1_path","amplicon2_path","outdir"])
-	for i in range(0,df.shape[0]-1):
-		for j in range(i,df.shape[0]):
-			ok, genes1,genes2 = overlap(i,j,df,genelist)
-
-			amplicon_path1, amplicon_name1 = get_path(i,df,prefix_root)
-			amplicon_path2, amplicon_name2 = get_path(j,df,prefix_root)
-
-			if ok:
 	
-				new_row = {
-					"project": project,
-					"reference": df.iloc[i,12],
-					"sample1": df.iloc[i,0],
-					"sample2": df.iloc[j,0],
-					"amplicon1_classification": df.iloc[i,3],
-					"amplicon2_classification": df.iloc[j,3],
-					"amplicon1_complexity": df.iloc[j,7],
-					"amplicon2_complexity": df.iloc[j,7],
-					"tissueorigin1": df.iloc[i,13],
-					"tissueorigin2": df.iloc[j,13],
-					"sampletype1": df.iloc[i,14],
-					"sampletype2": df.iloc[j,14],
-					"genes1": genes1,
-					"genes2": genes2,
-					"amplicon1_path": amplicon_path1,
-					"amplicon2_path": amplicon_path2,
-					"outdir": os.path.join(root,f"{amplicon_name1}_{amplicon_name2}") if root else f"{amplicon_name1}_{amplicon_name2}"
-				}
-				df_out.loc[len(df_out)] = new_row
+	for j in range(i,df.shape[0]):
+		ok, genes1,genes2 = overlap(i,j,df,genelist)
+
+		amplicon_path1, amplicon_name1 = get_path(i,df,prefix_root)
+		amplicon_path2, amplicon_name2 = get_path(j,df,prefix_root)
+
+		if ok:
+
+			new_row = {
+				"project": project,
+				"reference": df.iloc[i,12],
+				"sample1": df.iloc[i,0],
+				"sample2": df.iloc[j,0],
+				"amplicon1_classification": df.iloc[i,3],
+				"amplicon2_classification": df.iloc[j,3],
+				"amplicon1_complexity": df.iloc[j,7],
+				"amplicon2_complexity": df.iloc[j,7],
+				"tissueorigin1": df.iloc[i,13],
+				"tissueorigin2": df.iloc[j,13],
+				"sampletype1": df.iloc[i,14],
+				"sampletype2": df.iloc[j,14],
+				"genes1": genes1,
+				"genes2": genes2,
+				"amplicon1_path": amplicon_path1,
+				"amplicon2_path": amplicon_path2,
+				"outdir": os.path.join(root,f"{amplicon_name1}_{amplicon_name2}") if root else f"{amplicon_name1}_{amplicon_name2}"
+			}
+			df_out.loc[len(df_out)] = new_row
+	return df_out
+
+  
+def generate_pairs(input,output,project,prefix_root=None,root=None,genelist=None):
+	
+	results = []
+	df = pd.read_csv(input, header=0, sep=",",index_col=0)
+	# keep only entries having an amplicon
+	df = df[~df["AA amplicon number"].isna()]
+ 
+	# Use ProcessPoolExecutor to run the subprocesses in parallel
+	with ProcessPoolExecutor(max_workers=4) as executor:
+		# Submit all commands to be run in parallel
+		futures = {
+			executor.submit(run_subprocess, i, df, project, prefix_root, root, genelist): i for i in range(0,df.shape[0])
+		}
+
+		# Process results as they complete
+		for future in as_completed(futures):
+			command = futures[future]
+			try:
+				result_df = future.result()
+				results.append(result_df)
+				print(f"Output from command '{command}'",result_df.shape)
+			except Exception as exc:
+				print(f"Command '{command}' generated an exception: {exc}")
+	
+	# Merge all resulting dataframes
+	merged_df = pd.concat(results, ignore_index=True)
+	return merged_df
+	
 	
 	df_out.to_csv(output, sep="\t",header=True,index=None)
 
@@ -148,9 +175,9 @@ if __name__ == "__main__":
 	print("Root path:", args.root)
 	print("Filtered genes:", args.filtered_genes)
 	generate_pairs(args.input,
-                args.output,
-                args.project,
-                args.prefix_root,
-                args.root,
-                args.filtered_genes)
+				args.output,
+				args.project,
+				args.prefix_root,
+				args.root,
+				args.filtered_genes)
 	
