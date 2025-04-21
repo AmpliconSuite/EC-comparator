@@ -45,7 +45,7 @@ def generate_pairs(input,output,project,prefix_root=None,root=None,genelist=None
 	
 	# keep only entries having an amplicon
 	df = df[~df["AA amplicon number"].isna()]
-	
+	print("Size",df.shape)
 	df_out = pd.DataFrame(columns=["project",
 								   "sample1","sample2",
 								   "amplicon1_name","amplicon2_name",
@@ -55,6 +55,7 @@ def generate_pairs(input,output,project,prefix_root=None,root=None,genelist=None
 								   "genes1","genes2",
 								   "amplicon1_path","amplicon2_path","outdir"])
 	for i in range(0,df.shape[0]-1):
+		print(i)
 		for j in range(i,df.shape[0]):
 			ok, genes1,genes2 = overlap(i,j,df,genelist)
 
