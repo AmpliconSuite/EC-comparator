@@ -40,8 +40,8 @@ def get_path(i,df, prefix_root):
 		return os.path.join(dirname1,filename1), sample1
 
 def overlap(i,j,df,genelist):
-	genes1 = list(set(ast.literal_eval(df.iloc[i,4].replace("'","")) + ast.literal_eval(df.iloc[i,5].replace("'","")))
-	genes2 = list(set(ast.literal_eval(df.iloc[j,4].replace("'","")) + ast.literal_eval(df.iloc[j,5].replace("'","")))
+	genes1 = list(set(ast.literal_eval(df.iloc[i,4].replace("'","")) + ast.literal_eval(df.iloc[i,5].replace("'",""))))
+	genes2 = list(set(ast.literal_eval(df.iloc[j,4].replace("'","")) + ast.literal_eval(df.iloc[j,5].replace("'",""))))
 	genes_overlap = set(genes1) & set(genes2)
 	
 	# check if the two sample have at least one gene overlapping
