@@ -1,4 +1,4 @@
-# AmpliconComparison
+# EC-comparator
 Comparing cycle decompositions across technologies and methods.
 
 ### Installation
@@ -17,9 +17,9 @@ And build and install (for developers):
 ```bash
 python -m pip install build installer toml setuptools
 
-cd AmpliconComparison
+cd EC-comparator
 python -m build
-python -m pip install --force-reinstall dist/AmpliconComparison-0.0.2-py3-none-any.whl
+python -m pip install --force-reinstall dist/EC-comparator-0.0.2-py3-none-any.whl
 ```
 
 ### Usage
@@ -27,7 +27,7 @@ python -m pip install --force-reinstall dist/AmpliconComparison-0.0.2-py3-none-a
 Run the following test:
 
 ```bash
-cd AmpliconComparison/AmpliconComparison
+cd EC-comparator/AmpliconComparison
 python main.py -a ../examples/ecdna1/true.bed \
                -b ../examples/ecdna1/reconstructed.bed \
                -d ../examples/ecdna1/output
@@ -53,10 +53,10 @@ python main.py -a ../examples/ecdna1/true.bed \
 ### Help
 
 ```bash
-usage: AmpliconComparison [-h] -a FIRST_STRUCTURE -b SECOND_STRUCTURE -d OUTDIR [--plot | --no-plot] [--report | --no-report] [--cn-hamming-dist CN_HAMMING_DIST] [--cn-cosine-dist CN_COSINE_DIST] [--cn-jc-dist CN_JC_DIST]
+usage: EC-comparator [-h] -a FIRST_STRUCTURE -b SECOND_STRUCTURE -d OUTDIR [--plot | --no-plot] [--report | --no-report] [--cn-hamming-dist CN_HAMMING_DIST] [--cn-cosine-dist CN_COSINE_DIST] [--cn-jc-dist CN_JC_DIST]
                           [--fragments-dist FRAGMENTS_DIST] [--cycles-dist CYCLES_DIST] [--breakpoint-dist BREAKPOINT_DIST]
 
-AmpliconComparison - compare cycle sets
+EC-comparator - compare cycle sets
 
 optional arguments:
   -h, --help            show this help message and exit
