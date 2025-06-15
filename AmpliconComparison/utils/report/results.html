@@ -28,12 +28,12 @@
     <h2>Results:</h2>
     <p>Here we compute the cycle distance between `s1` and `s2`.<br/><br/>
         Distance description:<br/>
-        d1 = measures differences of genomic regions presence / absence for s1 and s2<br/>
-        d2 = measures the copy-number distance between the s1 and s2 using cosine distance<br/>
-        d3 = measures the copy-number distance between the s1 and s2 using jaccard distance<br/>
-        d4 = measures differences of genomic bins usage<br/>
-        d5 = measures differences of paths decomposition between s1 and s2<br/>
-        d6 = measures differences between the breakpoint junctions profiles between s1 and s2<br/><br/>
+        d1 = Hamming distance = measures differences of genomic regions presence / absence for s1 and s2<br/>
+        d2 = Cosind distance = measures the copy-number distance between the s1 and s2 using cosine distance<br/>
+        d3 = Min-max distance = measures the copy-number distance between the s1 and s2 using jaccard distance<br/>
+        d4 = Bins distance = measures differences of genomic bins usage<br/>
+        d5 = Paths distance = measures differences of paths decomposition between s1 and s2<br/>
+        d6 = Breakpoint distance = measures differences between the breakpoint junctions profiles between s1 and s2<br/><br/>
         The radial plot shows all these distances, with values between 0 (low cost, high similarity) and 1 (high
         cost, low similarity).<br/>
         The more colorful the more distant are `s1` and `s2`.

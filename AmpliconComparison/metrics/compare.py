@@ -26,6 +26,35 @@ from AmpliconComparison.utils.utils import get_weight_distance, get_value_distan
 import warnings
 warnings.filterwarnings("ignore")
 
+def write_matches(matches,br_t,br_r,outfile):
+    """
+    Output the breakpoint matches.
+    """
+    df = pd.DataFrame(columns=["chr1","xpos1","xchr2","xpos2","xorientation","ychr1","ypos1","ychr2","ypos2","yorientation"])
+    
+    for key,value in matches.items():
+        idx1 = int(key[1:])
+        idx2 = int(value[1:])
+        df1_row = br_t.loc[idx1]
+        df2_row = br_r.loc[idx2]
+        
+        json_obj = {
+			"xchr1": df1_row[0],
+			"xpos1": df1_row[1],
+			"xchr2": df1_row[2],
+			"xpos2": df1_row[3],
+			"xorientation": df1_row[7],
+			"ychr1": df2_row[0],
+			"ypos1": df2_row[1],
+			"ychr2": df2_row[2],
+			"ypos2": df2_row[3],
+			"yorientation": df2_row[7]
+		}
+				
+        df = pd.concat([df, pd.DataFrame([json_obj])], ignore_index=True)
+        df.to_csv(outfile, header=True, index=False, sep="\t")
+
+
 def remove_key(d, key_to_remove='definition'):
 	"""
 	Remove from dictionary all values which are pointers to methods
@@ -152,7 +181,7 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=
 
 	# 4. Breakpoint matching
 	br_t, br_r = get_breakpoints_pairs(df_t, df_r)
-	jc, matches, breakpoint_matches = compute_breakpoint_distance(br_t, br_r,
+	jc, matches, breakpoint_matches, G = compute_breakpoint_distance(br_t, br_r,
 																  distance=default_breakpoint_distance,
 																  distance_threshold=default_breakpoint_distance_threshold,
 																  unmatched_dist=default_unmatching_distance,
@@ -196,6 +225,12 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=
 		# save breakpoint profile
 		br_t.to_csv(os.path.join(outdir, o.BREAKPOINTS_PROFILE_S1_TXT), header=True, index=False, sep="\t")
 		br_r.to_csv(os.path.join(outdir, o.BREAKPOINTS_PROFILE_S2_TXT), header=True, index=False, sep="\t")
+  
+		# save matched breakpoints
+		outfile_matched = os.path.join(outdir, o.MATCHED_BREAKPOINTS_TXT)
+		with open(outfile_matched, 'w', encoding='utf-8') as f:
+			write_matches(matches,br_t,br_r,outfile_matched)
+			
 
 		if plot:
 

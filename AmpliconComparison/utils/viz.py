@@ -223,10 +223,10 @@ def draw_breakpoints(chr1, start, chr2, end, max_value, scale, color, alpha,
 			ax.scatter(xs[-1], 0, s=w * dotsize, color=color, alpha=alpha)
 			ax.set_xlabel(chr1, fontsize=12)
 			ax.title.set_text(title)
-			if flipped == False:
-				ax.text(xs[-int(len(xs)/9)],ys[int(len(ys)/5.5)], f't:{debug_br}', fontsize=16)
-			else:
-				ax.text(xs[int(len(xs)/9)],ys[int(len(ys)/5.5)],f'r:{debug_br}', fontsize=16)
+			# if flipped == False:
+			# 	ax.text(xs[-int(len(xs)/9)],ys[int(len(ys)/5.5)], f't:{debug_br}', fontsize=16)
+			# else:
+			# 	ax.text(xs[int(len(xs)/9)],ys[int(len(ys)/5.5)],f'r:{debug_br}', fontsize=16)
 			# ax.set_yticks([])
 			ax.set_xticklabels(np.array(ax.get_xticks()).astype(int),
 							   rotation=90,
@@ -323,7 +323,7 @@ def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=3, outfile=Non
 			ax.plot(dict_x[t], dict_y[t],
 					drawstyle='steps',
 					label=ci,
-					linewidth=3,
+					linewidth=2,
 					color="gray",
 					alpha=0.8)
 			ax.fill_between(dict_x[t], dict_y[t], color=custom_gray, step="pre", alpha=0.8)
@@ -349,7 +349,7 @@ def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=3, outfile=Non
 		ax.plot(x_diff, y_diff,
 				drawstyle='steps',
 				label=ht.S1 + "/" + ht.S2,
-				linewidth=4,
+				linewidth=2,
 				color="black",
 				alpha=0.8,
 		        zorder=1)
@@ -474,8 +474,12 @@ def plot_breakpoints_location(br_t, br_r, max_y, chrlist, width=30, height=5, s1
 	return fig, axs
 
 # Define the asymptotic function
-def asymptotic_function(y, A=10, B=5):
-    return (A * y) / (B + y)
+def asymptotic_function(y, a=0.1, b=7, max_n=300):
+    raw = math.log(y)
+    raw_max = math.log(max_n)
+    norm = (raw - 0) / (raw_max - 0)  # assume raw_min = 0 or close to it
+    scaled = a + (b - a) * norm
+    return scaled
 
 def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 								width=30, height=3, max_value=None, scale=True, fig=None, axs=None, s1="",s2=""):
@@ -535,7 +539,8 @@ def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 			# check if the breakpoint is a match
 			color = PROPS.UNMATCHED[PROPS.COLOR]
 			alpha = PROPS.UNMATCHED[PROPS.ALPHA]
-			cn = asymptotic_function(1+row[ht.CN] / max_cov * 9) # scale
+			cn = asymptotic_function(row[ht.CN],max_n=max_cov) # scale
+   
 			flipped = True if row[ht.TRACK] == ht.S2 else False
 
 			# if s1 and matched breakpoint
@@ -548,7 +553,9 @@ def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 				alpha = PROPS.MATCHED[PROPS.ALPHA]
 
 			draw_breakpoints(c1, p1, c2, p2, max_value, scale,
-							 color, alpha, debug_br=index, linesize=cn, ax=ax, flipped=flipped)
+							 color, alpha, debug_br="", linesize=cn, ax=ax, flipped=flipped)
+			# draw_breakpoints(c1, p1, c2, p2, max_value, scale,
+			# 				 color, alpha, debug_br=index, linesize=cn, ax=ax, flipped=flipped)
 
 			if max_value:
 				ax.set_ylim(-max_value, max_value)
@@ -582,7 +589,7 @@ def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 			# check if the breakpoint is a match
 			color = PROPS.UNMATCHED[PROPS.COLOR]
 			alpha = PROPS.UNMATCHED[PROPS.ALPHA]
-			cn = asymptotic_function(1+row[ht.CN] / max_cov * 9) # scale
+			cn = asymptotic_function(row[ht.CN],max_n=max_cov) # scale
 			# set if flipped or not
 			flipped = True if row[ht.TRACK] == ht.S2 else False
 

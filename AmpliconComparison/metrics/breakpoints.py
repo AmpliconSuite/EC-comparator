@@ -939,7 +939,7 @@ def compute_breakpoint_distance(
 		# 5. compute jaccard distance
 		jd = compute_jc_distance(breakpoint_match, t_nodes, r_nodes, G, how=how)
 
-	return round(jd, 3), matches, breakpoint_match
+	return round(jd, 3), matches, breakpoint_match, G
 
 
 dict_breakpoint_distance_calculation = {

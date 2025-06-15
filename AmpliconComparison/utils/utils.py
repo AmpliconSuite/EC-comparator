@@ -251,5 +251,6 @@ class OUTFILES:
 	BREAKPOINTS_PROFILE_S1_TXT = 'breakpoints_profile_s1.txt'
 	BREAKPOINTS_PROFILE_S2_TXT = 'breakpoints_profile_s2.txt'
 	METRICS_JSON = 'metrics.json'
+	MATCHED_BREAKPOINTS_TXT = 'breakpoints_matched.txt'
 
 
