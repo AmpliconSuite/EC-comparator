@@ -7,9 +7,13 @@ import os
 import argparse
 import pandas as pd
 import subprocess
+import pybedtools
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 def get_directory(i,df):
+	print(i)
+	print(df.iloc[i])
+	print(df.iloc[i,11])
 	if df.iloc[i,11] != "Not Provided":
 		return os.path.dirname(df.iloc[i,11])
 	else:
@@ -26,9 +30,12 @@ def get_file(i,df):
 		#print("11 ", df.iloc[i,11])
 		fname = os.path.basename(df.iloc[i,11]).split(".")[0]
 		return f"{fname}_cycles.bed", fname
-	else:
+	elif df.iloc[i,11] != "Not Provided":
 		#print("10 ", df.iloc[i,10])
 		fname = os.path.basename(df.iloc[i,10]).split(".")[0]
+		return f"{fname}_cycles.bed", fname
+	else:
+		fname = df.iloc[i,2].split("amplicon")[0] + "amplicon" + str(df.iloc[i,2].split("amplicon")[1].split("_")[0])
 		return f"{fname}_cycles.bed", fname
 
 def get_path(i,df, prefix_root):
@@ -53,6 +60,33 @@ def overlap(i,j,df,genelist):
 		return False, None, None
 
 	return	True, ",".join(genes1), ",".join(genes2)
+
+def reannotate(df, bed_anno, prefix_root):
+    
+    new_df = df.copy()
+    
+    for i in range(0,df.shape[0]):
+        a1, _ = get_path(i,df, prefix_root)
+        bed1 = pybedtools.BedTool(a1)
+        intersected1 = bed_anno.intersect(bed1, u=True)
+        
+        # Convert result to dataframe
+        overlapping_genes1 = intersected1.to_dataframe(names=["chr","start","end","gene"])
+
+        genes1 = []
+        if overlapping_genes1.shape[0] > 0:
+            genes1 = overlapping_genes1["gene"].tolist()
+        
+        genes1_original = list(set(ast.literal_eval(df.iloc[i,4].replace("'","")) + ast.literal_eval(df.iloc[i,5].replace("'",""))))
+        genes1_new = ",".join(list(set(genes1_original + genes1)))
+        new_df.loc[i,"Oncogenes"] = genes1_new
+        
+        if len(genes1)>0:
+            print(a1,genes1)
+            print(genes1_new)
+
+    return new_df
+
 
 def run_subprocess(i,df,project, prefix_root, root, genelist):
 	
@@ -100,13 +134,14 @@ def run_subprocess(i,df,project, prefix_root, root, genelist):
 	return df_out
 
   
-def generate_pairs(input,output,project,prefix_root=None,root=None,genelist=None):
+def generate_pairs(input,output,project,bed_anno,prefix_root=None,root=None,genelist=None):
 	
 	results = []
 	df = pd.read_csv(input, header=0, sep=",",index_col=0)
 	# keep only entries having an amplicon
 	columns=["Sample name","AA amplicon number","Feature ID","Classification","Oncogenes","All genes","Complexity score","Reference version","Tissue of origin","Sample type","AA PNG file","AA directory"]
 	df = df.loc[~df["AA amplicon number"].isna(),columns]
+	df = reannotate(df, bed_anno, prefix_root)
  
 	# Use ProcessPoolExecutor to run the subprocesses in parallel
 	with ProcessPoolExecutor(max_workers=30) as executor:
@@ -179,6 +214,13 @@ def parse_args():
 		default=[],
 		help="List of gene names to filter the results on. Provide as space-separated list or with repeated flag."
 	)
+ 
+	parser.add_argument(
+		"--bed-anno",
+		type=str,
+		required=True,
+		help="Genes anno."
+	)
 
 	return parser.parse_args()
 
@@ -190,9 +232,11 @@ if __name__ == "__main__":
 	print("Prefix root path:", args.prefix_root)
 	print("Root path:", args.root)
 	print("Filtered genes:", args.filtered_genes)
+	print("BED anno genes:", args.bed_anno)
 	generate_pairs(args.input,
                 args.output,
                 args.project,
+                pybedtools.BedTool(args.bed_anno),
                 args.prefix_root,
                 args.root,
                 args.filtered_genes)
