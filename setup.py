@@ -107,7 +107,7 @@ setuptools.setup(
 	# scripts=["AmpliconComparison/main.py"],
 	entry_points={
 		'console_scripts': [
-			'AmpliconComparison = AmpliconComparison.main:main'
+			'EC-comparator = eccomparator.main:main'
 			]
 		},
 	cmdclass={

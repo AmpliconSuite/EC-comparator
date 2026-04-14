@@ -1,4 +1,4 @@
-name: comparator
+name: eccomparator
 channels:
   - bioconda
   - conda-forge
