@@ -95,7 +95,7 @@ def get_total_cost(dict_metrics):
 	return total_cost, total_cost_description
 
 
-def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=True, min_cn=0, s1=None, s2=None, debug=False):
+def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=True, min_cn=0, s1=None, s2=None, debug=False, gap=1000000):
 	"""
 	Entrypoint: compare the distance between two structures sets.
 	Args:
@@ -233,20 +233,24 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=
 			
 
 		if plot:
+      
+			interval_regions  = viz.build_merged_tree(cn_profile_t, cn_profile_r, gap=gap)
+			# annotate these regions on the cn_profile, br and chrlist
+			cn_profile_t_annot, cn_profile_r_annot, br_t_annot, br_r_annot, chrlist_annot = viz.segment_union_with_regions(cn_profile_t, cn_profile_r, br_t, br_r, interval_regions)
+			chrlist_annot = sorted(list(set(cn_profile_r_annot[ht.CHR].tolist() + cn_profile_t_annot[ht.CHR].tolist())))
 
 			# plot coverage profile
 			outfile = os.path.join(outdir, o.COVERAGE_PROFILE_PNG)
-			viz.draw_cn(cn_profile_t, cn_profile_r, chrlist,
+			viz.draw_cn(cn_profile_t_annot, cn_profile_r_annot, chrlist_annot,
 						outfile=outfile,s1=s1,s2=s2)
 
-
 			# plot merged coverage and breakpoint profile
-			max_coverage = max(np.max(cn_profile_t[ht.CN].tolist()), np.max(cn_profile_r[ht.CN].tolist()))
+			max_coverage = max(np.max(cn_profile_t_annot[ht.CN].tolist()), np.max(cn_profile_r_annot[ht.CN].tolist()))
 			max_coverage = max_coverage + 0.5 * max_coverage
 
 			outfile = os.path.join(outdir, o.COVERAGE_BREAKPOINTS_PROFILE) if outdir else None
-			viz.plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, breakpoint_matches,
-							  chrlist, max_coverage, outfile=outfile,s1=s1,s2=s2, debug=debug)
+			viz.plot_combined(br_t_annot, br_r_annot, cn_profile_t_annot, cn_profile_r_annot,  chrlist_annot, breakpoint_matches,
+							  max_coverage, outfile=outfile,s1=s1,s2=s2, debug=debug)
 
 			# plot total cost
 			outfile = os.path.join(outdir, o.TOTAL_COST_PNG)

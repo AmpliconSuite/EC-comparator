@@ -13,6 +13,9 @@ import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
 from matplotlib.patches import ConnectionPatch, Circle
 
+# find union regions
+from intervaltree import IntervalTree
+
 # custom module
 from eccomparator.utils.utils import DDT
 from eccomparator.utils.utils import HEADER as ht
@@ -243,42 +246,99 @@ def draw_breakpoints(chr1, start, chr2, end, max_value, scale, color, alpha,
 			plt.xlabel("")
 
 
+# def break_cn(df):
+# 	"""
+# 	Break copy number into the double number of bins
+# 	"""
+# 	cols = [ht.CHR, ht.START, ht.END, ht.CN, ht.TRACK]
+# 	df_new = pd.DataFrame(columns=cols)
+# 	j = 0
+# 	chr_old = -1
+
+# 	for i in range(0, df.shape[0]):
+# 		chr, start, end, cn, type = df.loc[i, cols].tolist()
+# 		len = end - start
+
+# 		if chr_old == -1 or chr != chr_old:
+# 			if chr_old != -1:
+# 				df_new.loc[j, :] = [chr_old,
+# 									df_new.loc[j - 1, ht.END],
+# 									df_new.loc[j - 1, ht.END] + 1,
+# 									df_new.loc[j - 1, ht.CN],
+# 									df_new.loc[j - 1, ht.TRACK]]
+# 				j = j + 1
+# 			chr_old = chr
+
+# 		df_new.loc[j, :] = [chr, start, start + math.floor(len / 2), cn, type]
+# 		j = j + 1
+# 		df_new.loc[j, :] = [chr, start + math.floor(len / 2) + 1, end, cn, type]
+# 		j = j + 1
+
+# 	# last element
+# 	df_new.loc[j, :] = [chr_old,
+# 						df_new.loc[j - 1, ht.END],
+# 						df_new.loc[j - 1, ht.END] + 1,
+# 						df_new.loc[j - 1, ht.CN],
+# 						df_new.loc[j - 1, ht.TRACK]]
+
+# 	return df_new
+
 def break_cn(df):
-	"""
-	Break copy number into the double number of bins
-	"""
-	cols = [ht.CHR, ht.START, ht.END, ht.CN, ht.TRACK]
-	df_new = pd.DataFrame(columns=cols)
-	j = 0
-	chr_old = -1
+    """
+    Break copy number into the double number of bins
+    while preserving original index.
+    """
 
-	for i in range(0, df.shape[0]):
-		chr, start, end, cn, type = df.loc[i, cols].tolist()
-		len = end - start
+    cols = [ht.CHR, ht.START, ht.END, ht.CN, ht.TRACK]
+    df_new = pd.DataFrame(columns=cols)
 
-		if chr_old == -1 or chr != chr_old:
-			if chr_old != -1:
-				df_new.loc[j, :] = [chr_old,
-									df_new.loc[j - 1, ht.END],
-									df_new.loc[j - 1, ht.END] + 1,
-									df_new.loc[j - 1, ht.CN],
-									df_new.loc[j - 1, ht.TRACK]]
-				j = j + 1
-			chr_old = chr
+    j = 0
+    chr_old = None
 
-		df_new.loc[j, :] = [chr, start, start + math.floor(len / 2), cn, type]
-		j = j + 1
-		df_new.loc[j, :] = [chr, start + math.floor(len / 2) + 1, end, cn, type]
-		j = j + 1
+    for idx, row in df.iterrows():
+        chr_, start, end, cn, track = row[cols]
+        length = end - start
 
-	# last element
-	df_new.loc[j, :] = [chr_old,
-						df_new.loc[j - 1, ht.END],
-						df_new.loc[j - 1, ht.END] + 1,
-						df_new.loc[j - 1, ht.CN],
-						df_new.loc[j - 1, ht.TRACK]]
+        if chr_old is None or chr_ != chr_old:
+            if chr_old is not None and j > 0:
+                prev = df_new.iloc[-1]
 
-	return df_new
+                df_new.loc[j] = [
+                    chr_old,
+                    prev[ht.END],
+                    prev[ht.END] + 1,
+                    prev[ht.CN],
+                    prev[ht.TRACK],
+                ]
+                j += 1
+
+            chr_old = chr_
+
+        mid = start + math.floor(length / 2)
+
+        # first half
+        df_new.loc[j] = [chr_, start, mid, cn, track]
+        df_new.rename(index={j: idx}, inplace=True)
+        j += 1
+
+        # second half
+        df_new.loc[j] = [chr_, mid + 1, end, cn, track]
+        df_new.rename(index={j: idx}, inplace=True)
+        j += 1
+
+    # last element
+    if j > 0:
+        prev = df_new.iloc[-1]
+        df_new.loc[j] = [
+            chr_old,
+            prev[ht.END],
+            prev[ht.END] + 1,
+            prev[ht.CN],
+            prev[ht.TRACK],
+        ]
+        df_new.rename(index={j: df.index[-1]}, inplace=True)
+
+    return df_new
 
 
 def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=3, outfile=None, fig=None, axs=None, s1="", s2=""):
@@ -354,7 +414,7 @@ def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=3, outfile=Non
 				linewidth=2,
 				color="black",
 				alpha=0.8,
-		        zorder=1)
+				zorder=1)
 	if outfile:
 		base, _ = os.path.splitext(outfile)
 		svg_outfile = base + ".svg"
@@ -481,11 +541,11 @@ def plot_breakpoints_location(br_t, br_r, max_y, chrlist, width=30, height=5, s1
 
 # Define the asymptotic function
 def asymptotic_function(y, a=0.1, b=7, max_n=300):
-    raw = math.log(y)
-    raw_max = math.log(max_n)
-    norm = (raw - 0) / (raw_max - 0)  # assume raw_min = 0 or close to it
-    scaled = a + (b - a) * norm
-    return scaled
+	raw = math.log(y)
+	raw_max = math.log(max_n)
+	norm = (raw - 0) / (raw_max - 0)  # assume raw_min = 0 or close to it
+	scaled = a + (b - a) * norm
+	return scaled
 
 def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 								width=30, height=3, max_value=None, scale=True, fig=None, axs=None, s1="",s2="", debug=False):
@@ -613,10 +673,165 @@ def plot_breakpoints_comparison(br_t, br_r, breakpoint_match, chrlist,
 			draw_breakpoints_cross_ax(c1, p1, c2, p2, max_value, scale, color, alpha,
 									  ax1, ax2, fig, linesize=cn, flipped=flipped)
 
+def transform_regions(br_t, br_r, cn_profile_t, cn_profile_r, breakpoint_matches, chrlist, gap=1000000):
+	"""Split chromosomes in smaller regions if there is a large gap > 1MB"""
+	
+	chromosomes = pd.concat([cn_profile_t["Chromosome"], cn_profile_r["Chromosome"]]).unique()
 
-def plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, breakpoint_matches, chrlist, max_coverage, outfile=None, s1="", s2="", debug=False):
+	regions = []
 
-	fig, axs = plot_breakpoints_location(br_t, br_r, max_coverage, chrlist,debug=debug)
+	for chrom in chromosomes:
+
+		# collect breakpoints
+		breaks = set()
+
+		for df in [cn_profile_t, cn_profile_r]:
+			sub = df[df["Chromosome"] == chrom]
+			breaks.update(sub["Start"])
+			breaks.update(sub["End"])
+
+		breaks = sorted(breaks)
+
+		for i in range(len(breaks) - 1):
+			regions.append({
+				"Chromosome": chrom,
+				"Start": breaks[i],
+				"End": breaks[i+1]
+			})
+
+	regions = pd.DataFrame(regions)
+
+	regions["region"] = ["r"+str(i+1) for i in range(len(regions))]
+	print(regions)
+
+	return regions
+
+def build_interval_tree(df):
+
+	trees = {}
+
+	for chrom, sub in df.groupby("Chromosome"):
+		tree = IntervalTree()
+		for _, row in sub.iterrows():
+			tree.addi(row["Start"], row["End"], row.to_dict())
+		trees[chrom] = tree
+
+	return trees
+
+def build_merged_tree(df1, df2, gap=1000000):
+
+	trees = {}
+	chromosomes = pd.concat([df1[ht.CHR], df2[ht.CHR]]).unique()
+
+	for chrom in chromosomes:
+
+		tree = IntervalTree()
+
+		for df in [df1, df2]:
+
+			sub = df[df[ht.CHR] == chrom]
+
+			for _, row in sub.iterrows():
+				if row[ht.BIN_ENABLED] == 1:
+					tree.addi(row[ht.START]-gap, row[ht.END]+gap)
+
+		# merge overlapping intervals
+		tree.merge_overlaps()
+		trees[chrom] = tree
+
+	return trees
+
+
+def annotate_df_with_tree(df, trees):
+
+	annotated = []
+	region_id = {}
+	df = df[df[ht.BIN_ENABLED]==1]
+
+	# assign region IDs
+	for chrom, tree in trees.items():
+		for i, interval in enumerate(sorted(tree), start=1):
+			region_id[(chrom, interval.begin, interval.end)] = f"r{i}"
+
+	for _, row in df.iterrows():
+
+		chrom = row[ht.CHR]
+
+		overlaps = trees[chrom].overlap(row[ht.START], row[ht.END])
+
+		for interval in overlaps:
+
+			r = row.copy()
+
+			region = region_id[(chrom, interval.begin, interval.end)]
+
+			r["region"] = region
+			r[ht.CHR] = f"{chrom}_{region}"
+
+			annotated.append(r)
+
+	return pd.DataFrame(annotated)
+
+
+def annotate_df_with_tree_point(df, trees):
+
+	# build region ID lookup
+	region_lookup = {}
+
+	for chrom, tree in trees.items():
+		for i, interval in enumerate(sorted(tree), start=1):
+			region_lookup[(chrom, interval.begin, interval.end)] = f"r{i}"
+
+	annotated_rows = []
+
+	for _, row in df.iterrows():
+
+		row = row.copy()
+
+		# annotate first breakpoint
+		chrom1 = row[ht.CHR1]
+		pos1 = row[ht.START]
+
+		if chrom1 in trees:
+			hits = trees[chrom1].at(pos1)
+			if hits:
+				interval = next(iter(hits))
+				region = region_lookup[(chrom1, interval.begin, interval.end)]
+				row[ht.CHR1] = f"{chrom1}_{region}"
+				row["region1"] = region
+
+		# annotate second breakpoint
+		chrom2 = row[ht.CHR2]
+		pos2 = row[ht.END]
+
+		if chrom2 in trees:
+			hits = trees[chrom2].at(pos2)
+			if hits:
+				interval = next(iter(hits))
+				region = region_lookup[(chrom2, interval.begin, interval.end)]
+				row[ht.CHR2] = f"{chrom2}_{region}"
+				row["region2"] = region
+
+		annotated_rows.append(row)
+
+	return pd.DataFrame(annotated_rows)
+
+
+def segment_union_with_regions(cn_profile_t, cn_profile_r, br_t, br_r, interval_regions):
+	
+	cn_profile_t_annot = annotate_df_with_tree(cn_profile_t, interval_regions)
+	cn_profile_r_annot = annotate_df_with_tree(cn_profile_r, interval_regions)
+	
+	br_t_annot = annotate_df_with_tree_point(br_t, interval_regions)
+	br_r_annot = annotate_df_with_tree_point(br_r, interval_regions)
+ 
+	chrlist_annot = list(set(cn_profile_t_annot[ht.CHR].tolist() + cn_profile_r_annot[ht.CHR].tolist()))
+	return cn_profile_t_annot, cn_profile_r_annot, br_t_annot, br_r_annot, chrlist_annot
+ 
+
+def plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, chrlist, breakpoint_matches, max_coverage, outfile=None, s1="", s2="", debug=False, gap=1000):
+ 
+	fig, axs = plot_breakpoints_location(br_t, br_r, max_coverage, chrlist, debug=debug)
 	draw_cn(cn_profile_t, cn_profile_r, chrlist, fig=fig, axs=axs, s1=s1, s2=s2)
 	plot_breakpoints_comparison(br_t, br_r, breakpoint_matches, chrlist, fig=fig, axs=axs, max_value=max_coverage, scale=True, s1=s1, s2=s2, debug=debug)
 	if outfile:

@@ -47,6 +47,7 @@ def config(args):
 	dict = Configs.DICT_DIST
 
 	# set all defaults
+	d.GAP = args.gap
 	d.GAUSSIAN_SIGMA = args.gaussian_sigma
 	d.GAUSSIAN_AMPL = args.gaussian_amplitude
 	d.BP_MATCH_UNWEIGHTED = args.breakpoint_dist_calc
@@ -276,7 +277,13 @@ def main():
 		# 					help='Match breakpoints-pairs nonlinear, i.e. allow for high variability on one side if the other side matches good  (default: %(default)s). ' +
 		# 					'Options: ' + ', '.join(d.BP_OPTIONS_NONLINEAR),
 		# 					required=False, default=None, type=str)
-
+		optional_args_bp.add_argument(
+			"--gap",
+			help="Merge neighboring intervals within < gap (default: %(default)s)",
+			required=False,
+			default=d.GAP,
+			type=int,
+		)
 		optional_args_bp.add_argument(
 			"--debug",
 			help="Debug structures (for developers)",
@@ -322,7 +329,8 @@ def main():
 			plot=args.plot,
 			plot_report=args.report,
 			min_cn=args.min_cn,
-			debug=args.debug
+			debug=args.debug,
+			gap=args.gap
 		)
 
 	except Exception:

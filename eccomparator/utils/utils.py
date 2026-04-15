@@ -149,6 +149,8 @@ class PROPS:
 
 class DDT:
 	
+	GAP=1000000
+ 
 	# breakpoints candidates selection using Gaussian distribution as cost function
 	GAUSSIAN = 'gaussian'
 	GAUSSIAN_DEF_SIGMA = 'sigma'
