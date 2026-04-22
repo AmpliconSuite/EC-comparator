@@ -225,7 +225,7 @@ def draw_breakpoints(chr1, start, chr2, end, max_value, scale, color, alpha,
 			ax.plot(xs, ys, color=color, alpha=alpha, lw=linesize)
 			ax.scatter(xs[0], 0, s=w * dotsize, color=color, alpha=alpha)
 			ax.scatter(xs[-1], 0, s=w * dotsize, color=color, alpha=alpha)
-			ax.set_xlabel(chr1, fontsize=12)
+			ax.set_xlabel(chr1.split("_")[0], fontsize=12)
 			ax.title.set_text(title)
 			if debug_br != "":
 				if flipped == False:
@@ -384,13 +384,13 @@ def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=3, outfile=Non
 
 			ax.plot(dict_x[t], dict_y[t],
 					drawstyle='steps',
-					label=ci,
+					label=ci.split("_")[0],
 					linewidth=2,
 					color="gray",
 					alpha=0.8)
 			ax.fill_between(dict_x[t], dict_y[t], color=custom_gray, step="pre", alpha=0.8)
 
-			ax.set_xlabel(ci, fontsize=12)
+			ax.set_xlabel(ci.split("_")[0], fontsize=12)
 			ax.set_ylabel("")
 			ax.set_xticklabels(np.array(ax.get_xticks()).astype(int),
 							   rotation=90,
@@ -521,11 +521,11 @@ def plot_breakpoints_location(br_t, br_r, max_y, chrlist, width=30, height=5, s1
 			ax = axs[i]
 
 		ax.scatter(x, y,
-				   label=ci,
+				   label=ci.split("_")[0],
 				   color=custom_gray,
 				   alpha=0.5)
 
-		ax.set_xlabel(ci, fontsize=12)
+		ax.set_xlabel(ci.split("_")[0], fontsize=12)
 		ax.set_ylim((-max_y, max_y))
 		ax.set_ylabel("")
 		ax.set_xticklabels(np.array(ax.get_xticks()).astype(int),

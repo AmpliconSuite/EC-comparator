@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EC-comparator</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <style>
+        body,h1,h3,h2,h4,p {font-family: Arial, sans-serif}
+        img {margin-bottom: -7px}
+        .w3-row-padding img {margin-bottom: 10px}
+        .w3-content {margin-left:10px}
+        .negative-padding {margin-top: -20px}
+        p,h3,h4 {margin-left: 40px}
+        h1,h2 {margin-left: 20px}
+
+    </style>
+</head>
+<body>
+<div class="w3-content w3-row-padding" style="max-width:1500px">
+    <h1>EC-comparator results</h1>
+    <h2>Setup:</h2>
+    <p><b>Date</b>: 2026-04-20 00:32:29.359827</p>
+    <p><b>Sample s1</b>: /Volumes/henssen_lab/data/AmpliconRepository/PCAWG_filtered_bed/results/AA_outputs/DO43658-SP95222/7197ffaa-841f-58d2-b890-0b8a3a2a5282__6283351c-b172-5577-a178-ea14fbece99c_classification/files/7197ffaa-841f-58d2-b890-0b8a3a2a5282__6283351c-b172-5577-a178-ea14fbece99c_amplicon5_cycles.bed</p>
+    <p><b>Sample s2</b>: /Volumes/henssen_lab/data/AmpliconRepository/PCAWG_filtered_bed/results/AA_outputs/DO43859-SP95646/cad656ef-3dee-553c-b64e-6a9cf173b3ad__c7dcd87e-21d5-5a66-b4c2-900a8caa4c5b_classification/files/cad656ef-3dee-553c-b64e-6a9cf173b3ad__c7dcd87e-21d5-5a66-b4c2-900a8caa4c5b_amplicon5_cycles.bed</p>
+    <p><b>Output directory</b>: examples/output_DO43658_DO43859_uterus_uterus</p>
+</div>
+<div class="w3-content w3-row-padding" style="width:100%; display: block; min-width: 95% !important;">
+    <h2>Results:</h2>
+    <p>Here we compute the cycle distance between `s1` and `s2`.<br/><br/>
+        Distance description:<br/>
+        d1 = Hamming distance = measures differences of genomic regions presence / absence for s1 and s2<br/>
+        d2 = Cosind distance = measures the copy-number distance between the s1 and s2 using cosine distance<br/>
+        d3 = Min-max distance = measures the copy-number distance between the s1 and s2 using jaccard distance<br/>
+        d4 = Bins distance = measures differences of genomic bins usage<br/>
+        d5 = Paths distance = measures differences of paths decomposition between s1 and s2<br/>
+        d6 = Breakpoint distance = measures differences between the breakpoint junctions profiles between s1 and s2<br/><br/>
+        The radial plot shows all these distances, with values between 0 (low cost, high similarity) and 1 (high
+        cost, low similarity).<br/>
+        The more colorful the more distant are `s1` and `s2`.
+    </p>
+    <h4><b>Total cost</b>: 4.27 (0 - highly similar, 5 - dissimilar)</h4>
+    <div class="w3-content">
+        <img title="total_cost" src="./total_cost.png" style="width:400px"/>
+    </div>
+    <div class="w3-content">
+        <img title="table_distances" src="./total_cost_table.png" style="width:500px"/>
+    </div>
+    <div class="w3-content">
+        <p>Coverage (gray track) and breakpoint-pairs matches for s1 (green) and s2 (blue).<br/>Unmached
+            breakpoint-pairs are displayed in gray. The log2(s1/s2) is displayed in black. The zero reference is
+            displayed as dotted red line.<br/>
+        </p>
+        <img title="viz_breakpoints" src="./coverage_breakpoints_profile.png" style="width:1000px"/>
+    </div>
+</div>
+</body>
+</html>
