@@ -201,8 +201,8 @@ def add_text(ax, fig, s1="", s2=""):
 	trans = mtransforms.ScaledTranslation(10 / 72, 15 / 72, fig.dpi_scale_trans)
 	ax.text(0.0, 0.0, ht.S2, transform=ax.transAxes + trans, fontsize='x-large', verticalalignment='top', zorder=10)
 
-	ax.text(0.0, -0.3, ht.S1 + "=" + s1, transform=ax.transAxes + trans, fontsize='x-large', verticalalignment='top', zorder=10)
-	ax.text(0.0, -0.35, ht.S2 + "=" + s2, transform=ax.transAxes + trans, fontsize='x-large', verticalalignment='top', zorder=10)
+	ax.text(0.0, -0.4, ht.S1 + "=" + s1, transform=ax.transAxes + trans, fontsize='x-large', verticalalignment='top', zorder=10)
+	ax.text(0.0, -0.45, ht.S2 + "=" + s2, transform=ax.transAxes + trans, fontsize='x-large', verticalalignment='top', zorder=10)
 
 def draw_breakpoints(chr1, start, chr2, end, max_value, scale, color, alpha,
 					 linesize=3, dotsize=10, w=5, ax=None, title="", flipped=False, debug_br=""):
@@ -244,6 +244,7 @@ def draw_breakpoints(chr1, start, chr2, end, max_value, scale, color, alpha,
 			plt.scatter(xs[-1], 0, s=w * dotsize, color=color, alpha=alpha)
 			plt.title(title)
 			plt.xlabel("")
+			plt.tight_layout()
 
 
 # def break_cn(df):
@@ -419,10 +420,12 @@ def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=3, outfile=Non
 		base, _ = os.path.splitext(outfile)
 		svg_outfile = base + ".svg"
 		pdf_outfile = base + ".pdf"
+		fig.tight_layout()
 		fig.savefig(outfile, bbox_inches='tight', dpi=600)
 		fig.savefig(svg_outfile, bbox_inches='tight', format="svg")
 		fig.savefig(pdf_outfile, bbox_inches='tight', dpi=600, format="pdf")
 	else:
+		fig.tight_layout()
 		fig.show()
 
 
@@ -838,8 +841,10 @@ def plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, chrlist, breakpoint_ma
 		base, _ = os.path.splitext(outfile)
 		svg_outfile = base + ".svg"
 		pdf_outfile = base + ".pdf"
+		fig.tight_layout()
 		fig.savefig(outfile, bbox_inches='tight', dpi=600)
 		fig.savefig(svg_outfile, bbox_inches='tight', format="svg")
 		fig.savefig(pdf_outfile, bbox_inches='tight', dpi=600, format="pdf")
 	else:
+		fig.tight_layout()
 		fig.show()

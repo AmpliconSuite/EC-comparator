@@ -95,21 +95,30 @@ def get_total_cost(dict_metrics):
 	return total_cost, total_cost_description
 
 
-def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=True, min_cn=0, s1=None, s2=None, debug=False, gap=1000000):
+def compare_cycles(t_file, r_file, 
+                   outdir,
+                   s1, s2,
+                   dict_configs,
+                   plot=True,
+                   plot_report=True, 
+                   min_cn=0,
+                   debug=False, 
+                   gap=1000000):
 	"""
 	Entrypoint: compare the distance between two structures sets.
 	Args:
 		t_file (str): First structures set
 		r_file (str): Second structures set
 		outdir (str): Output directory
+		s1 (str): Name of structure 1
+		s2 (str): Name of structure 2
 		dict_configs (dict):
 							hamming (bool): Include copy-number similarity for the total distance if set to True or Hamming distance is copy-number not available
 							viz (bool): Enable visualization of the comparison
-       plot (bool): Generate coverage and breakpoints plot comparatively for first and second structure
-       plot_report (bool): Generate a report including a summary plot of the distances and coverage and breakpoints plots
-       min_cn (float): Set a minimal copy-number or coverage for the structures to be considered for comparison (default 0)
-       s1 (str): Name of structure 1
-       s2 (str): Name of structure 2
+  		plot (bool): Generate coverage and breakpoints plot comparatively for first and second structure
+		plot_report (bool): Generate a report including a summary plot of the distances and coverage and breakpoints plots
+		min_cn (float): Set a minimal copy-number or coverage for the structures to be considered for comparison (default 0)
+		gap (int): Gap size for merging nearby breakpoints and coverage regions in the visualization (default 1Mb)
 
 	Returns:
 		Dictionary with different distances
@@ -117,14 +126,8 @@ def compare_cycles(t_file, r_file, outdir, dict_configs, plot=True, plot_report=
 	if outdir:
 		os.makedirs(outdir, exist_ok=True)
 
-	# pprint.pprint(dict_configs)
-	# set names
-	s1 = os.path.basename(t_file)
-	s2 = os.path.basename(r_file)
-
 	dict_metrics = {}
 	dict_metrics[ht.CONFIGS] = dict_configs
-	
 	
 	# umatching breakpoints 
 	default_unmatching_distance = dict_metrics[ht.CONFIGS][ht.BREAKPOINT_DISTANCE][ddt.UNMATCHED_DISTANCE]

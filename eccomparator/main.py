@@ -155,6 +155,16 @@ def main():
 
 		# optional - plotting and filtering threshold
 		optional_args = parser.add_argument_group("optional arguments")
+		required_args.add_argument(
+			"--alabel",
+			help="Label for first structure (default: BED file name)",
+			required=False,
+		)
+		required_args.add_argument(
+			"--blabel",
+			help="Label for second structure (default: BED file name)",
+			required=False,
+		)
 		optional_args.add_argument(
 			"--plot",
 			help="Plot coverage profiles",
@@ -316,6 +326,11 @@ def main():
 		
 		if args.debug is None:
 			args.debug = False
+
+		if args.alabel is None:
+			args.alabel = os.path.basename(args.first_structure).replace(".bed", "")
+		if args.blabel is None:
+			args.blabel = os.path.basename(args.second_structure).replace(".bed", "")
       
 		# 3. Compare cycles
 		print("Structure A:", args.first_structure)
@@ -325,6 +340,8 @@ def main():
 			args.first_structure,
 			args.second_structure,
 			args.outdir,
+			args.alabel,
+			args.blabel,
 			dict_configs,
 			plot=args.plot,
 			plot_report=args.report,
