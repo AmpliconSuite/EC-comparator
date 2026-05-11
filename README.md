@@ -6,7 +6,7 @@ Comparing cycle decompositions across technologies and methods.
 Please install `python3.9` and run the following code to install all dependencies:
 
 ```bash
-cd AmpliconComparison
+cd EC-comparator
 mamba env create -f environment.yml
 conda activate comparator
 python setup.py install
