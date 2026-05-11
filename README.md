@@ -6,10 +6,13 @@ Comparing cycle decompositions across technologies and methods.
 Please install `python3.9` and run the following code to install all dependencies:
 
 ```bash
+git clone https://github.com/AmpliconSuite/EC-comparator.git
 cd EC-comparator
+
 mamba env create -f environment.yml
-conda activate comparator
-python setup.py install
+conda activate eccomparator
+
+pip install .
 ```
 
 And build and install (for developers):
