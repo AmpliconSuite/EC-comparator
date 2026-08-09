@@ -47,10 +47,9 @@ def get_chromosome_offset(df_t, df_r):
 	l = d3.shape[0]
 	cumm_offset = 0
 	for i in range(1, l):
-		max_pos = d3[d3[ht.CHR] == chridx[i - 1]].iloc[0, 1]
+		max_pos = d3[d3[ht.CHR] == chridx[i - 1]].iloc[0, 2]  # get max position of previous chromosome
 		cumm_offset += max_pos
 		offsets[chridx[i]] = cumm_offset
-
 	return offsets
 
 

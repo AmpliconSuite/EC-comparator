@@ -63,6 +63,46 @@ def draw_total_cost(dict_metrics, outfile=None):
 		fig.show()
 
 
+def draw_total_cost_bar(dict_metrics, outfile=None, orientation='v'):
+	"""Create a bar plot with the same information used by the radar plot.
+
+	Arguments:
+		dict_metrics: metrics dictionary (same structure expected by draw_total_cost)
+		outfile: optional path to save the plot (png/svg)
+		orientation: 'v' for vertical bars, 'h' for horizontal
+	"""
+	# prepare data
+	dist = []
+	value = []
+	for key in dict_metrics[ht.DISTANCES][DDT.TOTAL_COST_DESCRIPTION]:
+		dist.append(DDT.RENAME[key])
+		value.append(dict_metrics[ht.DISTANCES][key])
+
+	df = pd.DataFrame(dict(
+		dist=dist,
+		value=value))
+
+	if orientation == 'h':
+		fig = px.bar(df, x='value', y='dist', orientation='h')
+		fig.update_layout(yaxis=dict(categoryorder='array', categoryarray=dist))
+	else:
+		fig = px.bar(df, x='dist', y='value')
+		fig.update_layout(xaxis=dict(categoryorder='array', categoryarray=dist))
+
+	fig.update_traces(marker_color='steelblue', opacity=0.85)
+	fig.update_yaxes(range=[0, 1])
+	fig.update_layout(
+		font=dict(color='darkslategray', size=13),
+		margin=dict(l=20, r=20, t=30, b=30)
+	)
+
+	if outfile:
+		fig.write_image(outfile, scale=10, width=600, height=400)
+		fig.write_image(outfile + ".svg", scale=10, width=600, height=400, format="svg")
+	else:
+		fig.show()
+
+
 def draw_total_cost_table(dict_metrics, outfile=None):
 	# table information
 	table_val = []
@@ -342,6 +382,36 @@ def break_cn(df):
     return df_new
 
 
+def fill_cn_gaps(df):
+    df = df.sort_values(["Chromosome", "Start", "End"]).reset_index(drop=True)
+
+    rows = []
+
+    for chrom, group in df.groupby("Chromosome", sort=False):
+        group = group.sort_values(["Start", "End"]).reset_index(drop=True)
+
+        for i in range(len(group)):
+            current = group.iloc[i]
+            rows.append(current.to_dict())
+
+            if i == len(group) - 1:
+                continue
+
+            nxt = group.iloc[i + 1]
+
+            if current["End"] + 2 < nxt["Start"]:
+                rows.append({
+                    "Chromosome": chrom,
+                    "Start": int(current["End"]) + 1,
+                    "End": int(nxt["Start"]),
+                    "estimated_cn": 0.0,
+                    "track": current["track"],
+                })
+                print(f"Gap filled between {current['End']} and {nxt['Start']} on chromosome {chrom}")
+
+    return pd.DataFrame(rows).reset_index(drop=True)
+
+
 def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=3, outfile=None, fig=None, axs=None, s1="", s2=""):
 	sns.set_style("whitegrid")
 	sns.set_context("paper")
@@ -349,7 +419,13 @@ def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=3, outfile=Non
 	# sns.set(rc={'figure.figsize': (width, height)})
 	cv_profile_t[ht.TRACK] = ht.S1
 	cv_profile_r[ht.TRACK] = ht.S2
-	c_new = pd.concat([break_cn(cv_profile_t),break_cn(cv_profile_r)], ignore_index=True)
+	
+	cv_profile_t_gaps = fill_cn_gaps(cv_profile_t) # add zero copy number for gaps between regions
+	print(":----")
+	cv_profile_r_gaps = fill_cn_gaps(cv_profile_r) # add zero copy number for gaps between regions
+	print(":----")
+	c_new = pd.concat([break_cn(cv_profile_t_gaps),break_cn(cv_profile_r_gaps)], ignore_index=True)
+	print(c_new)
 
 	tracks = [ht.S1, ht.S2]
 	ncols = len(chrlist)
@@ -387,7 +463,7 @@ def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=3, outfile=Non
 					drawstyle='steps',
 					label=ci.split("_")[0],
 					linewidth=2,
-					color="gray",
+					color=color,
 					alpha=0.8)
 			ax.fill_between(dict_x[t], dict_y[t], color=custom_gray, step="pre", alpha=0.8)
 
@@ -703,9 +779,7 @@ def transform_regions(br_t, br_r, cn_profile_t, cn_profile_r, breakpoint_matches
 			})
 
 	regions = pd.DataFrame(regions)
-
 	regions["region"] = ["r"+str(i+1) for i in range(len(regions))]
-	print(regions)
 
 	return regions
 
@@ -736,12 +810,12 @@ def build_merged_tree(df1, df2, gap=1000000):
 
 			for _, row in sub.iterrows():
 				if row[ht.BIN_ENABLED] == 1:
-					tree.addi(row[ht.START]-gap, row[ht.END]+gap)
+					tree.addi(max(0, row[ht.START]-gap), max(0, row[ht.END]+gap))
 
 		# merge overlapping intervals
 		tree.merge_overlaps()
 		trees[chrom] = tree
-
+  
 	return trees
 
 

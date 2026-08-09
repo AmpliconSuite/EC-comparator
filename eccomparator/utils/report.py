@@ -6,24 +6,12 @@ Created using PyCharm
 Create report with all the results
 """
 import os
-import importlib.util
-
 import datetime
 from jinja2 import Environment, FileSystemLoader
 from xhtml2pdf import pisa
 from io import BytesIO
 
 from eccomparator.utils.utils import OUTFILES as o
-from eccomparator.utils import utils
-
-def get_package_root(module_name):
-    # Find the module spec
-    spec = importlib.util.find_spec(module_name)
-    # Get the location of the module
-    module_location = spec.origin
-    # Return the directory containing the module
-    return os.path.dirname(os.path.abspath(module_location))
-
 
 def generate_report(path_s1,
                     path_s2,
@@ -31,8 +19,9 @@ def generate_report(path_s1,
                     outdir=None):
 
     if outdir:
-        env = Environment(loader=FileSystemLoader(get_package_root(utils.PACKAGE_NAME)))
-        template = env.get_template("utils/report/results.html")
+        template_dir = os.path.dirname(os.path.abspath(__file__))
+        env = Environment(loader=FileSystemLoader(template_dir))
+        template = env.get_template("/report/results.html")
 
 
         html_content = template.render(page_title_text='EC-comparator report',
@@ -63,12 +52,6 @@ def generate_report(path_s1,
         # Save to a file
         with open(outfile, "wb") as f:
             f.write(out_pdf_file_handle.getvalue())
-
-
-        # with open(outfile, "w+b") as out_pdf_file_handle:
-        #     pisa.CreatePDF(
-        #         src=html),  # HTML to convert
-        #         dest=out_pdf_file_handle)  # File handle to receive result
 
 if __name__ == "__main__":
     generate_report("/Users/madag/Projects/PhD/github/ecdna-compare/examples/COLODM320/COLO320DM_Hung2021_amplicon3_cycles.bed",

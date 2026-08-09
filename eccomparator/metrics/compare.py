@@ -241,6 +241,7 @@ def compare_cycles(t_file, r_file,
 			# annotate these regions on the cn_profile, br and chrlist
 			cn_profile_t_annot, cn_profile_r_annot, br_t_annot, br_r_annot, chrlist_annot = viz.segment_union_with_regions(cn_profile_t, cn_profile_r, br_t, br_r, interval_regions)
 			chrlist_annot = sorted(list(set(cn_profile_r_annot[ht.CHR].tolist() + cn_profile_t_annot[ht.CHR].tolist())))
+			print(chrlist_annot)
 
 			# plot coverage profile
 			outfile = os.path.join(outdir, o.COVERAGE_PROFILE_PNG)
