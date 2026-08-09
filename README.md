@@ -25,6 +25,22 @@ python -m build
 python -m pip install --force-reinstall dist/EC-comparator-0.0.2-py3-none-any.whl
 ```
 
+Running tests (for developers):
+
+The CLI examples tests generate PDF reports and require the xhtml2pdf package. If the tests fail with ModuleNotFoundError for xhtml2pdf, install it into the active environment:
+
+```bash
+pip install xhtml2pdf
+```
+
+To run the CLI examples test file and verify the CLI examples work:
+
+```bash
+pytest -q tests/test_cli_examples.py
+```
+
+If the test fails while generating reports, confirm xhtml2pdf is installed in the same Python environment used to run pytest (see pip install above).
+
 ### Usage
 
 Run the following test:
