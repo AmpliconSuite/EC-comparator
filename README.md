@@ -15,32 +15,6 @@ conda activate eccomparator
 pip install .
 ```
 
-And build and install (for developers):
-
-```bash
-python -m pip install build installer toml setuptools
-
-cd EC-comparator
-python -m build
-python -m pip install --force-reinstall dist/EC-comparator-0.0.2-py3-none-any.whl
-```
-
-Running tests (for developers):
-
-The CLI examples tests generate PDF reports and require the xhtml2pdf package. If the tests fail with ModuleNotFoundError for xhtml2pdf, install it into the active environment:
-
-```bash
-pip install xhtml2pdf
-```
-
-To run the CLI examples test file and verify the CLI examples work:
-
-```bash
-pytest -q tests/test_cli_examples.py
-```
-
-If the test fails while generating reports, confirm xhtml2pdf is installed in the same Python environment used to run pytest (see pip install above).
-
 ### Usage
 
 Run the following test:
@@ -129,6 +103,33 @@ optional arguments, fine tune breakpoint matching distance:
   --gap GAP             Merge neighboring intervals within < gap (default: 1000000)
   --debug, --no-debug   Debug structures (for developers)
 ```
+
+### Build and install (for developers)
+
+```bash
+python -m pip install build installer toml setuptools
+
+cd EC-comparator
+python -m build
+python -m pip install --force-reinstall dist/EC-comparator-0.0.2-py3-none-any.whl
+```
+
+Running tests (for developers):
+
+The CLI examples tests generate PDF reports and require the xhtml2pdf package. If the tests fail with ModuleNotFoundError for xhtml2pdf, install it into the active environment:
+
+```bash
+pip install xhtml2pdf
+```
+
+To run the CLI examples test file and verify the CLI examples work:
+
+```bash
+pytest -q tests/test_cli_examples.py
+```
+
+If the test fails while generating reports, confirm xhtml2pdf is installed in the same Python environment used to run pytest (see pip install above).
+
 
 ### License
 
