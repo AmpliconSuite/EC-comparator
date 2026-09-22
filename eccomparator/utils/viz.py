@@ -421,11 +421,8 @@ def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=3, outfile=Non
 	cv_profile_r[ht.TRACK] = ht.S2
 	
 	cv_profile_t_gaps = fill_cn_gaps(cv_profile_t) # add zero copy number for gaps between regions
-	print(":----")
 	cv_profile_r_gaps = fill_cn_gaps(cv_profile_r) # add zero copy number for gaps between regions
-	print(":----")
 	c_new = pd.concat([break_cn(cv_profile_t_gaps),break_cn(cv_profile_r_gaps)], ignore_index=True)
-	print(c_new)
 
 	tracks = [ht.S1, ht.S2]
 	ncols = len(chrlist)
