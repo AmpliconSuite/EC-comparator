@@ -19,7 +19,7 @@ from eccomparator.utils.utils import HEADER as ht
 from eccomparator.utils.utils import DDT as ddt
 from eccomparator.utils.utils import OUTFILES as o
 from eccomparator.utils.utils import NpEncoder
-from eccomparator.utils import report
+import eccomparator.utils.report as report
 from eccomparator.utils.utils import get_weight_distance, get_value_distance
 
 
@@ -241,7 +241,7 @@ def compare_cycles(t_file, r_file,
 			# annotate these regions on the cn_profile, br and chrlist
 			cn_profile_t_annot, cn_profile_r_annot, br_t_annot, br_r_annot, chrlist_annot = viz.segment_union_with_regions(cn_profile_t, cn_profile_r, br_t, br_r, interval_regions)
 			chrlist_annot = sorted(list(set(cn_profile_r_annot[ht.CHR].tolist() + cn_profile_t_annot[ht.CHR].tolist())))
-			print(chrlist_annot)
+			# print(chrlist_annot)
 
 			# plot coverage profile
 			outfile = os.path.join(outdir, o.COVERAGE_PROFILE_PNG)
@@ -267,5 +267,6 @@ def compare_cycles(t_file, r_file,
 				report.generate_report(
 					t_file,
 					r_file,
-					outdir=outdir,
-					total_cost=total_cost)
+					total_cost=total_cost,
+					outdir=outdir
+					)

@@ -1,0 +1,27 @@
+name: Test GitHub Installation
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install EC-comparator from GitHub
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install \
+            "git+https://github.com/AmpliconSuite/EC-comparator.git"
+
+      - name: Check CLI
+        run: |
+          EC-comparator --version
+          EC-comparator --help

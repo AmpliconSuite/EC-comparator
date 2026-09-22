@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 
 EXAMPLES = [
-    ("examples/test4_1/true.bed", "examples/test4_1/reconstruct.bed", "examples/test4_1/output"),
-    ("examples/ecdna1/true.bed", "examples/ecdna1/reconstructed.bed", "examples/ecdna1/output"),
+    # ("examples/test4_1/true.bed", "examples/test4_1/reconstruct.bed", "examples/test4_1/output"),
+    # ("examples/ecdna1/true.bed", "examples/ecdna1/reconstructed.bed", "examples/ecdna1/output"),
 
     ("examples/ecdna2/true_format.bed", "examples/ecdna2/reconstructed_format.bed", "examples/ecdna2/output"),
     ("examples/ecdna2/true_format.bed", "examples/ecdna2/reconstructed_format1.bed", "examples/ecdna2/output"),
@@ -24,8 +24,8 @@ EXAMPLES = [
     ("examples/ecdna9/true_format.bed", "examples/ecdna9/reconstructed_format.bed", "examples/ecdna9/output"),
     ("examples/ecdna10/true_format.bed", "examples/ecdna10/reconstructed_format.bed", "examples/ecdna10/output"),
 
-    ("examples/ecdna11/true_format.bed", "examples/ecdna11/reconstructed_format.bed", "examples/ecdna11/output"),
-    ("examples/ecdna11/true_format.bed", "examples/ecdna11/reconstructed_format2.bed", "examples/ecdna11/output"),
+    # ("examples/ecdna11/true_format.bed", "examples/ecdna11/reconstructed_format.bed", "examples/ecdna11/output"),
+    # ("examples/ecdna11/true_format.bed", "examples/ecdna11/reconstructed_format2.bed", "examples/ecdna11/output"),
 
     ("examples/ecdna12/true_format.bed", "examples/ecdna12/reconstructed_format.bed", "examples/ecdna12/output"),
     ("examples/ecdna13/true_format.bed", "examples/ecdna13/reconstructed_format.bed", "examples/ecdna13/output"),

@@ -3,7 +3,9 @@ Comparing cycle decompositions across technologies and methods.
 
 ### Installation
 
-Please install `python3.9` and run the following code to install all dependencies:
+Below is how to install `EC-comparator` from source. It assumes installed:
+- conda/mamba
+- git
 
 ```bash
 git clone https://github.com/AmpliconSuite/EC-comparator.git
@@ -12,7 +14,9 @@ cd EC-comparator
 mamba env create -f environment.yml
 conda activate eccomparator
 
-pip install .
+python -m pip install -r requirements.txt && python -m pip install .
+which EC-comparator
+EC-comparator --version
 ```
 
 ### Usage
@@ -20,10 +24,9 @@ pip install .
 Run the following example as test:
 
 ```bash
-cd EC-comparator/eccomparator
-python main.py -a ../examples/ecdna1/true.bed \
-               -b ../examples/ecdna1/reconstructed.bed \
-               -d ../examples/ecdna1/output
+EC-comparator -a ./examples/ecdna5/true_format.bed \
+               -b ./examples/ecdna5/reconstructed_format.bed \
+               -d ./examples/ecdna5/output --plot --report
 ```
 
 ### Output description
@@ -106,32 +109,137 @@ optional arguments, fine tune breakpoint matching distance:
 
 ### Build and install (for developers)
 
-```bash
-python -m pip install build installer toml setuptools
+Install the packaging tools:
 
+```bash
+python -m pip install  --upgrade installer toml setuptools build twine
+```
+
+Go to the repository root:
+
+```bash
 cd EC-comparator
-python -m build
-python -m pip install --force-reinstall dist/EC-comparator-0.0.2-py3-none-any.whl
 ```
 
-Running tests (for developers):
-
-The CLI examples tests generate PDF reports and require the xhtml2pdf package. If the tests fail with ModuleNotFoundError for xhtml2pdf, install it into the active environment:
+Remove previous builds:
 
 ```bash
-pip install xhtml2pdf
+rm -rf build dist *.egg-info eccomparator.egg-info
 ```
 
-To run the CLI examples test file and verify the CLI examples work:
+Build the package:
+
+```bash
+python -m build
+```
+
+The `dist/` directory should contain:
+
+```text
+dist/
+├── ec_comparator-0.0.3-py3-none-any.whl
+└── ec_comparator-0.0.3.tar.gz
+```
+
+Check the built packages:
+
+```bash
+python -m twine check dist/*
+```
+
+Both the wheel and source distribution should report:
+
+```text
+PASSED
+```
+
+### Test the package locally
+
+Create a clean test environment:
+
+```bash
+conda create -n eccomparator-test python=3.9
+conda activate eccomparator-test
+```
+
+Install the wheel:
+
+```bash
+python -m pip install dist/ec_comparator-0.0.3-py3-none-any.whl
+```
+
+Check the installed CLI:
+
+```bash
+EC-comparator --version
+```
+
+It should output:
+
+```text
+EC-comparator 0.0.3
+```
+
+### Upload to TestPyPI
+
+Upload the package:
+
+```bash
+python -m twine upload --repository testpypi dist/*
+```
+
+Use your TestPyPI credentials/API token when prompted:
+
+https://test.pypi.org/
+
+To test installation from TestPyPI, first remove the locally installed package:
+
+```bash
+python -m pip uninstall EC-comparator -y
+```
+
+Install from TestPyPI while using the regular PyPI index for dependencies:
+
+```bash
+python -m pip install \
+    --index-url https://test.pypi.org/simple/ \
+    --extra-index-url https://pypi.org/simple/ \
+    EC-comparator
+```
+
+Verify the installation:
+
+```bash
+EC-comparator --version
+```
+
+### Running tests (for developers)
+
+The CLI example tests generate PDF reports and require `xhtml2pdf`.
+
+If the tests fail with:
+
+```text
+ModuleNotFoundError: No module named 'xhtml2pdf'
+```
+
+install it in the active environment:
+
+```bash
+python -m pip install xhtml2pdf
+```
+
+Run the CLI example tests:
 
 ```bash
 pytest -q tests/test_cli_examples.py
 ```
 
-If the test fails while generating reports, confirm xhtml2pdf is installed in the same Python environment used to run pytest (see pip install above).
+If a test fails while generating reports, confirm that `xhtml2pdf` is installed in the same Python environment used to run `pytest`.
+
 
 
 ### License
 
-tbd
+MIT
 
