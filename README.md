@@ -17,7 +17,7 @@ pip install .
 
 ### Usage
 
-Run the following test:
+Run the following example as test:
 
 ```bash
 cd EC-comparator/eccomparator
