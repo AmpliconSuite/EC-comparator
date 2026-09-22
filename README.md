@@ -1,7 +1,53 @@
 # EC-comparator
 Comparing cycle decompositions across technologies and methods.
 
-### Installation
+## Table of Contents
+
+- [Requirements](#requirements)
+- [Getting started with pip](#getting-started-with-pip)
+- [Usage](#usage)
+- [Installation from source](#installation-from-source)
+- [Output description](#output-description)
+- [Help](#help)
+- [Build and install (for developers)](#build-and-install-for-developers)
+- [License](#license)
+- [Related paper](#related-paper)
+- [Contributors](#contributors)
+
+## Requirements
+
+EC-comparator requires:
+
+- Python 3.10
+- BedTools 2.31.1
+
+BedTools is an external command-line dependency used by pybedtools. It is not installed by pip, so it must be installed separately.
+
+Or, alternatively you can install these using conda/mamba ( assumes conda/mamba is preinstalled):
+
+```
+mamba install -c conda-forge -c bioconda python=3.10 bedtools=2.31.1
+```
+
+
+## Getting started with pip
+
+
+``` 
+python -m pip install EC-comparator==0.0.3
+```
+
+## Usage
+
+Run the following example as test:
+
+```bash
+EC-comparator -a ./examples/ecdna1/true.bed \
+               -b ./examples/ecdna1/reconstructed.bed \
+               -d ./examples/ecdna1/output --plot --report
+```
+
+## Installation from source
 
 Below is how to install `EC-comparator` from source. It assumes installed:
 - conda/mamba
@@ -19,17 +65,7 @@ which EC-comparator
 EC-comparator --version
 ```
 
-### Usage
-
-Run the following example as test:
-
-```bash
-EC-comparator -a ./examples/ecdna5/true_format.bed \
-               -b ./examples/ecdna5/reconstructed_format.bed \
-               -d ./examples/ecdna5/output --plot --report
-```
-
-### Output description
+## Output description
 
 ```bash
 ../examples/ecdna1/output/
@@ -53,7 +89,70 @@ EC-comparator -a ./examples/ecdna5/true_format.bed \
 ├── total_cost_table.png
 ```
 
-### Help
+`coverage_breakpoints_profile.png`
+![overage_breakpoints_profile.png](./examples/ecdna1/output/coverage_breakpoints_profile.png)
+
+`total_cost`
+| | |
+|---|---|
+| ![total_cost.png](./examples/ecdna1/output/total_cost.png) | ![total_cost_table.png](./examples/ecdna1/output/total_cost_table.png) |
+
+`metrics.json`
+```json
+{
+    "configs": {
+        "breakpoint_dist": {
+            ...
+            },
+            "gaussian": {
+                "weight": 1,
+                "threshold": 2,
+                "enable": false,
+                "sigma": 500,
+                "amplitude": 1,
+                "breakpoint_dist": {
+                    "weight": 1,
+                    "enable": true
+                }
+            },
+            ...
+        },
+...
+    },
+    "distances": {
+        "cn_hamming_dist": 350,
+        "cn_hamming_norm_dist": 0.05,
+        "cn_cos_dist": 0.01,
+        "cn_jc_dist": 0.1,
+        "breakpoint_dist": 0.64,
+        "fragments_dist": 0.16,
+        "cycles_dist": 0.05,
+        "total_cost": 0.9,
+       ...
+    }
+}%      
+```
+
+Distances explained:
+
+  <p>Here we compute the cycle distance between `s1` and `s2`.<br/><br/>
+        Distance description:<br/>
+        d1 = Hamming distance = measures differences of genomic regions presence / absence for s1 and s2<br/>
+        d2 = Cosine distance = measures the copy-number distance between the s1 and s2 using cosine distance<br/>
+        d3 = Min-max distance = measures the copy-number distance between the s1 and s2 using jaccard distance<br/>
+        d4 = Bins distance = measures differences of genomic bins usage<br/>
+        d5 = Paths distance = measures differences of paths decomposition between s1 and s2<br/>
+        d6 = Breakpoint distance = measures differences between the breakpoint junctions profiles between s1 and s2<br/><br/>
+        The radial plot shows all these distances, with values between 0 (low cost, high similarity) and 1 (high
+        cost, low similarity).<br/>
+        The more colorful the more distant are `s1` and `s2`.
+    </p>
+    <h4><b>Total cost</b>: {{total_cost}} (0 - highly similar, 5 - dissimilar)</h4>
+
+
+
+
+## Help
 
 ```bash
 usage: EC-comparator [-h] -a FIRST_STRUCTURE -b SECOND_STRUCTURE -d OUTDIR [--plot | --no-plot] [--report | --no-report] [--min-cn MIN_CN] [--no-cn-hamming-dist] [--no-cn-cosine-dist] [--no-cn-jc-dist] [--no-fragments-dist] [--no-cycles-dist] [--no-breakpoint-dist]
@@ -107,139 +206,19 @@ optional arguments, fine tune breakpoint matching distance:
   --debug, --no-debug   Debug structures (for developers)
 ```
 
-### Build and install (for developers)
+## Build and install (for developers)
 
-Install the packaging tools:
+[Build and packaging](docs/dev.md)
 
-```bash
-python -m pip install  --upgrade installer toml setuptools build twine
-```
-
-Go to the repository root:
-
-```bash
-cd EC-comparator
-```
-
-Remove previous builds:
-
-```bash
-rm -rf build dist *.egg-info eccomparator.egg-info
-```
-
-Build the package:
-
-```bash
-python -m build
-```
-
-The `dist/` directory should contain:
-
-```text
-dist/
-├── ec_comparator-0.0.3-py3-none-any.whl
-└── ec_comparator-0.0.3.tar.gz
-```
-
-Check the built packages:
-
-```bash
-python -m twine check dist/*
-```
-
-Both the wheel and source distribution should report:
-
-```text
-PASSED
-```
-
-### Test the package locally
-
-Create a clean test environment:
-
-```bash
-conda create -n eccomparator-test python=3.9
-conda activate eccomparator-test
-```
-
-Install the wheel:
-
-```bash
-python -m pip install dist/ec_comparator-0.0.3-py3-none-any.whl
-```
-
-Check the installed CLI:
-
-```bash
-EC-comparator --version
-```
-
-It should output:
-
-```text
-EC-comparator 0.0.3
-```
-
-### Upload to TestPyPI
-
-Upload the package:
-
-```bash
-python -m twine upload --repository testpypi dist/*
-```
-
-Use your TestPyPI credentials/API token when prompted:
-
-https://test.pypi.org/
-
-To test installation from TestPyPI, first remove the locally installed package:
-
-```bash
-python -m pip uninstall EC-comparator -y
-```
-
-Install from TestPyPI while using the regular PyPI index for dependencies:
-
-```bash
-python -m pip install \
-    --index-url https://test.pypi.org/simple/ \
-    --extra-index-url https://pypi.org/simple/ \
-    EC-comparator
-```
-
-Verify the installation:
-
-```bash
-EC-comparator --version
-```
-
-### Running tests (for developers)
-
-The CLI example tests generate PDF reports and require `xhtml2pdf`.
-
-If the tests fail with:
-
-```text
-ModuleNotFoundError: No module named 'xhtml2pdf'
-```
-
-install it in the active environment:
-
-```bash
-python -m pip install xhtml2pdf
-```
-
-Run the CLI example tests:
-
-```bash
-pytest -q tests/test_cli_examples.py
-```
-
-If a test fails while generating reports, confirm that `xhtml2pdf` is installed in the same Python environment used to run `pytest`.
-
-
-
-### License
+## License
 
 MIT
 
+## Related paper
+
+tba
+
+## Contributors
+
+- github@madagiurgiu25, Madalina Giurgiu-Kraljic, EMBL Heidelberg
+- copilot, chatgpt, claude
