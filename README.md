@@ -115,7 +115,7 @@ EC-comparator --version
 `total_cost`
 | | |
 |---|---|
-| ![total_cost.png](./examples/ecdna1/output/total_cost.png) | ![total_cost_table.png](./examples/ecdna1/output/total_cost_table.png) |
+| ![total_cost_bar.png](./examples/ecdna1/output/total_cost_bar.png) | ![total_cost_table.png](./examples/ecdna1/output/total_cost_table.png) |
 
 `metrics.json`
 ```json
