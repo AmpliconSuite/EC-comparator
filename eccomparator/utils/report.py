@@ -31,6 +31,7 @@ def generate_report(path_s1,
                                description_output=outdir,
                                total_cost=total_cost,
                                path_total_cost=o.TOTAL_COST_PNG,
+                               path_total_bar=o.TOTAL_COST_BAR_PNG,
                                path_total_table=o.TOTAL_COST_TABLE,
                                path_plot_cn_sv=o.COVERAGE_BREAKPOINTS_PROFILE)
 

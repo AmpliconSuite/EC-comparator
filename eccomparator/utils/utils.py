@@ -94,7 +94,9 @@ class HEADER:
 				   "strand": STRAND,
 				   "orientation": STRAND,
 	   			   "iscyclic":ISCYCLIC,
-			 	   "Iscyclic":ISCYCLIC}
+			 	   "Iscyclic":ISCYCLIC,
+				   "is_cyclic":ISCYCLIC,
+				   }
 
 	THRESHOLD = "threshold"
 	WEIGHT = "weight"
@@ -245,6 +247,7 @@ class DDT:
 
 class OUTFILES:
 	TOTAL_COST_PNG = 'total_cost.png'
+	TOTAL_COST_BAR_PNG = 'total_cost_bar.png'
 	TOTAL_COST_TABLE = 'total_cost_table.png'
 	COVERAGE_PROFILE_S1_TXT = 'coverage_profile_s1.txt'
 	COVERAGE_PROFILE_S2_TXT = 'coverage_profile_s2.txt'

@@ -170,17 +170,17 @@ def compare_cycles(t_file, r_file,
 	df_, h = get_hamming_score(df_)
 	h_norm = get_hamming_score_norm(df_)
 
-	dict_metrics[ht.DISTANCES][ddt.HAMMING] = round(h,2)
-	dict_metrics[ht.DISTANCES][ddt.HAMMING_NORM] = round(h_norm,2)
+	dict_metrics[ht.DISTANCES][ddt.HAMMING] = round(h,3)
+	dict_metrics[ht.DISTANCES][ddt.HAMMING_NORM] = round(h_norm,3)
 
 	# 3. Compute copy-number similarity
 	cn_profile_t = get_feature_cn(df_t, df_)
 	cn_profile_r = get_feature_cn(df_r, df_)
 
 	cv_distance = get_cosine_distance_cn(cn_profile_t, cn_profile_r)
-	dict_metrics[ht.DISTANCES][ddt.COSINE_DISTANCE] = round(cv_distance,2)
+	dict_metrics[ht.DISTANCES][ddt.COSINE_DISTANCE] = round(cv_distance,3)
 	cv_distance = get_jc_distance_cn(cn_profile_t, cn_profile_r)
-	dict_metrics[ht.DISTANCES][ddt.COPYNUMBER_JC] = round(cv_distance, 2)
+	dict_metrics[ht.DISTANCES][ddt.COPYNUMBER_JC] = round(cv_distance, 3)
 
 	# 4. Breakpoint matching
 	br_t, br_r = get_breakpoints_pairs(df_t, df_r)
@@ -193,15 +193,15 @@ def compare_cycles(t_file, r_file,
                   												#   match_nonlinear=default_match_nonlinear
                                 )
 	print("Breakpoint maching: JD:", jc)
-	dict_metrics[ht.DISTANCES][ddt.JACCARD_DISTANCE] = round(jc,2)
+	dict_metrics[ht.DISTANCES][ddt.JACCARD_DISTANCE] = round(jc,3)
  
 	# 5. Penalize for cycles and fragments multiplicity (if the tool decompose in one or more cycles)
 	# overlap_fragments_distance = get_overlap_fragments_weighted(df_t_pr, df_r_pr, df_bins_pr)
 	# overlap_cycles_distance = get_overlap_cycles_weighted(df_t_pr, df_r_pr, df_bins_pr)
 	overlap_fragments_distance = get_overlap_fragments_weighted(df_)
 	overlap_cycles_distance = get_overlap_cycles_weighted(df_t, df_r,  df_)
-	dict_metrics[ht.DISTANCES][ddt.FRAGMENTS_DISTANCE] = round(overlap_fragments_distance,2)
-	dict_metrics[ht.DISTANCES][ddt.CYCLES_DISTANCE] = round(overlap_cycles_distance,2)
+	dict_metrics[ht.DISTANCES][ddt.FRAGMENTS_DISTANCE] = round(overlap_fragments_distance,3)
+	dict_metrics[ht.DISTANCES][ddt.CYCLES_DISTANCE] = round(overlap_cycles_distance,3)
 
 	# 6. Stoichiometry (compute distance of transforming one permutation in the other)
 	# missing
@@ -259,8 +259,11 @@ def compare_cycles(t_file, r_file,
 			# plot total cost
 			outfile = os.path.join(outdir, o.TOTAL_COST_PNG)
 			viz.draw_total_cost(dict_metrics, outfile)
+			outfile = os.path.join(outdir, o.TOTAL_COST_BAR_PNG)
+			viz.draw_total_cost_bar(dict_metrics, outfile)
 			outfile = os.path.join(outdir, o.TOTAL_COST_TABLE)
 			viz.draw_total_cost_table(dict_metrics, outfile)
+
 
 			# create report
 			if plot_report:

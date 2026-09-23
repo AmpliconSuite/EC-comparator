@@ -1,4 +1,4 @@
-#chr	start	end	strand	circ_id	estimated_cn
-chr1	0	3000	+	1	8
-chr1	3500	4800	-	1	8
-chr1	0	3000	-	1	8
+#chr	start	end	strand	circ_id	estimated_cn	is_cyclic
+chr1	500	2800	+	1	8	True
+chr1	3500	4800	+	1	8	True
+chr1	0	3200	-	1	8	True
