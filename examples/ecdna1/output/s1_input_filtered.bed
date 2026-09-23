@@ -1,0 +1,7 @@
+Chromosome	Start	End	Stranded	circ_id	estimated_cn	iscyclic
+chr1	1000	2000	+	1	10.0	True
+chr1	7000	8000	+	1	10.0	True
+chr1	600	2500	-	1	10.0	True
+chr1	1500	2100	+	2	20.0	True
+chr1	9000	11100	-	2	20.0	True
+chr2	100	2000	+	2	20.0	True

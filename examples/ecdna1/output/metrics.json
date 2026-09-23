@@ -66,11 +66,11 @@
     "distances": {
         "cn_hamming_dist": 350,
         "cn_hamming_norm_dist": 0.05,
-        "cn_cos_dist": 0.01,
-        "cn_jc_dist": 0.1,
-        "breakpoint_dist": 0.64,
-        "fragments_dist": 0.16,
-        "cycles_dist": 0.05,
+        "cn_cos_dist": 0.007,
+        "cn_jc_dist": 0.102,
+        "breakpoint_dist": 0.636,
+        "fragments_dist": 0.156,
+        "cycles_dist": 0.046,
         "total_cost": 0.9,
         "total_cost_description": {
             "breakpoint_dist": 1,

@@ -107,7 +107,10 @@ EC-comparator --version
 | `total_cost_table.png` | Table image of the distances / total cost |
 
 `coverage_breakpoints_profile.png`
-![overage_breakpoints_profile.png](./examples/ecdna1/output/coverage_breakpoints_profile.png)
+![coverage_breakpoints_profile.png](./examples/ecdna1/output/coverage_breakpoints_profile.png)
+
+`original_structures.png`
+![original_structures.png](./examples/ecdna1/output/original_structures.png)
 
 `total_cost`
 | | |
