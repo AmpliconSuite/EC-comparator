@@ -302,6 +302,10 @@ def gaussian_distance(cha, a, chb, b, cov1, chx, x, chy, y ,cov2):
 	# i=a is mean, and j=x is x
 	cleft = gaussian_contribution_scaled(x,ddt.GAUSSIAN_AMPL,a,ddt.GAUSSIAN_SIGMA)
 	cright = gaussian_contribution_scaled(y,ddt.GAUSSIAN_AMPL,b,ddt.GAUSSIAN_SIGMA)
+
+	# print(cha,a,chx,x,cleft)
+	# print(chb,b,chy,y,cright)
+	# print("--=")
 	
 	contribution = cleft + cright if cleft > 0 and cright > 0 else 0
 	total_distance = np.inf
@@ -310,16 +314,7 @@ def gaussian_distance(cha, a, chb, b, cov1, chx, x, chy, y ,cov2):
 		contribution = min_max_scale(contribution, ddt.GAUSSIAN_AMPL)
 		total_distance = 1 - contribution
 
-	# print("contribution, total_distance", contribution, total_distance)
 	return total_distance
-
-	# cleft = gaussian_contribution(x,ddt.GAUSSIAN_AMPL,a,ddt.GAUSSIAN_SIGMA)
-	# cright = gaussian_contribution(y,ddt.GAUSSIAN_AMPL,b,ddt.GAUSSIAN_SIGMA)
-	
-	# if cleft > 0 or cright > 0:
-	# 	return 1 - uniformity_scale(cleft, cright)
-	# else:
-	# 	return np.inf
 
 	
 def weight_nodes_cn(df_br, i, m):

@@ -63,44 +63,102 @@ def draw_total_cost(dict_metrics, outfile=None):
 		fig.show()
 
 
-def draw_total_cost_bar(dict_metrics, outfile=None, orientation='v'):
-	"""Create a bar plot with the same information used by the radar plot.
+def draw_total_cost_bar(dict_metrics, outfile=None):
+    """Create a horizontal bar plot for the total-cost metrics.
 
-	Arguments:
-		dict_metrics: metrics dictionary (same structure expected by draw_total_cost)
-		outfile: optional path to save the plot (png/svg)
-		orientation: 'v' for vertical bars, 'h' for horizontal
-	"""
-	# prepare data
-	dist = []
-	value = []
-	for key in dict_metrics[ht.DISTANCES][DDT.TOTAL_COST_DESCRIPTION]:
-		dist.append(DDT.RENAME[key])
-		value.append(dict_metrics[ht.DISTANCES][key])
+    Arguments:
+        dict_metrics: metrics dictionary (same structure expected by draw_total_cost)
+        outfile: optional path to save the plot (png/svg)
+    """
 
-	df = pd.DataFrame(dict(
-		dist=dist,
-		value=value))
+    # Prepare data
+    dist = []
+    value = []
 
-	if orientation == 'h':
-		fig = px.bar(df, x='value', y='dist', orientation='h')
-		fig.update_layout(yaxis=dict(categoryorder='array', categoryarray=dist))
-	else:
-		fig = px.bar(df, x='dist', y='value')
-		fig.update_layout(xaxis=dict(categoryorder='array', categoryarray=dist))
+    for key in dict_metrics[ht.DISTANCES][DDT.TOTAL_COST_DESCRIPTION]:
+        dist.append(DDT.RENAME[key])
+        value.append(dict_metrics[ht.DISTANCES][key])
 
-	fig.update_traces(marker_color='steelblue', opacity=0.85)
-	fig.update_yaxes(range=[0, 1])
-	fig.update_layout(
-		font=dict(color='darkslategray', size=13),
-		margin=dict(l=20, r=20, t=30, b=30)
-	)
+    df = pd.DataFrame({
+        "dist": dist,
+        "value": value,
+    })
 
-	if outfile:
-		fig.write_image(outfile, scale=10, width=600, height=400)
-		fig.write_image(outfile + ".svg", scale=10, width=600, height=400, format="svg")
-	else:
-		fig.show()
+    # Desired order: d1 -> d6
+    order = ["d1", "d2", "d3", "d4", "d5", "d6"]
+
+    df["dist"] = pd.Categorical(
+        df["dist"],
+        categories=order,
+        ordered=True,
+    )
+
+    df = df.sort_values("dist")
+
+    # Horizontal bar plot
+    fig = px.bar(
+        df,
+        x="value",
+        y="dist",
+        orientation="h",
+    )
+
+    fig.update_traces(
+        marker_color="steelblue",
+        opacity=0.85,
+    )
+
+    # X axis: 0 -> 1, vertical grid lines only
+    fig.update_xaxes(
+        range=[0, 1],
+        showgrid=True,
+        gridcolor="lightgray",
+        gridwidth=1,
+        zeroline=False,
+        title=None,
+    )
+
+    # Y axis: d1 -> d6
+    fig.update_yaxes(
+        categoryorder="array",
+        categoryarray=order,
+        showgrid=False,
+        title=None,
+    )
+
+    fig.update_layout(
+        template="plotly_white",
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        font=dict(
+            color="darkslategray",
+            size=13,
+        ),
+        margin=dict(
+            l=20,
+            r=20,
+            t=30,
+            b=30,
+        ),
+    )
+
+    if outfile:
+        fig.write_image(
+            outfile,
+            scale=10,
+            width=200,
+            height=200,
+        )
+
+        fig.write_image(
+            outfile + ".svg",
+            scale=10,
+            width=200,
+            height=200,
+            format="svg",
+        )
+    else:
+        fig.show()
 
 
 def draw_total_cost_table(dict_metrics, outfile=None):
@@ -420,7 +478,7 @@ def draw_cn(cv_profile_t, cv_profile_r, chrlist, width=30, height=3, outfile=Non
 	cv_profile_t[ht.TRACK] = ht.S1
 	cv_profile_r[ht.TRACK] = ht.S2
 	
-	cv_profile_t_gaps = fill_cn_gaps(cv_profile_t) # add zero copy number for gaps between regions
+	cv_profile_t_gaps = fill_cn_gaps(cv_profile_t) # add zero copy number for gaps between regionsgit s
 	cv_profile_r_gaps = fill_cn_gaps(cv_profile_r) # add zero copy number for gaps between regions
 	c_new = pd.concat([break_cn(cv_profile_t_gaps),break_cn(cv_profile_r_gaps)], ignore_index=True)
 

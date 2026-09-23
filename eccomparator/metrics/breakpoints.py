@@ -755,6 +755,7 @@ def compute_jc_distance_cn_weighted_confidence(breakpoint_match, t_nodes, r_node
 		node2_weight,
 	) in breakpoint_match:
 		gaussian_confidence = 1 - edge_match_weight
+		print(gaussian_confidence,node1_weight,node2_weight)
 		match_score += gaussian_confidence * (node1_weight + node2_weight)
 
 	# weight of the individual
@@ -927,6 +928,7 @@ def compute_breakpoint_distance(
 	matches, breakpoint_match = find_matching_breakpoints(
 		G, t_nodes, r_nodes, threshold_max_value=distance_threshold
 	)
+	print(matches)
  
 	# 5. breakpoint distance
 	if how in [

@@ -101,7 +101,7 @@ def read_input(t_file, r_file, tempdir, min_cn=0):
 	else:
 		t_collection[ht.ISCYCLIC] = True
 
-	if 'iscyclic' in r_collection.columns.tolist():
+	if ht.ISCYCLIC in r_collection.columns.tolist():
 		r_collection[ht.ISCYCLIC] = r_collection[ht.ISCYCLIC].astype(bool)
 	else:
 		r_collection[ht.ISCYCLIC] = True
