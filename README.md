@@ -8,6 +8,7 @@ Comparing cycle decompositions across technologies and methods.
 - [Usage](#usage)
 - [Installation from source](#installation-from-source)
 - [Output description](#output-description)
+- [Key arguments](#key-arguments)
 - [Help](#help)
 - [Build and install (for developers)](#build-and-install-for-developers)
 - [License](#license)
@@ -89,6 +90,22 @@ EC-comparator --version
 ├── total_cost_table.png
 ```
 
+| File | Description |
+|---|---|
+| `breakpoints_matched.txt` | Matched breakpoints between `s1` and `s2` |
+| `breakpoints_profile_s1.txt` | Breakpoint profile of structure `s1` |
+| `breakpoints_profile_s2.txt` | Breakpoint profile of structure `s2` |
+| `coverage_breakpoints_profile.pdf` / `.png` / `.svg` | Coverage profile plot with breakpoints overlaid (same plot, three formats) |
+| `coverage_profile.pdf` / `.png` / `.svg` | Coverage (copy-number) profile plot (same plot, three formats) |
+| `coverage_profile_s1.txt` | Coverage profile values for structure `s1` |
+| `coverage_profile_s2.txt` | Coverage profile values for structure `s2` |
+| `metrics.json` | Computed distances and the configuration used to compute them |
+| `report.html` / `report.pdf` | Generated comparison report (HTML and PDF versions) |
+| `s1_input_filtered.bed` | Input structure `s1`, filtered (see `--min-cn`) |
+| `s2_input_filtered.bed` | Input structure `s2`, filtered (see `--min-cn`) |
+| `total_cost.png` | Radial plot of the distances / total cost |
+| `total_cost_table.png` | Table image of the distances / total cost |
+
 `coverage_breakpoints_profile.png`
 ![overage_breakpoints_profile.png](./examples/ecdna1/output/coverage_breakpoints_profile.png)
 
@@ -133,24 +150,43 @@ EC-comparator --version
 }%      
 ```
 
-Distances explained:
+### Distances explained
 
-  <p>Here we compute the cycle distance between `s1` and `s2`.<br/><br/>
-        Distance description:<br/>
-        d1 = Hamming distance = measures differences of genomic regions presence / absence for s1 and s2<br/>
-        d2 = Cosine distance = measures the copy-number distance between the s1 and s2 using cosine distance<br/>
-        d3 = Min-max distance = measures the copy-number distance between the s1 and s2 using jaccard distance<br/>
-        d4 = Bins distance = measures differences of genomic bins usage<br/>
-        d5 = Paths distance = measures differences of paths decomposition between s1 and s2<br/>
-        d6 = Breakpoint distance = measures differences between the breakpoint junctions profiles between s1 and s2<br/><br/>
-        The radial plot shows all these distances, with values between 0 (low cost, high similarity) and 1 (high
-        cost, low similarity).<br/>
-        The more colorful the more distant are `s1` and `s2`.
-    </p>
-    <h4><b>Total cost</b>: {{total_cost}} (0 - highly similar, 5 - dissimilar)</h4>
+Here we compute the cycle distance between `s1` and `s2`.
 
+| ID | Distance | Description |
+|---|---|---|
+| d1 | Hamming distance | measures differences of genomic regions presence / absence for s1 and s2 |
+| d2 | Cosine distance | measures the copy-number distance between the s1 and s2 using cosine distance |
+| d3 | Min-max distance | measures the copy-number distance between the s1 and s2 using jaccard distance |
+| d4 | Bins distance | measures differences of genomic bins usage |
+| d5 | Paths distance | measures differences of paths decomposition between s1 and s2 |
+| d6 | Breakpoint distance | measures differences between the breakpoint junctions profiles between s1 and s2 |
 
+The radial plot shows all these distances, with values between 0 (low cost, high similarity) and 1 (high cost, low similarity). The more colorful the more distant are `s1` and `s2`.
 
+**Total cost**: final score showing how dissimilar two reconstructions are (0 - highly similar, 5 - dissimilar)
+
+## Key arguments
+
+### Required arguments
+
+| Flag | Value | Description |
+|---|---|---|
+| `-a`, `--first-structure` | `FIRST_STRUCTURE` | First structure (BED-like format) |
+| `-b`, `--second-structure` | `SECOND_STRUCTURE` | Second structure (BED-like format) |
+| `-d`, `--outdir` | `OUTDIR` | Output directory |
+
+### Selected optional arguments
+
+| Flag | Value | Description |
+|---|---|---|
+| `--plot` / `--no-plot` | — | Plot coverage profiles |
+| `--report` / `--no-report` | — | Generate report (this the flag is set, it will also set 'plot') |
+| `--gap` | `GAP` | Merge neighboring intervals within < gap (default: 1000000) |
+| `--gaussian-sigma` | `GAUSSIAN_SIGMA` | Define standard deviation (default: 500) |
+
+See [Help](#help) below for the full list of arguments.
 
 ## Help
 

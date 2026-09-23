@@ -3,7 +3,7 @@
 Install the packaging tools:
 
 ```bash
-python -m pip install  --upgrade installer toml setuptools build twine
+python -m pip install  --upgrade installer toml build twine
 ```
 
 Go to the repository root:
@@ -49,7 +49,7 @@ PASSED
 Create a clean test environment:
 
 ```bash
-conda create -n eccomparator-test python=3.9
+conda create -n eccomparator-test -c conda-forge -c bioconda python=3.10 bedtools=2.31.1
 conda activate eccomparator-test
 ```
 
@@ -103,6 +103,25 @@ Verify the installation:
 ```bash
 EC-comparator --version
 ```
+
+## Upload to PyPI
+
+After successfully testing TestPyPI:
+
+```bash
+python -m twine upload dist/*
+```
+
+Test the official PyPI installation:
+
+```bash
+python -m pip uninstall EC-comparator -y
+python -m pip install EC-comparator
+
+EC-comparator --version
+```
+
+
 
 ### Running tests (for developers)
 
