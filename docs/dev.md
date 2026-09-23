@@ -28,8 +28,8 @@ The `dist/` directory should contain:
 
 ```text
 dist/
-├── ec_comparator-0.1.1-py3-none-any.whl
-└── ec_comparator-0.1.1.tar.gz
+├── ec_comparator-0.1.2-py3-none-any.whl
+└── ec_comparator-0.1.2.tar.gz
 ```
 
 Check the built packages:
@@ -56,7 +56,7 @@ conda activate eccomparator-test
 Install the wheel:
 
 ```bash
-python -m pip install dist/ec_comparator-0.1.1-py3-none-any.whl
+python -m pip install dist/ec_comparator-0.1.2-py3-none-any.whl
 ```
 
 Check the installed CLI:
@@ -68,7 +68,7 @@ EC-comparator --version
 It should output:
 
 ```text
-EC-comparator 0.1.1
+EC-comparator 0.1.2
 ```
 
 ### Upload to TestPyPI

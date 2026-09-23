@@ -35,7 +35,7 @@ mamba install -c conda-forge -c bioconda python=3.10 bedtools=2.31.1
 
 
 ``` 
-python -m pip install EC-comparator==0.1.0
+python -m pip install EC-comparator==0.1.2
 ```
 
 ## Usage
