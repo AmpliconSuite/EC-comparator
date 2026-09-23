@@ -3,8 +3,8 @@ channels:
   - bioconda
   - conda-forge
 dependencies:
-  - python=3.9
+  - python=3.10
   - bedtools=2.31.1
   - pip
   - pip:
-      - toml 
+      - toml

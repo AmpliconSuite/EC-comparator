@@ -21,7 +21,7 @@ def generate_report(path_s1,
     if outdir:
         template_dir = os.path.dirname(os.path.abspath(__file__))
         env = Environment(loader=FileSystemLoader(template_dir))
-        template = env.get_template("/report/results.html")
+        template = env.get_template("/template/results.html")
 
 
         html_content = template.render(page_title_text='EC-comparator report',

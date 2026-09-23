@@ -303,9 +303,9 @@ def gaussian_distance(cha, a, chb, b, cov1, chx, x, chy, y ,cov2):
 	cleft = gaussian_contribution_scaled(x,ddt.GAUSSIAN_AMPL,a,ddt.GAUSSIAN_SIGMA)
 	cright = gaussian_contribution_scaled(y,ddt.GAUSSIAN_AMPL,b,ddt.GAUSSIAN_SIGMA)
 
-	print(cha,a,chx,x,cleft)
-	print(chb,b,chy,y,cright)
-	print("--=")
+	# print(cha,a,chx,x,cleft)
+	# print(chb,b,chy,y,cright)
+	# print("--=")
 	
 	contribution = cleft + cright if cleft > 0 and cright > 0 else 0
 	total_distance = np.inf

@@ -17,10 +17,7 @@ from eccomparator.configs import Configs
 from eccomparator.utils.utils import DDT as d
 from eccomparator.utils.utils import HEADER as h
 from eccomparator.metrics import compare
-
-# from AmpliconComparison.utils.utils import DDT as d
-# from AmpliconComparison.utils.utils import HEADER as h
-
+from eccomparator import __version__
 
 def format_print(dict):
 	"""
@@ -135,6 +132,13 @@ def main():
 			description="Method for comparing ecDNA structures (sets of cycle/paths).",
 			add_help=True,
 		)
+
+		parser.add_argument(
+			"--version",
+			action="version",
+			version=f"%(prog)s {__version__}",
+)
+
 		# required
 		required_args = parser.add_argument_group("required arguments")
 		required_args.add_argument(
