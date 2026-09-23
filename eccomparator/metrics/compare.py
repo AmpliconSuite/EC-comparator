@@ -15,6 +15,7 @@ from eccomparator.metrics.features import *
 from eccomparator.metrics.breakpoints import *
 from eccomparator.metrics.distances import *
 from eccomparator.utils import viz
+from eccomparator.utils import threadsviz
 from eccomparator.utils.utils import HEADER as ht
 from eccomparator.utils.utils import DDT as ddt
 from eccomparator.utils.utils import OUTFILES as o
@@ -264,6 +265,9 @@ def compare_cycles(t_file, r_file,
 			outfile = os.path.join(outdir, o.TOTAL_COST_TABLE)
 			viz.draw_total_cost_table(dict_metrics, outfile)
 
+			# plot original filtered structures
+			outfile = os.path.join(outdir, o.ORIGINAL_STRUCTURES_PNG)
+			threadsviz.draw_reconstruction_overview({"s1": df_t, "s2": df_r}, outfile=outfile)
 
 			# create report
 			if plot_report:

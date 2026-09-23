@@ -71,6 +71,7 @@ class HEADER:
 	FRAG_ID = "Frag_id"
 	BINS = "bins"
 	BIN_ENABLED = "bin_enabled"
+	SEGMENTS = "segments"
 
 	HEADER_SORTED = [CHR, START, END, CIRC_ID, CN, STRAND, ISCYCLIC, FRAG_ID]
 	DICT_HEADER = {"#chr": CHR,
@@ -257,5 +258,6 @@ class OUTFILES:
 	BREAKPOINTS_PROFILE_S2_TXT = 'breakpoints_profile_s2.txt'
 	METRICS_JSON = 'metrics.json'
 	MATCHED_BREAKPOINTS_TXT = 'breakpoints_matched.txt'
+	ORIGINAL_STRUCTURES_PNG = 'original_structures.png'
 
 

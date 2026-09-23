@@ -33,7 +33,8 @@ def generate_report(path_s1,
                                path_total_cost=o.TOTAL_COST_PNG,
                                path_total_bar=o.TOTAL_COST_BAR_PNG,
                                path_total_table=o.TOTAL_COST_TABLE,
-                               path_plot_cn_sv=o.COVERAGE_BREAKPOINTS_PROFILE)
+                               path_plot_cn_sv=o.COVERAGE_BREAKPOINTS_PROFILE,
+                               path_plot_threads=o.ORIGINAL_STRUCTURES_PNG)
 
         # 5. Write the template to an HTML file
         outdirabs = os.path.abspath(outdir)

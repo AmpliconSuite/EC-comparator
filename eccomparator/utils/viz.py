@@ -971,6 +971,7 @@ def plot_combined(br_t, br_r, cn_profile_t, cn_profile_r, chrlist, breakpoint_ma
 		svg_outfile = base + ".svg"
 		pdf_outfile = base + ".pdf"
 		fig.tight_layout()
+		fig.set_size_inches(16, 3)  # width, height in inches
 		fig.savefig(outfile, bbox_inches='tight', dpi=600)
 		fig.savefig(svg_outfile, bbox_inches='tight', format="svg")
 		fig.savefig(pdf_outfile, bbox_inches='tight', dpi=600, format="pdf")
