@@ -1,10 +1,18 @@
+import re
 from pathlib import Path
-
 from setuptools import find_packages, setup
-from __init__ import __version__
-
 
 BASE_DIR = Path(__file__).resolve().parent
+
+def get_version():
+    init_file = BASE_DIR / "eccomparator" / "__init__.py"
+    content = init_file.read_text(encoding="utf-8")
+    match = re.search(r'^__version__\s*=\s*[\'"]([^\'"]+)[\'"]', content, re.MULTILINE)
+    if not match:
+        raise RuntimeError(f"Unable to find __version__ string in {init_file}")
+    return match.group(1)
+
+__version__ = get_version()
 
 with open(BASE_DIR / "requirements.txt", encoding="utf-8") as f:
     requirements = [
