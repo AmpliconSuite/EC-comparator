@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from setuptools import find_packages, setup
+from __init__ import __version__
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -14,7 +15,7 @@ with open(BASE_DIR / "requirements.txt", encoding="utf-8") as f:
 
 setup(
     name="EC-comparator",
-    version="0.0.3",
+    version=__version__,
     description="Compare ecDNA structures and amplicon sets across technologies and tools.",
     author="Madalina Giurgiu-Kraljic",
     url="https://github.com/AmpliconSuite/EC-comparator",
