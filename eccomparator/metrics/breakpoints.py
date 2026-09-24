@@ -442,6 +442,26 @@ def create_cost_matrix(br_t, br_r, dist=ddt.EUCLIDIAN):
 	return m
 
 
+def remove_hard_unmatched(
+	m,
+	br_t,
+	br_r,
+):
+	"""
+	Set breakpoints with different chromosomes or strandness as infinity distance
+	"""
+	# remove edges in the cost matrix if not meeting the criteria
+	for i in range(0, br_t.shape[0]):
+		for j in range(0, br_r.shape[0]):
+			if (
+				br_t.loc[i, ht.CHR1] != br_r.loc[j, ht.CHR1]
+				and br_t.loc[i, ht.CHR2] != br_r.loc[j, ht.CHR2]
+			):
+				m[i, j] = np.inf
+			if br_t.loc[i, ht.STRAND] != br_r.loc[j, ht.STRAND]:
+				m[i, j] = np.inf
+	return m
+
 def remove_unmatched(
 	m,
 	br_t,
@@ -901,6 +921,13 @@ def compute_breakpoint_distance(
 	m = create_cost_matrix(br_t, br_r, dist=distance)
 
 	# 2. remove unmatched edges
+	# only remove those breakpoint which do not match in terms if strandness and chromosome
+	m = remove_hard_unmatched(
+			m,
+			br_t,
+			br_r
+		)
+
 	if unmatched_dist in [ddt.EUCLIDIAN, ddt.MANHATTAN, ddt.RELATIVE_METRIC]:
 		m = remove_unmatched(
 			m,
@@ -913,7 +940,6 @@ def compute_breakpoint_distance(
 			match_nonlinear=match_nonlinear,
 		)
 	else:
-		# if gaussian skip this step
 		print("Skip unmatched step because Gaussian distance set.")
 
 	# 3. create bipartite graph

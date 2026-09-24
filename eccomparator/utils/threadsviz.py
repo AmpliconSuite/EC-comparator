@@ -17,6 +17,7 @@ it meets a segment.
 """
 
 import io
+import pprint
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -39,6 +40,14 @@ def load_structure(path_or_buffer):
     return df
 
 
+def _parse_bool(val):
+    """Parse a boolean that may arrive as an actual bool, or as the
+    string 'True'/'False' (as read from a TSV column, e.g. via pandas)."""
+    if isinstance(val, str):
+        return val.strip().lower() in ("true", "1", "yes")
+    return bool(val)
+
+
 def _segment_paths(df):
     """
     Group segments by circ_id, preserving row order as the path order.
@@ -48,7 +57,7 @@ def _segment_paths(df):
     for circ_id, group in df.groupby("circ_id", sort=False):
         paths.append({
             HEADER.CIRC_ID: circ_id,
-            HEADER.ISCYCLIC: bool(group[HEADER.ISCYCLIC].iloc[0]),
+            HEADER.ISCYCLIC: _parse_bool(group[HEADER.ISCYCLIC].iloc[0]),
             HEADER.SEGMENTS: group.to_dict("records"),
         })
     return paths
@@ -205,10 +214,10 @@ def _draw_structure_row(fig, ax_dict, df, color, sign=1, label_ax=None, name="")
                         arrowprops=dict(arrowstyle="-|>", color="white",
                                          lw=1.4, shrinkA=0, shrinkB=0),
                         zorder=4)
-
+        
         n = len(segs)
         pairs = [(segs[k], seg_y[k], segs[k + 1], seg_y[k + 1]) for k in range(n - 1)]
-        if path[HEADER.ISCYCLIC] and n > 1:
+        if path[HEADER.ISCYCLIC]==True and n >= 1:
             pairs.append((segs[-1], seg_y[-1], segs[0], seg_y[0]))
 
         for a, y_a, b, y_b in pairs:

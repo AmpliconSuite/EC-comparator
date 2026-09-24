@@ -1,6 +1,23 @@
 [build-system]
-requires = [
-    "setuptools>=61",
-    "wheel"
-]
+requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "EC-comparator"
+description = "Compare ecDNA structures and amplicon sets across technologies and tools."
+authors = [{ name = "Madalina Giurgiu-Kraljic" }]
+requires-python = ">=3.10"
+dynamic = ["version", "dependencies"]
+
+[project.urls]
+Homepage = "https://github.com/AmpliconSuite/EC-comparator"
+
+[project.scripts]
+EC-comparator = "eccomparator.main:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "eccomparator.__version__" }
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools.packages.find]
+include = ["eccomparator*"]

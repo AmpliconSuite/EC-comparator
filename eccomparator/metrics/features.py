@@ -65,6 +65,12 @@ def rename_columns(df_cols, dict_mapping_cols):
 			dict_newcols[c] = c
 	return dict_newcols
 
+def _parse_bool(val):
+    """Parse a boolean that may arrive as an actual bool, or as the
+    string 'True'/'False' (as read from a TSV column, e.g. via pandas)."""
+    if isinstance(val, str):
+        return val.strip().lower() in ("true", "1", "yes")
+    return bool(val)
 
 def read_input(t_file, r_file, tempdir, min_cn=0):
 	"""
@@ -97,12 +103,12 @@ def read_input(t_file, r_file, tempdir, min_cn=0):
 						inplace=True)
 	
 	if ht.ISCYCLIC in t_collection.columns.tolist():
-		t_collection[ht.ISCYCLIC] = t_collection[ht.ISCYCLIC].astype(bool)
+		t_collection[ht.ISCYCLIC] = t_collection[ht.ISCYCLIC].apply(_parse_bool)
 	else:
 		t_collection[ht.ISCYCLIC] = True
 
 	if ht.ISCYCLIC in r_collection.columns.tolist():
-		r_collection[ht.ISCYCLIC] = r_collection[ht.ISCYCLIC].astype(bool)
+		r_collection[ht.ISCYCLIC] = r_collection[ht.ISCYCLIC].apply(_parse_bool)
 	else:
 		r_collection[ht.ISCYCLIC] = True
 
